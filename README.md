@@ -83,7 +83,7 @@ fwconsole ma install sccp_manager
 
 If `fwconsole ma install` still stops with `chan-sccp not found`, it almost always means the `chan_skinny.so` exclusion above didn't take — see the Wiki's Troubleshooting page.
 
-The **[Wiki's Installation page](https://github.com/nortien/sccp_manager/wiki/Installation)** covers the same flow with explanations for each step, plus a couple of gotchas not worth cramming in here — most notably a GPG trust-level quirk if you want to self-sign the module to clear FreePBX's "Unsigned Module" warning.
+The **[Wiki's Building & Installation Guide](https://github.com/nortien/sccp_manager/wiki/Building-and-Installation-Guide)** covers the same flow with explanations for each step, plus a couple of gotchas not worth cramming in here — most notably a GPG trust-level quirk if you want to self-sign the module to clear FreePBX's "Unsigned Module" warning.
 
 ## Updating
 
