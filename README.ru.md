@@ -1,56 +1,117 @@
-# SCCP Manager (форк nortien — Asterisk 20 / FreePBX 16)
+# SCCP Manager — версия для FreePBX 16 / Asterisk 20
 
-| [English](https://github.com/nortien/sccp_manager/blob/work/README.md) | [Русский](https://github.com/nortien/sccp_manager/blob/work/README.ru.md) | [Wiki](https://github.com/nortien/sccp_manager/wiki) |
+**Рабочий, пропатченный форк, который реально запускается на современном Asterisk.**
 
-Это приватный форк оригинального модуля FreePBX [chan-sccp/sccp_manager](https://github.com/chan-sccp/sccp_manager), пропатченный для работы с **Asterisk 20** и **FreePBX 16** — версиями, которые оригинальный проект "из коробки" не поддерживает.
+[![License: GPL](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/nortien/sccp_manager/blob/work/COPYING)
+[![chan-sccp](https://img.shields.io/badge/driver-chan--sccp%204.4-informational.svg)](https://github.com/nortien/chan-sccp)
+[![Asterisk](https://img.shields.io/badge/Asterisk-20.x-orange.svg)]()
+[![FreePBX](https://img.shields.io/badge/FreePBX-16-orange.svg)]()
 
-Идея создания этого модуля позаимствована у [Cynjut/SCCP_Manager](https://github.com/Cynjut/SCCP_Manager), дальше проект развивал и поддерживал PhantomVl ([PhantomVl/sccp_manager](https://github.com/PhantomVl/sccp_manager)), который на какое-то время стал недоступен. Позже проект поддерживался под [chan-sccp/sccp_manager](https://github.com/chan-sccp/sccp_manager), вместе с самим драйвером канала [chan-sccp/chan-sccp](https://github.com/chan-sccp/chan-sccp).
+Телефоны Cisco по протоколу SCCP (Skinny), подключённые к FreePBX без лицензированного CallManager. Это веб-часть настройки — линии, speed dial, кнопки BLF, модели телефонов, софткеи — всё управляется прямо из FreePBX, а не правкой конфигов руками.
 
-Этот форк существует потому, что на момент написания ни один из оригинальных проектов не собирается и не работает корректно на Asterisk 20 (подробности — в разделе [Почему появился этот форк](#почему-появился-этот-форк) ниже). Мы пропатчили и сам драйвер канала, и этот GUI-модуль, и теперь ведём собственную нумерацию версий (`chan-sccp` — `4.4`, `sccp_manager` — `15.0.1`), отдельно от апстрима.
+---
 
-## Сопутствующий репозиторий
+## Коротко о сути
 
-Этот модуль требует драйвер-компаньон: **[nortien/chan-sccp](https://github.com/nortien/chan-sccp)** (наш пропатченный форк chan-sccp, ветка `work`). Модуль не заработает со стандартным оригинальным драйвером на Asterisk 20 — подробности в Wiki.
+Любая публичная сборка этого инструмента — и драйвер, и GUI — останавливается на Asterisk 18. Под Asterisk 20 её никто не обновлял. Мы обновили: пропатчили определение версии в драйвере, добавили корректную ветку кода под Asterisk 20 и перепроверили всю установку от начала до конца на реальном сервере FreePBX 16. Всё, что написано здесь, отражает именно это — а не документацию оригинального проекта с механической заменой ссылок.
 
-## Почему появился этот форк
+Полные заметки по сборке, каждая ошибка, с которой мы столкнулись, и точное решение каждой — в **[Wiki](https://github.com/nortien/sccp_manager/wiki)**. Этот README ориентирует вас в проекте; Wiki доводит до рабочей установки.
 
-- Эвристика определения версии в `./configure` оригинального `chan-sccp` не распознаёт Asterisk 20 (она ищет буквальную строку `AMI_VERSION "8.0.0"`, а Asterisk 20 сообщает `"9.0.0"`), поэтому молча откатывается на очень старую, неправильную ветку кода (`pbx_impl/ast117`).
-- Мы пропатчили `chan-sccp`, добавив полноценную реализацию `pbx_impl/ast120` и явное распознавание Asterisk 20 через флаг `--with-asterisk-version=20.0`.
-- Установщик оригинального `sccp_manager` сам корректно определяет Asterisk 20, как только исправлен драйвер выше — на стороне PHP патчи не потребовались, кроме обновления версии и ссылок.
-- Поддержка FreePBX 17 / Asterisk 21 — известная, пока **нерешённая** проблема апстрима ([chan-sccp/chan-sccp#618](https://github.com/chan-sccp/chan-sccp/issues/618)) — планируем разобраться с ней отдельно, см. Wiki.
+## Что в этом репозитории, а что нет
 
-Все технические детали, точные диффы патчей и все грабли, на которые мы наступили, задокументированы в **[Wiki](https://github.com/nortien/sccp_manager/wiki)** — начните оттуда, если разворачиваете это на новом сервере.
+Здесь лежит **модуль FreePBX** — PHP/GUI-слой. Он общается с реальным драйвером протокола через Asterisk Manager Interface (AMI), а сам драйвер — в отдельном репозитории: **[nortien/chan-sccp](https://github.com/nortien/chan-sccp)**. Нужны оба; этот модуль бесполезен, пока драйвер не собран и не загружен.
+
+| | Этот репозиторий | Сопутствующий репозиторий |
+|---|---|---|
+| Что это | Модуль GUI FreePBX (PHP) | Драйвер канала Asterisk (C) |
+| Версия | `15.0.1` | `4.4` |
+| Способ установки | `fwconsole ma install` | `./configure && make install` |
+
+## Зачем вообще понадобился этот форк?
+
+Коротко: внутренний маркер версии Asterisk изменился с `8.0.0` на `9.0.0` где-то между 19 и 20 версией, а сборочный скрипт драйвера умел искать только `8.0.0`. Из-за этого на Asterisk 20 драйвер молча ошибочно определял себя как гораздо более старый, несовместимый Asterisk 17 и собирался против неправильных внутренних API — без ошибок, без предупреждений, просто либо не компилировался чисто, либо вёл себя неправильно в рантайме.
+
+Мы исправили это на уровне конфигурации сборки, не трогая саму телефонную логику — обработка протокола SCCP осталась оригинальным кодом апстрима, мы просто научили его правильно распознавать реальный Asterisk, на котором он работает. Полный технический разбор: **[Wiki → Patches](https://github.com/nortien/sccp_manager/wiki/Patches)**.
 
 ## Требования
 
-- FreePBX 16 (протестировано), PHP 7.4.x (это требование самого FreePBX 16 — не используйте PHP 8.x)
-- Asterisk 20.x (протестировано на 20.17.0)
-- Собранный и загруженный [nortien/chan-sccp](https://github.com/nortien/chan-sccp) (см. его README / нашу Wiki)
-- PHP-расширение `zip` (`php-zip` / `phpX.Y-zip` в зависимости от дистрибутива)
-- TFTP-сервер для провижининга телефонов (см. Wiki — на RHEL/CentOS-подобных дистрибутивах это `tftp.socket` с socket-activation)
+- FreePBX 16, Asterisk 20.x (собрано и протестировано на 20.17.0)
+- PHP 7.4.x — это потолок самого FreePBX 16, не наш; PHP 8 ломает сам FreePBX 16
+- Собранный и загруженный [nortien/chan-sccp](https://github.com/nortien/chan-sccp)
+- Доступный TFTP-сервер для провижининга прошивок/конфигов телефонов
 
-## Быстрая установка (полную пошаговую инструкцию см. в Wiki)
+## Быстрый старт
+
+Это полный путь от чистой установки Sangoma FreePBX 16 с уже запущенным Asterisk. Выполняется от root.
 
 ```bash
-# 1. Сначала соберите и установите драйвер (см. README nortien/chan-sccp)
+# --- Зависимости для сборки ---
+yum install -y asterisk20-devel autoconf automake gcc git gettext-devel
 
-# 2. Склонируйте этот модуль в директорию модулей FreePBX
-cd /var/www/html/admin/modules/
-git clone https://github.com/nortien/sccp_manager.git sccp_manager
-cd sccp_manager
-git checkout work   # или конкретный тег vX.Y.Z
+# --- Драйвер: chan-sccp ---
+cd /usr/src
+git clone https://github.com/nortien/chan-sccp.git
+cd chan-sccp
+git checkout work   # или помеченный релиз, например v4.4
 
-# 3. Поправьте владельца файлов и установите через FreePBX
+./tools/bootstrap.sh
+./configure --with-asterisk-version=20.0 \
+  --enable-conference --enable-advanced-functions \
+  --enable-distributed-devicestate --enable-video
+make -j2
+make install
+
+# chan-sccp не инициализируется полностью, пока загружен chan_skinny.so — исключаем его
+echo "noload = chan_skinny.so" >> /etc/asterisk/modules.conf
+fwconsole restart
+
+# проверка — должна вывести реальную строку версии, а не "No such command"
+asterisk -rx "sccp show version"
+
+# --- GUI: sccp_manager ---
+git clone https://github.com/nortien/sccp_manager.git /var/www/html/admin/modules/sccp_manager
+cd /var/www/html/admin/modules/sccp_manager
+git checkout work   # или помеченный релиз, например v15.0.1
+
+fwconsole chown
+
+# --- TFTP (провижининг телефонов) ---
+systemctl enable --now tftp.socket
+
+fwconsole ma install sccp_manager
+```
+
+Если `fwconsole ma install` всё же останавливается с ошибкой `chan-sccp not found` — почти всегда это значит, что исключение `chan_skinny.so` выше не сработало, см. страницу Troubleshooting в Wiki.
+
+**[Страница Installation в Wiki](https://github.com/nortien/sccp_manager/wiki/Installation)** содержит тот же путь с пояснениями к каждому шагу, плюс пару граблей, которые не стоит впихивать сюда — прежде всего, особенность уровня доверия GPG-ключа, если захотите самостоятельно подписать модуль, чтобы убрать предупреждение FreePBX "Unsigned Module".
+
+## Обновление
+
+Подтяните новый коммит или тег, затем заново запустите установщик — он сам обработает миграции БД:
+
+```bash
+cd /var/www/html/admin/modules/sccp_manager
+git pull origin work        # или: git fetch --tags && git checkout vX.Y.Z
 fwconsole chown
 fwconsole ma install sccp_manager
 ```
 
-Если установщик останавливается с ошибкой `chan-sccp not found`, почти всегда это значит, что `chan_skinny.so` всё ещё загружен и блокирует инициализацию chan-sccp — см. страницу Troubleshooting в Wiki.
+Если обновлялся и драйвер — сначала пересоберите и переустановите **его**, затем сделайте полный рестарт Asterisk, прежде чем трогать модуль — никогда не делайте "горячую" замену `chan_sccp.so` (см. Wiki → Troubleshooting):
 
-## Документация
+```bash
+cd /usr/src/chan-sccp
+git pull origin work
+./tools/bootstrap.sh
+./configure --with-asterisk-version=20.0 --enable-conference --enable-advanced-functions --enable-distributed-devicestate --enable-video
+make -j2
+make install
+fwconsole restart
+```
 
-Все шаги настройки, патчи и заметки по устранению неполадок (настройка TFTP, подпись модуля, отключение DAHDi/IAX2, конфликт с `chan_skinny`, краш при "горячей" замене `.so`-файла и т.д.) — в **[GitHub Wiki](https://github.com/nortien/sccp_manager/wiki)**.
+## Откуда это взялось
+
+Родословная, для любопытных: концепция восходит к [Cynjut/SCCP_Manager](https://github.com/Cynjut/SCCP_Manager), дальше её развивал [PhantomVl](https://github.com/PhantomVl/sccp_manager), позже проект поддерживался под организацией [chan-sccp](https://github.com/chan-sccp/sccp_manager) вместе с самим драйвером. Этот форк продолжает эту линию.
 
 ## Лицензия
 
-GPL — см. [COPYING](https://github.com/nortien/sccp_manager/blob/work/COPYING), если файл присутствует, либо лицензию оригинального проекта.
+GPL, как и у апстрима. См. `COPYING`, если файл присутствует в репозитории.
