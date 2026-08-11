@@ -1,118 +1,56 @@
-## Добро пожаловать странник на SCCP страницу веб интерфейса для FreePBX (SCCP Manager)
-| [English :gb:/:us:](README.md) | [Russian :ru:](README.ru.md) | [Старая страница проекта](https://github.com/PhantomVl/sccp_manager/tree/master)
+# SCCP Manager (форк nortien — Asterisk 20 / FreePBX 16)
 
-![Gif](https://github.com/chan-sccp/sccp_manager/raw/develop/.dok/image/Demo_1s5.gif)
+| [English](https://github.com/nortien/sccp_manager/blob/work/README.md) | [Русский](https://github.com/nortien/sccp_manager/blob/work/README.ru.md) | [Wiki](https://github.com/nortien/sccp_manager/wiki) |
 
-  * [Installation](https://github.com/chan-sccp/sccp_manager#installation)
-  * [Prerequisites](https://github.com/chan-sccp/sccp_manager#prerequisites)
-  * [Links](https://github.com/chan-sccp/sccp_manager#link)
-  * [Wiki](https://github.com/chan-sccp/sccp_manager/wiki)
+Это приватный форк оригинального модуля FreePBX [chan-sccp/sccp_manager](https://github.com/chan-sccp/sccp_manager), пропатченный для работы с **Asterisk 20** и **FreePBX 16** — версиями, которые оригинальный проект "из коробки" не поддерживает.
 
-## Link
+Идея создания этого модуля позаимствована у [Cynjut/SCCP_Manager](https://github.com/Cynjut/SCCP_Manager), дальше проект развивал и поддерживал PhantomVl ([PhantomVl/sccp_manager](https://github.com/PhantomVl/sccp_manager)), который на какое-то время стал недоступен. Позже проект поддерживался под [chan-sccp/sccp_manager](https://github.com/chan-sccp/sccp_manager), вместе с самим драйвером канала [chan-sccp/chan-sccp](https://github.com/chan-sccp/chan-sccp).
 
-[![Download Sccp-Mamager](https://img.shields.io/badge/SccpGUI-build-ff69b4.svg)](https://github.com/chan-sccp/sccp_manager/archive/tarball/develop)
-[![Download Chan-SCCP channel driver for Asterisk](https://img.shields.io/sourceforge/dt/chan-sccp-b.svg)](https://github.com/chan-sccp/chan-sccp/releases/latest)
-[![Chan-SCCP Documentation](https://img.shields.io/badge/docs-wiki-blue.svg)](https://github.com/chan-sccp/chan-sccp/wiki)
+Этот форк существует потому, что на момент написания ни один из оригинальных проектов не собирается и не работает корректно на Asterisk 20 (подробности — в разделе [Почему появился этот форк](#почему-появился-этот-форк) ниже). Мы пропатчили и сам драйвер канала, и этот GUI-модуль, и теперь ведём собственную нумерацию версий (`chan-sccp` — `4.4`, `sccp_manager` — `15.0.1`), отдельно от апстрима.
 
-### История
-.... давнем давно в далеком прошлом ....
-Группа программистов пыталось быстро бороться с несовершенством продуктов CISCO, но повседневные дела угробили проект.
-Но на помощь им пришел молодой программист и возродил идею уже заброшенного проекта.
-Для желающих попробовать себя в этой борьбе на просторах программирования ссылка на проект (https://github.com/Cynjut/SCCP_Manager).
+## Сопутствующий репозиторий
 
-### Кому это надо...
-Ну в первую очередь для Себя любимого ну и для тех, у кого есть куча телефонного хлама от компании Cisco. 
-Если вы планируете использовать Aserisk + FreePBX, то я надеюсь, что данный модуль существенно упростит управление и настройки телефонами от Cisco.
-В интернете существует замечательный проект (IMHO), который интегрирует проприетарный протокол Cisco в Asterisk, конечно, он пока далек от идеала, 
-но все же это замечательная замена серверам CCME, СCM, СUСM !
-Ну я совершенно не представляю себе, сколько времени данный проект будет поддерживаться.
+Этот модуль требует драйвер-компаньон: **[nortien/chan-sccp](https://github.com/nortien/chan-sccp)** (наш пропатченный форк chan-sccp, ветка `work`). Модуль не заработает со стандартным оригинальным драйвером на Asterisk 20 — подробности в Wiki.
 
-### Ну если ты еще с нами ...
+## Почему появился этот форк
 
-Как я говорил выше, это дополнение к (Aserisk + FreePBX), но нам еще потребуется:
- 1. У меня не получилось поставить добиться работы с дисками Aserisk и FreePBX - собираем из исходников 
- 1.1. Замечательная копания freepbx. Теперь с SNG7-PBX-64bit-... все работает!
- 2. Mysql (Maria)
- 3. Драйвер протокола SCCP страница (https://github.com/chan-sccp/chan-sccp/)
- 4. Этот модуль.
- 5. Руки
- 6. Возможно еще несколько проектов
+- Эвристика определения версии в `./configure` оригинального `chan-sccp` не распознаёт Asterisk 20 (она ищет буквальную строку `AMI_VERSION "8.0.0"`, а Asterisk 20 сообщает `"9.0.0"`), поэтому молча откатывается на очень старую, неправильную ветку кода (`pbx_impl/ast117`).
+- Мы пропатчили `chan-sccp`, добавив полноценную реализацию `pbx_impl/ast120` и явное распознавание Asterisk 20 через флаг `--with-asterisk-version=20.0`.
+- Установщик оригинального `sccp_manager` сам корректно определяет Asterisk 20, как только исправлен драйвер выше — на стороне PHP патчи не потребовались, кроме обновления версии и ссылок.
+- Поддержка FreePBX 17 / Asterisk 21 — известная, пока **нерешённая** проблема апстрима ([chan-sccp/chan-sccp#618](https://github.com/chan-sccp/chan-sccp/issues/618)) — планируем разобраться с ней отдельно, см. Wiki.
 
-### Вжно! В этой ветке лежат самые последне нововведения и обновления, и самые последние БАГИ! 
-    Пользуйся и наслождайся. Так же не забывай писать нам об ошибках, которые ты нашел! 
-    Это очень нам поможет, Я с радостью исправлю то, что ты нашел и добалю новых.
+Все технические детали, точные диффы патчей и все грабли, на которые мы наступили, задокументированы в **[Wiki](https://github.com/nortien/sccp_manager/wiki)** — начните оттуда, если разворачиваете это на новом сервере.
 
-### Wiki - Основные Инструкции по настройке 
-Вся документация по проекту пока лежит на старой Вики [![SCCP Manager Wiki](https://img.shields.io/badge/Wiki-new-blue.svg)](https://github.com/PhantomVl/sccp_manager/wiki)
-Вся документация по драйверу Chan-SCCP  [![SCCP Manager Wiki](https://img.shields.io/badge/Wiki-new-blue.svg)](https://github.com/chan-sccp/wiki)
+## Требования
 
-Ну и как водится у на SCCP Manager это бесплатное дополнение. И помни "(C)" означает "Копия верна". Please see the file COPYING for details.
+- FreePBX 16 (протестировано), PHP 7.4.x (это требование самого FreePBX 16 — не используйте PHP 8.x)
+- Asterisk 20.x (протестировано на 20.17.0)
+- Собранный и загруженный [nortien/chan-sccp](https://github.com/nortien/chan-sccp) (см. его README / нашу Wiki)
+- PHP-расширение `zip` (`php-zip` / `phpX.Y-zip` в зависимости от дистрибутива)
+- TFTP-сервер для провижининга телефонов (см. Wiki — на RHEL/CentOS-подобных дистрибутивах это `tftp.socket` с socket-activation)
 
+## Быстрая установка (полную пошаговую инструкцию см. в Wiki)
 
-### Prerequisites - как говориться все, что хуже этого возможно работать тоже будет .... но только вопрос как ?
-Make sure you have the following installed on your system:
-- PHPx.x-zip has to be installed (where x.x is the installed version of PHP).
-  For example, on Debian, using PHP7.3
+```bash
+# 1. Сначала соберите и установите драйвер (см. README nortien/chan-sccp)
 
-- pbx:
-  - asterisk >= 1.8 (absolute minimum & not recommended)
-  - asterisk >= 13.7 or asterisk >= 14.0 or asterisk >= 15.0 (Тестировалось на стендах)
-- gui:
-  - freepbx >= 13.0.192 (http://wiki.freepbx.org/display/FOP/Install+FreePBX)
-- standard posix compatible applications like sed, awk, tr
-- a working version of [chan-sccp](https://github.com/chan-sccp/chan-sccp)
-- PHPx.x Ну тут уж как повезет, 5.6 от freepbx, но мы уже пишем под PHP7.3
+# 2. Склонируйте этот модуль в директорию модулей FreePBX
+cd /var/www/html/admin/modules/
+git clone https://github.com/nortien/sccp_manager.git sccp_manager
+cd sccp_manager
+git checkout work   # или конкретный тег vX.Y.Z
 
-```
-apt-get install PHP7.3-zip
-```
-### Installation Очень короткая инструкция
-- открой полную инструкцию [Полная версия инструкции] (https://github.com/PhantomVl/sccp_manager/wiki/step-by-step-instlation)
-
-### Installation Другие инструкции по установке :-)
-- [Setting up a FreePBX system](http://wiki.freepbx.org/display/FOP/Install+FreePBX)
-- [Setting up Chan-Sccp](https://github.com/chan-sccp/chan-sccp/wiki/How-to-setup-the-chan_sccp-Module)
-- [See chan-sccp wiki](https://github.com/chan-sccp/chan-sccp/wiki/Realtime-Configuration).
-
-
-## Установка в Веб морде 
-
------
-
-1. Log in to FreePBX
-2. Go to Admin -> Module Admin
-3. Click Upload Modules.
-4. Enter one of the following urls:
-
-Мы решили, что это стабильная версия:
-
-```
-https://github.com/chan-sccp/sccp_manager/archive/refs/heads/Legacy.zip
+# 3. Поправьте владельца файлов и установите через FreePBX
+fwconsole chown
+fwconsole ma install sccp_manager
 ```
 
-Для тех, кто ищет нового и интересного:
+Если установщик останавливается с ошибкой `chan-sccp not found`, почти всегда это значит, что `chan_skinny.so` всё ещё загружен и блокирует инициализацию chan-sccp — см. страницу Troubleshooting в Wiki.
 
-_This is development software and so may have issues_
-```
-https://github.com/chan-sccp/sccp_manager/archive/refs/heads/develop.zip
-```
+## Документация
 
-5. Жми Download From Web.
-6. Открывай Manage Local Modules.
-7. Практически в конце списка "SCCP Manager". Тут и так понятно, выбрать "Install",  и нажать "Process".
-8. "Confirm installation".
-9. "Close" Status window.
-10. Красная кнопка "Apply" в правом верхнем углу.
-11. Далее вопрос ни одного научного труда [Using-SCCP_Manager-to-Manage-chan-sccp](https://github.com/chan-sccp/chan-sccp/wiki/Using-SCCP_Manager-to-Manage-chan-sccp)
+Все шаги настройки, патчи и заметки по устранению неполадок (настройка TFTP, подпись модуля, отключение DAHDi/IAX2, конфликт с `chan_skinny`, краш при "горячей" замене `.so`-файла и т.д.) — в **[GitHub Wiki](https://github.com/nortien/sccp_manager/wiki)**.
 
-### Важно:   
-   - !!! Если это это проект не заработал на твоей системе - переключись на ветку мастер [master](https://github.com/PhantomVl/sccp_manager) 
-     !!! Но есть ограничение - ветка master не поддерживает изменения в chan-sccp сделаные после октября 2018 г.
-   - И чуть не забыл настраиваем Realtime-Configuration ([See](https://github.com/chan-sccp/chan-sccp/wiki/Realtime-Configuration)).
-   - Желательно иметь Firmware телефонов Cisco, языковые пакеты ну всякое разное.
-   - Возможно, ты найдешь, то, что ищешь, в проекте (https://github.com/dkgroot/provision_sccp)
-   - Если что-то не так [Wiki GUI] (https://github.com/PhantomVl/sccp_manager), [Wiki chan-sccp] (https://github.com/chan-sccp/chan-sccp/wiki),
+## Лицензия
 
-### Chat
-[![Gitter](https://badges.gitter.im/chan-sccp/chan-sccp.svg)](https://gitter.im/sccp_manager/community)
-
+GPL — см. [COPYING](https://github.com/nortien/sccp_manager/blob/work/COPYING), если файл присутствует, либо лицензию оригинального проекта.
