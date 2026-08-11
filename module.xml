@@ -1,12 +1,12 @@
 <module>
 	<rawname>sccp_manager</rawname>
 	<name>SCCP Manager</name>
-	<version>14.5.0.4</version>
+	<version>15.1.1</version>
 	<type>setup</type>
 	<category>SCCP Connectivity</category>
-	<publisher>Steve Lad, Alex GP</publisher>
+	<publisher>nortien</publisher>
 	<repo>extended</repo>
-	<description>SCCP Phone and Extension Manager</description>
+	<description>The Sccp Manager module lets you manage the chan-sccp driver.</description>
 	<menuitems>
 		<sccpsettings	sort="1">Server Config</sccpsettings>
 		<sccp_adv	sort="2">System Parameters</sccp_adv>
@@ -43,8 +43,10 @@
 		 * Version 14.4.0.5 * - Fix issue #59.
 		 * Version 14.5.0.2 * - Fix issue #32.
 		 * Version 14.5.0.4 * - Fix issue where values with spaces are truncated. Preserve softkeys accross installs
+		 * Version 15.0.1 * - Own fork, Asterisk 20 / FreePBX 16 support
+		 * Version 15.1.1 * - Asterisk 23 / FreePBX 17 / PHP 8.2 support
 	</changelog>
-	<location>https://github.com/chan-sccp/sccp_manager</location>
+	<location>https://github.com/nortien/sccp_manager</location>
 	<depends>
 		<version>15</version>
 		<phpversion>7.0</phpversion>
@@ -53,9 +55,10 @@
 	<supported>
 		<version>13.0.0.2M</version>
 	</supported>
-	<info>https://github.com/chan-sccp/sccp_manager</info>
-	<updateurl>https://raw.githubusercontent.com/chan-sccp/sccp_manager/develop/sccpManagerUpdater.json</updateurl>
+	<info>https://github.com/nortien/sccp_manager</info>
+	<updateurl>https://raw.githubusercontent.com/nortien/sccp_manager/work/sccpManagerUpdater.json</updateurl>
 	<license>GPL</license>
+	<licenselink>http://www.gnu.org/licenses/gpl.txt</licenselink>
 	<md5sum></md5sum>
 	<database>
 		<table name="sccpdevice">

@@ -9,6 +9,7 @@
 
 namespace FreePBX\modules\Sccp_manager;
 
+#[\AllowDynamicProperties]
 class aminterface
 {
 
@@ -93,6 +94,11 @@ class aminterface
         }
     }
 
+    private function _errorException($message)
+    {
+        $this->_error[] = $message;
+        error_log('[sccp_manager aminterface] ' . $message);
+    }
     public function info()
     {
         $Ver = '13.0.4';
@@ -335,7 +341,7 @@ class aminterface
             if ($listener instanceof \Closure) {
                 $listener($message);
             } elseif (is_array($listener)) {
-                $listener[0]->$listener[1]($message);
+                $listener[0]->{$listener[1]}($message);
             } else {
                 $listener->handle($message);
             }
