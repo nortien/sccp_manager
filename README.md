@@ -6,6 +6,7 @@
 [![chan-sccp](https://img.shields.io/badge/driver-chan--sccp%204.4-informational.svg)](https://github.com/nortien/chan-sccp)
 [![Asterisk](https://img.shields.io/badge/Asterisk-20.x-orange.svg)]()
 [![FreePBX](https://img.shields.io/badge/FreePBX-16-orange.svg)]()
+[![Documentation](https://img.shields.io/badge/docs-wiki-blue.svg)](https://github.com/nortien/sccp_manager/wiki)
 
 Cisco IP phones (SCCP/Skinny) talking to FreePBX, without a licensed CallManager. This is the web GUI half of the setup — line assignments, speed dials, BLF buttons, phone models, softkeys, all managed from FreePBX itself instead of hand-edited config files.
 
@@ -15,7 +16,7 @@ Cisco IP phones (SCCP/Skinny) talking to FreePBX, without a licensed CallManager
 
 Every public build of this tool — the driver and the GUI alike — stops at Asterisk 18. Nobody had updated it for Asterisk 20. So we did: patched the driver's version detection, added a proper code path for Asterisk 20, and re-tested the whole install end to end on a real FreePBX 16 box. Everything here reflects that — not the upstream project's docs with a find-and-replace.
 
-Full build notes, every error message we hit, and the exact fix for each one live on the **[Wiki](https://github.com/nortien/sccp_manager/wiki)**. This README gets you oriented; the Wiki gets you installed.
+Full build notes, every error message we hit, and the exact fix for each one — plus the complete general reference (features, hardware, config options, dialplan, provisioning) — live on the **[Wiki](https://github.com/nortien/sccp_manager/wiki)**. This README gets you oriented and installed; the Wiki is where you go for everything after that.
 
 ## What's in this repo, and what isn't
 
@@ -110,7 +111,7 @@ fwconsole restart
 
 ## Where this came from
 
-Lineage, for the curious: the concept traces back to [Cynjut/SCCP_Manager](https://github.com/Cynjut/SCCP_Manager), was carried forward by [PhantomVl](https://github.com/PhantomVl/sccp_manager), and later maintained under the [chan-sccp](https://github.com/chan-sccp/sccp_manager) organization alongside the driver itself. This fork picks up from there.
+This project stands on the work of others, and wouldn't exist without it. The concept traces back to [Cynjut/SCCP_Manager](https://github.com/Cynjut/SCCP_Manager), was carried forward by [PhantomVl](https://github.com/PhantomVl/sccp_manager), and was later maintained under the [chan-sccp](https://github.com/chan-sccp/sccp_manager) organization alongside the [chan-sccp/chan-sccp](https://github.com/chan-sccp/chan-sccp) driver itself — all the credit for the original design, protocol implementation, and years of feature work belongs to them. This fork is a direct continuation of that lineage: same codebase, same license, patched specifically to keep working on Asterisk versions the original maintainers hadn't gotten to yet.
 
 ## License
 

@@ -6,6 +6,7 @@
 [![chan-sccp](https://img.shields.io/badge/driver-chan--sccp%204.4-informational.svg)](https://github.com/nortien/chan-sccp)
 [![Asterisk](https://img.shields.io/badge/Asterisk-20.x-orange.svg)]()
 [![FreePBX](https://img.shields.io/badge/FreePBX-16-orange.svg)]()
+[![Documentation](https://img.shields.io/badge/docs-wiki-blue.svg)](https://github.com/nortien/sccp_manager/wiki)
 
 Телефоны Cisco по протоколу SCCP (Skinny), подключённые к FreePBX без лицензированного CallManager. Это веб-часть настройки — линии, speed dial, кнопки BLF, модели телефонов, софткеи — всё управляется прямо из FreePBX, а не правкой конфигов руками.
 
@@ -110,7 +111,7 @@ fwconsole restart
 
 ## Откуда это взялось
 
-Родословная, для любопытных: концепция восходит к [Cynjut/SCCP_Manager](https://github.com/Cynjut/SCCP_Manager), дальше её развивал [PhantomVl](https://github.com/PhantomVl/sccp_manager), позже проект поддерживался под организацией [chan-sccp](https://github.com/chan-sccp/sccp_manager) вместе с самим драйвером. Этот форк продолжает эту линию.
+Этот проект стоит на плечах чужой работы и не существовал бы без неё. Концепция восходит к [Cynjut/SCCP_Manager](https://github.com/Cynjut/SCCP_Manager), дальше её развивал [PhantomVl](https://github.com/PhantomVl/sccp_manager), позже проект поддерживался под организацией [chan-sccp](https://github.com/chan-sccp/sccp_manager) вместе с драйвером [chan-sccp/chan-sccp](https://github.com/chan-sccp/chan-sccp) — вся заслуга за оригинальный дизайн, реализацию протокола и годы доработок принадлежит им. Этот форк — прямое продолжение этой линии: тот же код, та же лицензия, пропатчено конкретно для того, чтобы продолжать работать на версиях Asterisk, до которых у оригинальных мейнтейнеров пока не дошли руки.
 
 ## Лицензия
 
