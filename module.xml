@@ -4,7 +4,7 @@
 	<version>15.0.1</version>
 	<type>setup</type>
 	<category>SCCP Connectivity</category>
-	<publisher>Steve Lad, Alex GP</publisher>
+	<publisher>nortien</publisher>
 	<repo>extended</repo>
 	<description>SCCP Phone and Extension Manager</description>
 	<menuitems>
@@ -54,7 +54,7 @@
 	<supported>
 		<version>13.0.0.2M</version>
 	</supported>
-	<info>https://github.com/chan-sccp/sccp_manager</info>
+	<info>https://github.com/nortien/sccp_manager</info>
 	<updateurl>https://raw.githubusercontent.com/nortien/sccp_manager/work/sccpManagerUpdater.json</updateurl>
 	<license>GPL</license>
 	<md5sum></md5sum>
