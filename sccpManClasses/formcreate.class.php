@@ -12,6 +12,57 @@ class formcreate
         $this->buttonHelpLabel = 'site';
     }
 
+    // Shared field wrapper, matching FreePBX core's own convention
+    // (see admin/modules/core/views/extensions.php): a label+help-icon
+    // column, a value column, and a full-width help-text row below.
+    // Used by all addElement* methods except addElementHLP (a collapsible
+    // help panel, not a labeled field).
+    private function elementOpen($res_id, $label, $secClass = '') {
+        ?>
+        <div class="element-container">
+            <div class="row">
+                <div class="form-group <?php echo $secClass; ?>">
+                    <div class="col-md-4 control-label">
+                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo $label; ?></label>
+                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
+                    </div>
+                    <div class="col-md-8">
+        <?php
+    }
+
+    private function elementCloseRow() {
+        ?>
+                    </div>
+                </div>
+            </div>
+        <?php
+    }
+
+    // The hidden "customise" row used by the sccp-edit/sccp-restore toggle
+    // (addElementIE/addElementIS). id/name contract must match
+    // assets/js/sccp_manager.js exactly - it is not event-delegated.
+    private function elementEditRowOpen($res_id, $promptText, $secClass = '') {
+        ?>
+            <div class="row" id="edit_<?php echo $res_id; ?>" style="display: none">
+                <div class="form-group <?php echo $secClass; ?>">
+                    <div class="col-md-4">
+                        <i><?php echo $promptText; ?></i>
+                    </div>
+                    <div class="col-md-8">
+        <?php
+    }
+
+    private function elementHelpAndClose($res_id, $helpText) {
+        ?>
+            <div class="row">
+                <div class="col-md-12">
+                    <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo $helpText;?></span>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
     function addElementIE ($child, $fvalues, $sccp_defaults, $npref) {
         $res_input = '';
         $res_name = '';
