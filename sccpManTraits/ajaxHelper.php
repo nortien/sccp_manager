@@ -164,7 +164,8 @@ trait ajaxHelper {
                         }
                     }
                 }
-                return array('status' => (($res['Response'] == 'Error')? false : true ), 'message' => $msgr, 'reload' => false, 'table_reload' => true);
+                // $res is only assigned when a device actually matched above
+                return array('status' => ((($res['Response'] ?? '') == 'Error')? false : true ), 'message' => $msgr, 'reload' => false, 'table_reload' => true);
                 break;
             case 'update_button_label':
                 $msg = '';

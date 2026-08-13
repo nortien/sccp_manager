@@ -211,11 +211,13 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $this->pagedata = array(
             "general" => array(
                 "name" => _("Site Default Settings"),
-                "page" => 'views/server.setting.php'
+                "page" => 'views/server.setting.php',
+                "banner" => _("Any changes to the server configuration can cause all phones to restart")
               ),
             "sccpdevice" => array(
                 "name" => _("SCCP Device"),
-                "page" => 'views/server.device.php'
+                "page" => 'views/server.device.php',
+                "banner" => _("Any changes to the device configuration can cause all phones to restart. It is important to read the information on hotline below before using this capability")
               ),
             "sccpurl" => array(
                 "name" => _("SCCP Device URL"),

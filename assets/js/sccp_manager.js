@@ -469,11 +469,12 @@ $(document).ready(function () {
                     .addClass('state-icon ' + settings[isChecked].icon);
         }
         if (isChecked) {
-            $('input', this).removeAttr('checked');
+            // must clear the property, not the attribute - the checked state
+            // is set via prop() below, and removeAttr() does not undo that
+            $('input', this).prop('checked', false);
             button_1.removeClass('active');
         } else {
-            $('input', this).attr('checked');
-            $('input', this).prop('checked', 'true');
+            $('input', this).prop('checked', true);
             button_1.addClass('active');
         }
     });
@@ -918,9 +919,26 @@ function load_oncliсk(e, data)
 
 // call from here not document.ready as have dynamic content
 $(document).on('click', ".input-js-remove" , function () {
-    // delete the current row
     var pname = $(this).data('id');
-    $('#' + pname).remove();
+    var row = $('#' + pname);
+    var pcls = row.attr('class').split(' ')[0];
+    // Never remove the last remaining row - clear it instead, so the field
+    // keeps an empty input to type into (same behaviour as del_dynamic_table).
+    if ($('.' + pcls).length <= 1) {
+        row.find('input:text').val('');
+        return;
+    }
+    // The add button only lives on the last row, so if we are removing that
+    // row we have to carry the button over to the row that becomes last -
+    // otherwise there is no way left to add rows again.
+    var addBtn = row.find('.input-js-add').detach();
+    row.remove();
+    var lastRow = $('.' + pcls).last();
+    if (addBtn.length && lastRow.find('.input-js-add').length === 0) {
+        var nid = lastRow.data('nextid');
+        addBtn.attr('id', pcls + nid + '-btn-add').attr('data-row', nid);
+        lastRow.append(addBtn);
+    }
 });
 
 $(document).on('click', ".input-js-add" , function () {
@@ -940,9 +958,9 @@ $(document).on('click', ".input-js-add" , function () {
     var last = $("." + pcls).last(),
         ourid = last.data('nextid'),
         nextid = ourid + 1,
-        html = "<div class='" + pcls + " form-group' id='" + pname + nextid + "' data-nextid='" + nextid + "'>";
-    // input row, matching formcreate.class.php's addElementIED markup
-    html += "<div class='row'><div class='form-inline'>";
+        html = "<div class='" + pcls + " sccp-ied-row form-group form-inline' id='" + pname + nextid + "' data-nextid='" + nextid + "'>";
+    // matching formcreate.class.php's addElementIED markup: inputs and
+    // +/- buttons all on the same line
     for (var key in jdata) {
         html_opt = '';
         for (var skey in jdata[key]['options']) {
@@ -950,15 +968,11 @@ $(document).on('click', ".input-js-add" , function () {
         }
         html += "<input type='text' name='" + pname + "[" + nextid + "][" + key + "]' class " + html_opt + "> " + jdata[key]['nameseparator'] + " ";
     }
-    html += "</div></div>";
-    // add/remove-row buttons on their own row below the inputs
-    html += "<div class='row'><div>";
     html += "<button type='button' class='btn btn-danger btn-lg input-js-remove' id='" + pname + nextid + "-btn-remove' data-id='" + pname + nextid + "' data-for='" + pname + "'>";
     html += "<i class='fa fa-minus pull-right'></i></button>";
     html += "<button type='button' class='btn btn-primary btn-lg input-js-add' id='" + pname + nextid + "-btn-add' data-id='" + pname + "'";
     html += " data-row='" + nextid + "' data-for='" + pname + "' data-max='" + pmax + "' data-json='" + $(this).data('json') + "' >";
     html += "<i class='fa fa-plus pull-right'></i></button>";
-    html += "</div></div>";
     html += "</div>\n";
 
     last.after(html);

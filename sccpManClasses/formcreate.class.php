@@ -22,11 +22,11 @@ class formcreate
         <div class="element-container">
             <div class="row">
                 <div class="form-group <?php echo $secClass; ?>">
-                    <div class="col-md-4 control-label">
+                    <div class="col-md-3 sccp-field-label">
                         <label class="control-label" for="<?php echo $res_id; ?>"><?php echo $label; ?></label>
                         <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
                     </div>
-                    <div class="col-md-8">
+                    <div class="col-md-9">
         <?php
     }
 
@@ -45,10 +45,10 @@ class formcreate
         ?>
             <div class="row" id="edit_<?php echo $res_id; ?>" style="display: none">
                 <div class="form-group <?php echo $secClass; ?>">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <i><?php echo $promptText; ?></i>
                     </div>
-                    <div class="col-md-8">
+                    <div class="col-md-9">
         <?php
     }
 
@@ -112,18 +112,21 @@ class formcreate
             if ($i > 0) {
                 $valueDisplay .= $child->nameseparator;
             }
-            // Output current value
-            if (empty($value->value)) {
+            // Output current value. Compare against '' rather than using
+            // empty(), which treats a legitimate "0" as unset.
+            if ((string)$value->value === '') {
                 $valueDisplay .= "{$res_n} has not been set";
+            } else {
+                $valueDisplay .= $value->value;
             }
-            $valueDisplay .= $value->value;
             $i ++;
         }
 
         $this->elementOpen($res_id, _($child->label), $res_sec_class);
         if ($hasSysDefault) {
         ?>
-                    <div class="col-sm-8"><?php echo $valueDisplay; ?></div>
+                    <div class="row">
+                    <div class="col-sm-3"><?php echo $valueDisplay; ?></div>
                     <div class="col-sm-4">
                       <span class="radioset">
                         <input type="checkbox"
@@ -146,6 +149,7 @@ class formcreate
                             ?>
                         </label>
                       </span>
+                    </div>
                     </div>
         <?php
         } else {
@@ -283,12 +287,12 @@ class formcreate
                                     }
 
                                     echo '<span class="'.$opt_class.'"'.$opt_hide.'><button type="button" class="btn '.(($res_vf) ? 'active':"").'" data-color="primary">';
-                                    echo '<i class="state-icon '. (($res_vf)?'glyphicon glyphicon-check"':'glyphicon glyphicon-uncheck'). '"></i> ';
+                                    echo '<i class="state-icon '. (($res_vf)?'glyphicon glyphicon-check':'glyphicon glyphicon-unchecked'). '"></i> ';
                                     echo $value.'</button><input type="checkbox" name="'. $res_n.'" class="hidden" '. (($res_vf)?'checked="checked"':'') .'/></span>';
                                 }
                                 echo '</div>';
                             }
-                            $opt_class = "col-sm-7 ".$res_id."-gr";
+                            $opt_class = $res_id."-gr";
                             if (!empty($child->class)) {
                                 $opt_class .= " ".(string)$child->class;
                             }
@@ -296,8 +300,7 @@ class formcreate
                             $i=1;
                             foreach ($res_value as $addrArr) {
                                 ?>
-                                <div class = "<?php echo $res_id;?> form-group" data-nextid=<?php echo $i;?> id= <?php echo $res_id . $i;?>>
-                                <div class="row"><div class="form-inline">
+                                <div class = "<?php echo $res_id;?> sccp-ied-row form-group form-inline" data-nextid=<?php echo $i;?> id= <?php echo $res_id . $i;?>>
                                 <?php
                                 foreach ($child->xpath('input') as $value) {
                                     $field_id = (string)$value['field'];
@@ -320,13 +323,8 @@ class formcreate
                                     }
                                     echo '> '.(string)$value['nameseparator'].' ';
                                 }
-                                ?>
-                                </div></div>
-                                <?php
+
                                 if (!empty($child->add_pluss)) {
-                                    ?>
-                                    <div class="row"><div>
-                                    <?php
                                     if ($i <= count($res_value)) {
                                         echo '<button type="button" class="btn btn-danger btn-lg input-js-remove" id="'.$res_id.$i.'-btn-del" data-id="'.$res_id.$i.'"><i class="fa fa-minus pull-right"></i></button>';
                                     }
@@ -334,9 +332,6 @@ class formcreate
                                     if ($i == count($res_value)) {
                                         echo '<button type="button" class="btn btn-primary btn-lg input-js-add" id="'.$res_id.$i.'-btn-add" data-id="'.$res_id.'" data-row="'.$i.'" data-for="'.$res_id.'" data-max="'.$max_row.'"data-json="'.bin2hex(json_encode($opt_at)).'"><i class="fa fa-plus pull-right"></i></button>';
                                     }
-                                    ?>
-                                    </div></div>
-                                    <?php
                                 }
                                 echo '</div>';
                                 $i++;
@@ -345,7 +340,7 @@ class formcreate
                                 </div>
                             <?php
                             if (!empty($child->addbutton)) {
-                                echo '<div class = "col-sm-5 '.$res_id.'-gr">';
+                                echo '<div class = "'.$res_id.'-gr">';
                                 echo '<input type="button" id="'.$res_id.'-btn" data-id="'.$res_id.'" data-for="'.$res_id.'" data-max="'.$max_row.'"data-json="'.bin2hex(json_encode($opt_at)).'" class="input-js-add" value="'._($child->addbutton).'" />';
                                 echo '</div>';
                             }
@@ -375,44 +370,71 @@ class formcreate
         if (!empty($child ->class)) {
             $res_sec_class = (string)$child ->class;
         }
+        $res_v = '';
+        // set res_v according to precedence Default here, value here, supplied value
+        if (!empty($child->default)) {
+            $res_v = (string)$child->default;
+        }
+        if (!empty($child->value)) {
+             $res_v = (string)$child->value;
+        }
+        if (!empty($fvalues[$res_n])) {
+            if (($fvalues[$res_n]['data'] != '') ) {
+                $res_v = (string)$fvalues[$res_n]['data'];
+            }
+        }
+        $hasSysDefault = !empty($sccp_defaults[$res_n]['systemdefault']);
+        if ($res_v === '' && $hasSysDefault) {
+            // No site-specific value set, so the chan-sccp default is what is
+            // actually in effect - show that rather than an empty value.
+            $res_v = (string)$sccp_defaults[$res_n]['systemdefault'];
+        }
+        if (($sccp_defaults[$res_n]['systemdefault'] ?? '') != $res_v) {
+            $usingSysDefaults = false;
+        }
+
+        // Renders the actual radio button set. Used directly in the value
+        // column when there's no system default to customise away from, or
+        // inside the hidden edit row when there is one.
+        $renderButtons = function() use ($child, $disabledButtons, $res_id, &$res_v) {
+            $i = 0;
+            $opt_hide = '';
+            if (!empty($child->option_hide)) {
+                $opt_hide = ' class="sccp_button_hide" data-vhide="'.$child->option_hide.'" data-clhide="'.$child->option_hide['class'].'" ';
+            }
+            if (!empty($child->option_show)) {
+                if (empty($opt_hide)) {
+                    $opt_hide =' class="sccp_button_hide" ';
+                }
+                $opt_hide .= ' data-vshow="'.$child->option_show.'" data-clshow="'.$child->option_show['class'].'" ';
+            }
+            foreach ($child->xpath('button') as $value) {
+                $opt_disabled = '';
+                if (in_array($value, $disabledButtons )) {
+                    $opt_disabled = 'disabled';
+                }
+                $val_check = strtolower((string)$value['value']);
+                if ($val_check == strtolower($res_v)) {
+                    $val_check = "checked";
+                } else {
+                    if ($val_check == '' || $val_check == 'none' ) {
+                       if (strtolower($res_v) == 'none' || $res_v == '' )  {
+                          $val_check = "checked";
+                       } else {$val_check = "";}
+                    } else {$val_check = "";}
+                }
+                echo "<input type=radio name= {$res_id} id={$res_id}_{$i} value='{$value['value']}' {$val_check} {$opt_hide} {$opt_disabled}>";
+                echo "<label for= {$res_id}_{$i}>{$value}</label>";
+                $i++;
+            }
+        };
+
+        $this->elementOpen($res_id, _($child->label), $res_sec_class);
+        if ($hasSysDefault) {
         ?>
-        <div class="element-container">
-            <div class="row">
-                <div class="form-group <?php echo $res_sec_class;?>">
-                    <div class="col-md-3 radioset">
-                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label)?></label>
-                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                    </div>
-
-                    <?php
-                    $res_v = '';
-                    // set res_v according to precedence Default here, value here, supplied value
-
-                    if (!empty($child->default)) {
-                        $res_v = (string)$child->default;
-                    }
-                    if (!empty($child->value)) {
-                         $res_v = (string)$child->value;
-                    }
-                    if (!empty($fvalues[$res_n])) {
-                        if (($fvalues[$res_n]['data'] != '') ) {
-                            $res_v = (string)$fvalues[$res_n]['data'];
-                        }
-                    }
-                    if (($sccp_defaults[$res_n]['systemdefault'] ?? '') != $res_v) {
-                        $usingSysDefaults = false;
-                    }
-                    if (!empty($sccp_defaults[$res_n]['systemdefault'])) {
-                    // There is a system default, so add button to customise or reset
-                    // the closing } is after the code to include the button at line ~438
-
-                    //-- Start include of defaults button --
-                    echo "<div class='col-md-3'>";
-                    // Output current value
-                    echo $res_v;
-                    ?>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="row">
+                    <div class="col-sm-3"><?php echo $res_v; ?></div>
+                    <div class="col-sm-4">
                       <span class="radioset">
                         <input type="checkbox"
                             <?php
@@ -435,67 +457,29 @@ class formcreate
                         </label>
                       </span>
                     </div>
-                </div>
-            </div>
-        <!--    <div class="row" id="edit_<?php echo $res_id; ?>" style="display: none"> -->
-            <div class="row" id="edit_<?php echo $res_id; ?>" style="display: none">
-                <div class="form-group <?php echo $res_id; ?>">
-                    <div class="col-md-3">
-                        <i><?php echo "Choose new {$this->buttonHelpLabel} value for {$res_n}"; ?></i>
                     </div>
-                    <!-- Finish include of defaults button -->
-                    <?php
-                    // Close the conditional include of the defaults button opened at line ~385
-                    }
-                    ?>
-
-                    <div class="col-md-9 radioset " data-hide="on">
-
-                      <?php
-                        $i = 0;
-                        $opt_hide = '';
-
-                        if ($usingSysDefaults) {
-                            $res_v = $sccp_defaults[$res_n]['systemdefault'] ?? '';
-                        }
-                        if (!empty($child->option_hide)) {
-                            $opt_hide = ' class="sccp_button_hide" data-vhide="'.$child->option_hide.'" data-clhide="'.$child->option_hide['class'].'" ';
-                        }
-                        if (!empty($child->option_show)) {
-                            if (empty($opt_hide)) {
-                                $opt_hide =' class="sccp_button_hide" ';
-                            }
-                            $opt_hide .= ' data-vshow="'.$child->option_show.'" data-clshow="'.$child->option_show['class'].'" ';
-                        }
-                        foreach ($child->xpath('button') as $value) {
-                            $opt_disabled = '';
-                            if (in_array($value, $disabledButtons )) {
-                                $opt_disabled = 'disabled';
-                            }
-                            $val_check = strtolower((string)$value['value']);
-                            if ($val_check == strtolower($res_v)) {
-                                $val_check = "checked";
-                            } else {
-                                if ($val_check == '' || $val_check == 'none' ) {
-                                   if (strtolower($res_v) == 'none' || $res_v == '' )  {
-                                      $val_check = "checked";
-                                   } else {$val_check = "";}
-                                } else {$val_check = "";}
-                            }
-                            echo "<input type=radio name= {$res_id} id={$res_id}_{$i} value='{$value['value']}' {$val_check} {$opt_hide} {$opt_disabled}>";
-                            echo "<label for= {$res_id}_{$i}>{$value}</label>";
-                            $i++;
-                        }
-                        ?>
-                        </div>
-                    </div>
-                </div>
-            <div class="row"><div class="col-md-12">
-                    <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-            </div></div>
-        </div>
-
         <?php
+        } else {
+            ?>
+                    <div class="radioset"><?php $renderButtons(); ?></div>
+            <?php
+        }
+        $this->elementCloseRow();
+
+        if ($hasSysDefault) {
+            $this->elementEditRowOpen($res_id, "Choose new {$this->buttonHelpLabel} value for {$res_n}", $res_id);
+            if ($usingSysDefaults) {
+                $res_v = $sccp_defaults[$res_n]['systemdefault'] ?? '';
+            }
+            ?>
+                    <div class="radioset" data-hide="on">
+                        <?php $renderButtons(); ?>
+                    </div>
+            <?php
+            $this->elementCloseRow();
+        }
+
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 
     function addElementSL($child, $fvalues, $sccp_defaults,$npref, $installedLangs) {
@@ -598,15 +582,8 @@ class formcreate
                 $child->value = $child->default;
             }
         }
+        $this->elementOpen($res_id, _($child->label));
         ?>
-        <div class="element-container">
-            <div class="row">
-                <div class="form-group">
-                    <div class="col-md-3">
-                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label);?></label>
-                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                    </div>
-                    <div class="col-md-9">
                         <div class = "lnet form-group form-inline" data-nextid=1>
                             <?php
                             echo  '<select name="'.$res_id.'" class="'. $child->class . '" id="' . $res_id . '">';
@@ -632,16 +609,9 @@ class formcreate
                             ?>
                             </select>
                         </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-                </div>
-            </div>
-        </div>
         <?php
+        $this->elementCloseRow();
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 
     function addElementSLNA($child, $fvalues, $sccp_defaults,$npref, $installedLangs) {
@@ -693,19 +663,12 @@ class formcreate
             }
         }
 
-        ?>
-        <div class="element-container">
-            <div class="row">
-                <div class="form-group">
-                    <?php
-                    include($amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/views/getFileModal.html');
-                    ?>
+        include($amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/views/getFileModal.html');
 
-                    <div class="col-md-3">
-                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label);?></label>
-                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                    </div>
-                    <div class="col-md-3">
+        $this->elementOpen($res_id, _($child->label));
+        ?>
+                    <div class="row">
+                    <div class="col-sm-3">
                         <div class = "lnet form-group form-inline" data-nextid=1>
                             <?php
                             echo  '<select name="'.$res_id.'" class="'. $child->class . '" id="' . $res_id . '">';
@@ -722,21 +685,14 @@ class formcreate
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-sm-4">
                       <button type="button" class="btn btn-primary btn-lg" id="<?php echo $requestType;?>" data-toggle="modal" data-target=".get_ext_file_<?php echo $requestType;?>"><i class="fa fa-bolt"></i> <?php echo _("Get $requestType from Provisioner");?>
                       </button>
                     </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-                </div>
-            </div>
-        </div>
-
+                    </div>
         <?php
-
+        $this->elementCloseRow();
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 
     function addElementSD($child, $fvalues, $sccp_defaults,$npref) {
@@ -800,14 +756,9 @@ class formcreate
                 $select_opt = $device_list;
                 break;
         }
+        $this->elementOpen($res_id, _($child->label));
         ?>
-        <div class="element-container">
-           <div class="row"> <div class="form-group">
-                   <div class="col-md-3">
-                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label);?></label>
-                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                    </div>
-                    <div class="col-md-9"><div class = "lnet form-group form-inline" data-nextid=1> <?php
+                    <div class = "lnet form-group form-inline" data-nextid=1> <?php
                             echo  '<select name="'.$res_id.'" class="'. $child->class . '" id="' . $res_id . '"';
                     if (isset($child->options)) {
                         foreach ($child->options->attributes() as $optkey => $optval) {
@@ -849,14 +800,9 @@ class formcreate
                     ?>
                     </select>
                     </div>
-                  </div>
-                </div>
-            </div>
-            <div class="row"><div class="col-md-12">
-                <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-            </div></div>
-        </div>
         <?php
+        $this->elementCloseRow();
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 
     function addElementITED($child, $fvalues, $sccp_defaults, $npref, $napref) {
@@ -1022,25 +968,10 @@ class formcreate
         }
 
         $child->value = \date_default_timezone_get();
-        ?>
-        <div class="element-container">
-           <div class="row">
-              <div class="form-group">
-                  <div class="col-md-3">
-                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label);?></label>
-                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                  </div>
-                  <div class="col-md-9"> <?php
-                      echo  $child->value;
-                  ?>
-                  </div>
-                </div>
-            </div>
-            <div class="row"><div class="col-md-12">
-                <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-            </div></div>
-        </div>
-        <?php
+        $this->elementOpen($res_id, _($child->label));
+        echo $child->value;
+        $this->elementCloseRow();
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 }
 

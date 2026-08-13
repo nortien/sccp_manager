@@ -16,3 +16,22 @@ and open the template in the editor.
     min-height: 10px;
     padding: 1px 1px;
 }
+.sccp-field-label {
+    top: 5px;
+    position: relative;
+}
+/* Bootstrap zeroes margin-bottom on .form-group inside .form-inline, which
+   leaves stacked address/mask rows glued together. */
+/* !important needed: FreePBX core's own compiled CSS has
+   ".element-container .row .form-group { margin-bottom: 0 }" which outranks
+   any class-based selector we can write here (3 classes vs 2). */
+.sccp-ied-row {
+    margin-bottom: 10px !important;
+}
+/* Inside .form-inline Bootstrap sets .form-control to width:auto, so every
+   select ends up sized to its longest option and no two line up. */
+.lnet select.form-control,
+.lnet select {
+    width: 100%;
+    max-width: 300px;
+}
