@@ -57,3 +57,9 @@ and open the template in the editor.
 .sccp-value-flex > .sccp-reset-radio-default {
     flex: 0 0 auto;
 }
+/* addElementIED add/remove-row buttons: same height as the text inputs next
+   to them (Bootstrap's default .btn height already matches .form-control),
+   with a gap so they don't sit flush against the input. */
+.sccp-row-btn {
+    margin-left: 8px;
+}

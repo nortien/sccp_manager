@@ -76,7 +76,7 @@ and open the template in the editor. Base Version before all crash :-)
             <label>SCCP Server Name</label>
             <input>
                 <name>servername</name>
-                <default>Asterisk XML</default>
+                <default></default>
             </input>
             <help>Servername: This is the name of the server; normally it will be Asterisk.</help>
         </item>
