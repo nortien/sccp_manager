@@ -157,7 +157,7 @@ $selectArray = array();
 if (!file_exists("{$this->sccppath['tftp_path']}/masterFilesStructure.xml")) {
     if (!$this->getFileListFromProvisioner($this->sccppath['tftp_path'])) {
         // File does not exist and cannot get from internet.
-        return $result;
+        return;
     };
 }
 $tftpBootXml = simplexml_load_file("{$this->sccppath['tftp_path']}/masterFilesStructure.xml");

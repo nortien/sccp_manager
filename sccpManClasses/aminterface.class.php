@@ -181,12 +181,11 @@ class aminterface
         // The loop calls readBuffer, which calls GetMessages, which calls Process
         // This loop then continues until we have _thisComplete as an object variable
         $this->eventListIsCompleted[$this->_lastActionId] = false;
+        $deadline = microtime(true) + $this->_config['timeout'];
         while (true) {
-            stream_set_timeout($this->_socket, 1);
-            $this->readBuffer();
-            $info = stream_get_meta_data($this->_socket);
-            if ($info['timed_out'] == true) {
-                $this->_errorException("Read waittime: " . ($this->socket_param['timeout']) . " exceeded (timeout).\n");
+            $gotData = $this->readBuffer(1);
+            if (!$gotData && microtime(true) >= $deadline) {
+                $this->_errorException("Read waittime: " . $this->_config['timeout'] . " exceeded (timeout).\n");
                 return false;
             }
             if ($this->eventListIsCompleted[$this->_lastActionId]) {
@@ -218,20 +217,34 @@ class aminterface
         }
     }
 
-    protected function readBuffer ()
+    protected function readBuffer($waitSeconds = 1)
     {
         $read = @fread($this->_socket, 65535);
         // AMI never returns EOF
         if ($read === false ) {
             $this->_errorException('Error reading');
+            return false;
         }
-        // Do not return empty Messages
-        while ($read == "" ) {
+        if ($read === "") {
+            // Nothing buffered yet - wait for the socket to become readable instead
+            // of busy-spinning fread() in a tight loop (which pegs a CPU core and
+            // starves the timeout logic in send() from ever running).
+            $readStreams = array($this->_socket);
+            $write = null;
+            $except = null;
+            $ready = @stream_select($readStreams, $write, $except, $waitSeconds);
+            if (!$ready) {
+                return false;
+            }
             $read = @fread($this->_socket, 65535);
+            if ($read === false || $read === "") {
+                return false;
+            }
         }
         // Add read to the rest of buffer from previous read
         $this->_ProcessingMessage .= $read;
         $this->getMessages();
+        return true;
     }
 
     protected function getMessages()
