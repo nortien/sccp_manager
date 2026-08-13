@@ -136,7 +136,7 @@ class formcreate
             $i ++;
         }
         if ($hasSysDefault) {
-            echo '<button type="button" class="btn btn-default sccp-reset-default" data-for="'.$res_id.'">Use '.$this->buttonDefLabel.' defaults</button>';
+            echo '<button type="button" class="btn btn-warning sccp-reset-default" data-for="'.$res_id.'">'.sprintf(_('Use %s defaults'), $this->buttonDefLabel).'</button>';
             echo '</div>';
         }
         $this->elementCloseRow();
@@ -266,11 +266,11 @@ class formcreate
 
                                 if (!empty($child->add_pluss)) {
                                     if ($i <= count($res_value)) {
-                                        echo '<button type="button" class="btn btn-danger btn-lg input-js-remove" id="'.$res_id.$i.'-btn-del" data-id="'.$res_id.$i.'"><i class="fa fa-minus pull-right"></i></button>';
+                                        echo ' <button type="button" class="btn btn-danger sccp-row-btn input-js-remove" id="'.$res_id.$i.'-btn-del" data-id="'.$res_id.$i.'"><i class="fa fa-minus"></i></button>';
                                     }
                                     // only add plus button to the last row
                                     if ($i == count($res_value)) {
-                                        echo '<button type="button" class="btn btn-primary btn-lg input-js-add" id="'.$res_id.$i.'-btn-add" data-id="'.$res_id.'" data-row="'.$i.'" data-for="'.$res_id.'" data-max="'.$max_row.'"data-json="'.bin2hex(json_encode($opt_at)).'"><i class="fa fa-plus pull-right"></i></button>';
+                                        echo ' <button type="button" class="btn btn-primary sccp-row-btn input-js-add" id="'.$res_id.$i.'-btn-add" data-id="'.$res_id.'" data-row="'.$i.'" data-for="'.$res_id.'" data-max="'.$max_row.'" data-json="'.bin2hex(json_encode($opt_at)).'"><i class="fa fa-plus"></i></button>';
                                     }
                                 }
                                 echo '</div>';
@@ -373,7 +373,7 @@ class formcreate
                     <div class="radioset"><?php $renderButtons(); ?></div>
         <?php
         if ($hasSysDefault) {
-            echo '<button type="button" class="btn btn-default sccp-reset-radio-default" data-for="'.$res_id.'">Use '.$this->buttonDefLabel.' defaults</button>';
+            echo '<button type="button" class="btn btn-warning sccp-reset-radio-default" data-for="'.$res_id.'">'.sprintf(_('Use %s defaults'), $this->buttonDefLabel).'</button>';
             if ($curData === '') {
                 $sysDefault = $sccp_defaults[$res_n]['systemdefault'] ?? '';
                 echo ' <small class="text-muted">('.htmlspecialchars($sysDefault, ENT_QUOTES).')</small>';

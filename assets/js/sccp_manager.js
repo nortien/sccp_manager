@@ -982,11 +982,9 @@ $(document).on('click', ".input-js-add" , function () {
         }
         html += "<input type='text' name='" + pname + "[" + nextid + "][" + key + "]' class " + html_opt + "> " + jdata[key]['nameseparator'] + " ";
     }
-    html += "<button type='button' class='btn btn-danger btn-lg input-js-remove' id='" + pname + nextid + "-btn-remove' data-id='" + pname + nextid + "' data-for='" + pname + "'>";
-    html += "<i class='fa fa-minus pull-right'></i></button>";
-    html += "<button type='button' class='btn btn-primary btn-lg input-js-add' id='" + pname + nextid + "-btn-add' data-id='" + pname + "'";
-    html += " data-row='" + nextid + "' data-for='" + pname + "' data-max='" + pmax + "' data-json='" + $(this).data('json') + "' >";
-    html += "<i class='fa fa-plus pull-right'></i></button>";
+    html += " <button type='button' class='btn btn-danger sccp-row-btn input-js-remove' id='" + pname + nextid + "-btn-remove' data-id='" + pname + nextid + "' data-for='" + pname + "'><i class='fa fa-minus'></i></button>";
+    html += " <button type='button' class='btn btn-primary sccp-row-btn input-js-add' id='" + pname + nextid + "-btn-add' data-id='" + pname + "'";
+    html += " data-row='" + nextid + "' data-for='" + pname + "' data-max='" + pmax + "' data-json='" + $(this).data('json') + "'><i class='fa fa-plus'></i></button>";
     html += "</div>\n";
 
     last.after(html);
