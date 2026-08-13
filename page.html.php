@@ -1,6 +1,6 @@
 <div class="container-fluid">
     <h1><?php echo $display_info?></h1>
-    <div id="sccp-page-banner" class="alert alert-warning" style="display:none"></div>
+    <div id="sccp-page-banner" class="alert alert-danger" style="display:none"></div>
     <div class="row">
         <div class="col-sm-12">
             <div class="fpbx-container">

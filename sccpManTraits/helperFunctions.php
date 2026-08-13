@@ -338,7 +338,10 @@ trait helperfunctions {
 
     public function getFileListFromProvisioner(string $tftpRootPath) {
 
-        $provisionerUrl = "https://github.com/dkgroot/provision_sccp/raw/master/";
+        // Use our own fork via raw.githubusercontent.com directly (not github.com/.../raw/,
+        // which redirects through github.com - blocked in /etc/hosts to stop the module
+        // update-check hang; see PHP8-MIGRATION-NOTES.md). Keeps us independent of upstream.
+        $provisionerUrl = "https://raw.githubusercontent.com/nortien/provision_sccp/master/";
         // Get master tftpboot directory structure
         try {
             file_put_contents("{$tftpRootPath}/masterFilesStructure.xml",file_get_contents("{$provisionerUrl}tools/tftpbootFiles.xml"));

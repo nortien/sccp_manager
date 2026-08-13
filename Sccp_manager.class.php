@@ -374,6 +374,18 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
             include($page['page']);
             $page['content'] = ob_get_contents();
             ob_end_clean();
+            if (!empty($device_warning)) {
+                // views/form.adddevice.php computes this when a device's firmware or
+                // config template is missing. Surface it through the shared page-level
+                // banner slot (page.html.php) instead of rendering it inline, matching
+                // the warning banners on the other tabs.
+                $bannerParts = array();
+                foreach ($device_warning as $value) {
+                    $bannerParts[] = is_array($value) ? implode('; ', $value) : $value;
+                }
+                $page['banner'] = implode('<br>', $bannerParts);
+                unset($device_warning);
+            }
         }
     }
 
