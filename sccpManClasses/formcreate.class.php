@@ -649,7 +649,7 @@ class formcreate
                 if (!empty($installedLangs['languages']['have'])) {
                     $select_opt = $installedLangs['languages']['have'];
                 }
-                $selectArray = $installedLangs['languages']['available'];
+                $selectArray = $installedLangs['languages']['available'] ?? array();
                 $requestType = 'locale';
                 break;
 
@@ -658,7 +658,7 @@ class formcreate
                 if (!empty($installedLangs['countries']['have'])) {
                     $select_opt = $installedLangs['countries']['have'];
                 }
-                $selectArray = $installedLangs['countries']['available'];
+                $selectArray = $installedLangs['countries']['available'] ?? array();
                 $requestType = 'country';
               break;
         }

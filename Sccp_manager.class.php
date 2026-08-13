@@ -567,7 +567,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $val = ($this->sccpvalues['allow']['data'] ?? '');
         if (empty($val)) {
             // No site defaults so return chan-sccp defaults
-            $val = $this->sccpvalues['allow']['systemdefault'];
+            $val = $this->sccpvalues['allow']['systemdefault'] ?? '';
         }
         $siteCodecs = array_fill_keys(explode(';',$val), 1);
         switch ($type) {

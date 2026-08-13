@@ -123,7 +123,7 @@ trait ajaxHelper {
                     }
                 };
 
-                if ($this->sccpvalues['siptftp']['data'] == 'on') { // Check SIP Support Enabled
+                if (($this->sccpvalues['siptftp']['data'] ?? '') == 'on') { // Check SIP Support Enabled
                     $this->createSccpXmlSoftkey(); // Create Softkey Sets for SIP
                 }
                 // !TODO!: -TODO-: Do these returned message strings work with i18n ?
@@ -412,13 +412,13 @@ trait ajaxHelper {
         // all codecs are currently treated as audiocodecs. To treat videocodecs separately name in video codec section of
         // server.codec needs to be changed from audiocodecs to videocodecs.
         if (!isset($request['audiocodecs'])) {
-            $save_settings['allow'] = $this->sccpvalues['allow'];
-            $save_settings['allow']['data'] = $this->sccpvalues['allow']['systemdefault'];
+            $save_settings['allow'] = $this->sccpvalues['allow'] ?? array();
+            $save_settings['allow']['data'] = $this->sccpvalues['allow']['systemdefault'] ?? '';
         } else {
             foreach ($request['audiocodecs'] as $keycodeс => $dumVal) {
                 $save_codec[] = $keycodeс;
             }
-            $save_settings['allow'] = $this->sccpvalues['allow'];
+            $save_settings['allow'] = $this->sccpvalues['allow'] ?? array();
             $save_settings['allow']['data'] = implode(";", $save_codec);
         }
         unset($request['audiocodecs']);
@@ -445,7 +445,7 @@ trait ajaxHelper {
 
         foreach (['deny','permit'] as $keyVal) {
             if (!isset($request[$hdr_arprefix.$keyVal])) {
-                $tmpArr = $this->convertCsvToArray($this->sccpvalues[$keyVal]['systemdefault']);
+                $tmpArr = $this->convertCsvToArray($this->sccpvalues[$keyVal]['systemdefault'] ?? '');
                 if (isset($tmpArr[0]['internal'])) {
                     $request[$hdr_arprefix.$keyVal][0] = $tmpArr[0];
                 } else {
@@ -462,10 +462,10 @@ trait ajaxHelper {
             if ($count_mods) {
                 // Only arrays : network lists or ip lists.
                 $save_settings[$key]['keyword'] = $key;
-                $save_settings[$key]['type'] = $this->sccpvalues[$key]['type'];
-                $save_settings[$key]['seq'] = $this->sccpvalues[$key]['seq'];
+                $save_settings[$key]['type'] = $this->sccpvalues[$key]['type'] ?? '';
+                $save_settings[$key]['seq'] = $this->sccpvalues[$key]['seq'] ?? '';
                 $save_settings[$key]['data'] = $this->convertArrayToCsv($value);
-                $save_settings[$key]['systemdefault'] = $this->sccpvalues[$key]['systemdefault'];
+                $save_settings[$key]['systemdefault'] = $this->sccpvalues[$key]['systemdefault'] ?? '';
                 continue;
             }
             // Now handle any normal data - arrays will not match as already handled.
@@ -507,7 +507,7 @@ trait ajaxHelper {
         // now add the site defaults from sccpsettings to sccpdevice for permit and deny, so that these will override
         foreach (['deny', 'permit'] as $fieldId) {
             $output = array();
-            foreach ($this->convertCsvToArray($this->sccpvalues[$fieldId]['data']) as $netValue) {
+            foreach ($this->convertCsvToArray($this->sccpvalues[$fieldId]['data'] ?? '') as $netValue) {
                 if (isset($netValue['internal'])) {
                     $output[] = 'internal';
                     continue;
