@@ -450,30 +450,24 @@ $(document).ready(function () {
 
 
     $('.button-checkbox').on('click', '', function (e) {
-        settings = {
-            true: {
-                icon: 'glyphicon glyphicon-unchecked'
-            },
-            false: {
-                icon: 'glyphicon glyphicon-check'
-            }
-        };
         var button_1 = $('button', this);
         var isChecked = $('input', this).is(':checked');
-
-        if (button_1.find('.state-icon').length == 0) {
-            button_1.prepend('<i class="state-icon ' + settings[isChecked].icon + '"></i> ');
-        } else {
-            button_1.find('.state-icon')
-                    .removeClass()
-                    .addClass('state-icon ' + settings[isChecked].icon);
+        var icon = button_1.find('.state-icon');
+        if (icon.length == 0) {
+            button_1.prepend('<i class="state-icon"></i> ');
+            icon = button_1.find('.state-icon');
         }
+
         if (isChecked) {
+            // currently active - deactivating: icon disappears entirely
+            icon.removeClass('fa fa-check-square-o');
             // must clear the property, not the attribute - the checked state
             // is set via prop() below, and removeAttr() does not undo that
             $('input', this).prop('checked', false);
             button_1.removeClass('active');
         } else {
+            // currently inactive - activating: show the checkmark icon
+            icon.addClass('fa fa-check-square-o');
             $('input', this).prop('checked', true);
             button_1.addClass('active');
         }
@@ -916,6 +910,26 @@ function load_oncliсk(e, data)
         }
     }
 }
+
+// Restore-default button for IE fields with a chan-sccp system default
+// (see formcreate.class.php::addElementIE). Clearing the input back to empty
+// means the field submits '' - createDefaultSccpConfig() then omits the
+// directive entirely, so chan-sccp's own built-in default applies again.
+$(document).on('click', ".sccp-reset-default", function () {
+    var id = $(this).data('for');
+    // Multiple inputs can share the same id (nameseparator fields), so use an
+    // attribute selector rather than the jQuery id selector, which only matches
+    // the first element with a given id.
+    $('input[id="' + id + '"]').val('').first().focus();
+});
+
+// Same idea for addElementIS radio groups: unchecking every radio in the
+// group means nothing is submitted for that field name, so chan-sccp's own
+// default keeps applying instead of freezing in whatever was last selected.
+$(document).on('click', ".sccp-reset-radio-default", function () {
+    var name = $(this).data('for');
+    $('input[name="' + name + '"]').prop('checked', false);
+});
 
 // call from here not document.ready as have dynamic content
 $(document).on('click', ".input-js-remove" , function () {

@@ -35,3 +35,25 @@ and open the template in the editor.
     width: 100%;
     max-width: 300px;
 }
+/* addElementIE/addElementIS: input or radio-button set, plus a "Use ...
+   defaults" reset button, on one line when there's room. Fields with a wide
+   button set (e.g. SCCP DEBUG's 6 buttons) wrap the reset button onto its own
+   line instead of colliding with it, rather than a fixed row/col split that
+   only works for narrow content. */
+.sccp-value-flex {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 15px;
+    row-gap: 6px;
+}
+.sccp-value-flex > input.form-control {
+    flex: 0 1 260px;
+}
+.sccp-value-flex > .radioset {
+    flex: 0 1 auto;
+}
+.sccp-value-flex > .sccp-reset-default,
+.sccp-value-flex > .sccp-reset-radio-default {
+    flex: 0 0 auto;
+}

@@ -58,42 +58,24 @@ if (!empty($_REQUEST['id'])) {
     }
 }
 
-if (!empty($def_val['type'])) {
+if (!empty($def_val['type']['data'])) {
     $tmp_raw = $this->getSccpModelInformation('byid', true, 'all', array('model'=>$def_val['type']['data']));
     if (!empty($tmp_raw[0])) {
         $tmp_raw = $tmp_raw[0];
     }
     if (!empty($tmp_raw['validate'])) {
+        // validate is "yes"/"no;"" per field, or "-" when the field isn't defined for
+        // this model at all (e.g. no loadimage registered) - only "no" is a real problem.
         $tmpar =  explode(";", $tmp_raw['validate']);
-        if ($tmpar[0] != 'yes') {
+        if ($tmpar[0] === 'no') {
             $device_warning['Image'] = array('Device firmware not found : '.$tmp_raw['loadimage']);
         }
-        if ($tmpar[1] != 'yes') {
+        if ($tmpar[1] === 'no') {
             $device_warning['Template'] = array('Missing device configuration template : '. $tmp_raw['nametemplate']);
         }
-        if (!empty($device_warning)) {
-            ?>
-            <div class="container-fluid">
-                <div class="alert alert-danger">
-                    <b><?php echo _("Warning in the SCCP Device"); ?></b>
-                    <div class="table-responsive">
-                        <pre>
-                            <?php
-                            foreach ($device_warning as $key => $value) {
-                                echo '<h3>'.$key.'</h3>';
-                                if (is_array($value)) {
-                                    echo '<li>'._(implode('</li><li>', $value)).'</li>';
-                                } else {
-                                    echo '<li>'. _($value).'</li>';
-                                }
-                            }
-                            ?>
-                        </pre>
-                    </div>
-                </div>
-            </div>
-        <br>
-<?php   }
+        // $device_warning (if set) is picked up by Sccp_manager::processPageData() and
+        // rendered in the shared page-level banner slot (page.html.php, above the tab
+        // strip), matching the warning banners on the other tabs - not rendered here.
     }
 } ?>
 

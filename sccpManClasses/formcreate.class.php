@@ -70,7 +70,6 @@ class formcreate
             $this->buttonDefLabel = 'site';
             $this->buttonHelpLabel = 'device';
         }
-        $usingSysDefaults = true;
         // if there are multiple inputs, take the first for res_id and shortId
         $shortId = (string)$child->input[0]->name;
         $res_id = $npref.$shortId;
@@ -91,18 +90,23 @@ class formcreate
 
         $hasSysDefault = !empty($sccp_defaults[$shortId]['systemdefault']);
 
-        // Can have multiple inputs for a field which are displayed with a separator
+        $this->elementOpen($res_id, _($child->label), $res_sec_class);
+
+        // Always a plain, directly-editable input - no separate "Customise"
+        // click-to-reveal step. When chan-sccp has a system default for this
+        // field, it is shown as a placeholder (not a real value): leaving the
+        // input untouched submits '' so chan-sccp's own default keeps applying
+        // (createDefaultSccpConfig() only writes the directive when data is
+        // non-empty); typing a value - even one matching the default - explicitly
+        // overrides it. Can have multiple inputs for a field, shown with a separator.
+        if ($hasSysDefault) {
+            echo '<div class="sccp-value-flex">';
+        }
         $i = 0;
-        $valueDisplay = '';
         foreach ($child->xpath('input') as $value) {
             $res_n =  (string)$value->name;
             $res_name = $npref . $res_n;
-            $value->value = $fvalues[$res_n]['data'] ?? '';
-            if (!empty($fvalues[$res_n]['data'])) {
-                if (($sccp_defaults[$res_n]['systemdefault'] ?? '') != ($fvalues[$res_n]['data'] ?? '')) {
-                    $usingSysDefaults = false;
-                }
-            }
+            $curData = $fvalues[$res_n]['data'] ?? '';
             if (empty($value->type)) {
                 $value->type = 'text';
             }
@@ -110,96 +114,32 @@ class formcreate
                 $value->class = 'form-control';
             }
             if ($i > 0) {
-                $valueDisplay .= $child->nameseparator;
+                echo $child->nameseparator;
             }
-            // Output current value. Compare against '' rather than using
-            // empty(), which treats a legitimate "0" as unset.
-            if ((string)$value->value === '') {
-                $valueDisplay .= "{$res_n} has not been set";
-            } else {
-                $valueDisplay .= $value->value;
+            echo '<input type="' . $value->type . '" class="' . $value->class . '" id="' . $res_id . '" name="' . $res_name . '" value="' . htmlspecialchars($curData, ENT_QUOTES) . '"';
+            if ($hasSysDefault) {
+                $sysDefault = $sccp_defaults[$res_n]['systemdefault'] ?? '';
+                echo ' placeholder="' . htmlspecialchars($sysDefault, ENT_QUOTES) . '"';
             }
+            if (isset($value->options)) {
+                foreach ($value->options ->attributes() as $optkey => $optval) {
+                    echo  ' '.$optkey.'="'.$optval.'"';
+                }
+            }
+            if (!empty($value->min)) {
+                echo  ' min="'.$value->min.'"';
+            }
+            if (!empty($value->max)) {
+                echo  ' max="'.$value->max.'"';
+            }
+            echo  '>';
             $i ++;
         }
-
-        $this->elementOpen($res_id, _($child->label), $res_sec_class);
         if ($hasSysDefault) {
-        ?>
-                    <div class="row">
-                    <div class="col-sm-3"><?php echo $valueDisplay; ?></div>
-                    <div class="col-sm-4">
-                      <span class="radioset">
-                        <input type="checkbox"
-                            <?php
-                            echo " data-for={$res_id} data-type=text id=usedefault_{$res_id} ";
-                            if ($usingSysDefaults) {
-                                // Setting a site specific value
-                                echo "class=sccp-edit :checked ";
-                            } else {
-                                // reverting to chan-sccp default values
-                                $res_sysdefault = $sccp_defaults[$res_n]['systemdefault'] ?? '';
-                                echo "class=sccp-restore data-default={$res_sysdefault} ";
-                            }
-                            ?>
-                        >
-                        <label
-                            <?php
-                            echo "for=usedefault_{$res_id} >";
-                            echo ($usingSysDefaults) ? "Customise" : "Use {$this->buttonDefLabel} defaults";
-                            ?>
-                        </label>
-                      </span>
-                    </div>
-                    </div>
-        <?php
-        } else {
-            echo $valueDisplay;
+            echo '<button type="button" class="btn btn-default sccp-reset-default" data-for="'.$res_id.'">Use '.$this->buttonDefLabel.' defaults</button>';
+            echo '</div>';
         }
         $this->elementCloseRow();
-
-        if ($hasSysDefault) {
-            $this->elementEditRowOpen($res_id, "Enter new {$this->buttonHelpLabel} value for {$shortId}", $res_sec_class);
-            $i=0;
-            // Can have multiple inputs for a field displayed with a separator
-            foreach ($child->xpath('input') as $value) {
-                    $res_n =  (string)$value->name;
-                    $res_name = $npref . $res_n;
-                if (empty($res_id)) {
-                    $res_id = $res_name;
-                }
-                if (!empty($fvalues[$res_n]['data'])) {
-                    $value->value = $fvalues[$res_n]['data'];
-                }
-                // Default to chan-sccp defaults, not xml defaults if reverting to defaults or empty
-                if ((empty($value->value)) || ($usingSysDefaults)) {
-                    $value->value = $sccp_defaults[$res_n]['systemdefault'] ?? '';
-                }
-                if (empty($value->type)) {
-                    $value->type = 'text';
-                }
-                if (empty($value->class)) {
-                    $value->class = 'form-control';
-                }
-                if ($i > 0) {
-                    echo $child->nameseparator;
-                }
-                echo '<input type="' . $value->type . '" class="' . $value->class . '" id="' . $res_id . '" name="' . $res_name . '" value="' . $value->value.'"';
-                if (isset($value->options)) {
-                    foreach ($value->options ->attributes() as $optkey => $optval) {
-                        echo  ' '.$optkey.'="'.$optval.'"';
-                    }
-                }
-                if (!empty($value->min)) {
-                    echo  ' min="'.$value->min.'"';
-                }
-                if (!empty($value->max)) {
-                    echo  ' max="'.$value->max.'"';
-                }
-                echo  '>';
-                $i ++;
-            }
-            $this->elementCloseRow();
-        }
 
         $this->elementHelpAndClose($res_id, _($child->help));
     }
@@ -287,7 +227,7 @@ class formcreate
                                     }
 
                                     echo '<span class="'.$opt_class.'"'.$opt_hide.'><button type="button" class="btn '.(($res_vf) ? 'active':"").'" data-color="primary">';
-                                    echo '<i class="state-icon '. (($res_vf)?'glyphicon glyphicon-check':'glyphicon glyphicon-unchecked'). '"></i> ';
+                                    echo '<i class="state-icon'. (($res_vf)?' fa fa-check-square-o':''). '"></i> ';
                                     echo $value.'</button><input type="checkbox" name="'. $res_n.'" class="hidden" '. (($res_vf)?'checked="checked"':'') .'/></span>';
                                 }
                                 echo '</div>';
@@ -358,7 +298,6 @@ class formcreate
         $res_n =  (string)$child->name;
         $res_id = $npref.$res_n;
         $res_ext = str_replace($npref,'',$res_n);
-        $usingSysDefaults = true;
         if (!empty($metainfo[$res_n])) {
             if ($child->meta_help == '1' || $child->help == 'Help!') {
                 $child->help = $metaInfo[$res_n];
@@ -370,32 +309,29 @@ class formcreate
         if (!empty($child ->class)) {
             $res_sec_class = (string)$child ->class;
         }
-        $res_v = '';
+        $hasSysDefault = !empty($sccp_defaults[$res_n]['systemdefault']);
+        $curData = $fvalues[$res_n]['data'] ?? '';
+
         // set res_v according to precedence Default here, value here, supplied value
+        $res_v = '';
         if (!empty($child->default)) {
             $res_v = (string)$child->default;
         }
         if (!empty($child->value)) {
              $res_v = (string)$child->value;
         }
-        if (!empty($fvalues[$res_n])) {
-            if (($fvalues[$res_n]['data'] != '') ) {
-                $res_v = (string)$fvalues[$res_n]['data'];
-            }
-        }
-        $hasSysDefault = !empty($sccp_defaults[$res_n]['systemdefault']);
-        if ($res_v === '' && $hasSysDefault) {
-            // No site-specific value set, so the chan-sccp default is what is
-            // actually in effect - show that rather than an empty value.
-            $res_v = (string)$sccp_defaults[$res_n]['systemdefault'];
-        }
-        if (($sccp_defaults[$res_n]['systemdefault'] ?? '') != $res_v) {
-            $usingSysDefaults = false;
+        if ($curData !== '') {
+            $res_v = $curData;
+        } elseif ($hasSysDefault) {
+            // No site-specific value set and chan-sccp has its own default for
+            // this field - leave nothing pre-selected (see $renderButtons) rather
+            // than defaulting res_v to the XML default/value above, so an
+            // untouched radio group submits nothing and chan-sccp's own default
+            // keeps applying (matches addElementIE's placeholder-input approach).
+            $res_v = '';
         }
 
-        // Renders the actual radio button set. Used directly in the value
-        // column when there's no system default to customise away from, or
-        // inside the hidden edit row when there is one.
+        // Renders the actual radio button set.
         $renderButtons = function() use ($child, $disabledButtons, $res_id, &$res_v) {
             $i = 0;
             $opt_hide = '';
@@ -431,53 +367,20 @@ class formcreate
 
         $this->elementOpen($res_id, _($child->label), $res_sec_class);
         if ($hasSysDefault) {
+            echo '<div class="sccp-value-flex">';
+        }
         ?>
-                    <div class="row">
-                    <div class="col-sm-3"><?php echo $res_v; ?></div>
-                    <div class="col-sm-4">
-                      <span class="radioset">
-                        <input type="checkbox"
-                            <?php
-                            echo " data-for={$res_id} data-type=radio id=usedefault_{$res_id} ";
-                            if ($usingSysDefaults) {
-                                // Setting a site specific value
-                                echo " class=sccp-edit :checked ";
-                            } else {
-                                // reverting to chan-sccp default values
-                                $res_sysdefault = $sccp_defaults[$res_n]['systemdefault'] ?? '';
-                                echo " data-default={$res_sysdefault} class=sccp-restore ";
-                            }
-                            ?>
-                        >
-                        <label
-                            <?php
-                            echo "for=usedefault_{$res_id} >";
-                            echo ($usingSysDefaults) ? "Customise" : "Use {$this->buttonDefLabel} defaults";
-                            ?>
-                        </label>
-                      </span>
-                    </div>
-                    </div>
-        <?php
-        } else {
-            ?>
                     <div class="radioset"><?php $renderButtons(); ?></div>
-            <?php
+        <?php
+        if ($hasSysDefault) {
+            echo '<button type="button" class="btn btn-default sccp-reset-radio-default" data-for="'.$res_id.'">Use '.$this->buttonDefLabel.' defaults</button>';
+            if ($curData === '') {
+                $sysDefault = $sccp_defaults[$res_n]['systemdefault'] ?? '';
+                echo ' <small class="text-muted">('.htmlspecialchars($sysDefault, ENT_QUOTES).')</small>';
+            }
+            echo '</div>';
         }
         $this->elementCloseRow();
-
-        if ($hasSysDefault) {
-            $this->elementEditRowOpen($res_id, "Choose new {$this->buttonHelpLabel} value for {$res_n}", $res_id);
-            if ($usingSysDefaults) {
-                $res_v = $sccp_defaults[$res_n]['systemdefault'] ?? '';
-            }
-            ?>
-                    <div class="radioset" data-hide="on">
-                        <?php $renderButtons(); ?>
-                    </div>
-            <?php
-            $this->elementCloseRow();
-        }
 
         $this->elementHelpAndClose($res_id, _($child->help));
     }

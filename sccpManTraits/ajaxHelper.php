@@ -555,7 +555,10 @@ trait ajaxHelper {
     public function getFilesFromProvisioner($request) {
         $filesToGet = array();
         $totalFiles = 0;
-        $provisionerUrl = "https://github.com/dkgroot/provision_sccp/raw/master/";
+        // Use our own fork via raw.githubusercontent.com directly (not github.com/.../raw/,
+        // which redirects through github.com - blocked in /etc/hosts to stop the module
+        // update-check hang; see PHP8-MIGRATION-NOTES.md). Keeps us independent of upstream.
+        $provisionerUrl = "https://raw.githubusercontent.com/nortien/provision_sccp/master/";
         // TODO: Maybe should always fetch to ensure have latest, backing up old version
         if (!file_exists("{$this->sccppath['tftp_path']}/masterFilesStructure.xml")) {
             if (!$this->getFileListFromProvisioner($this->sccppath['tftp_path'])) {
@@ -574,7 +577,23 @@ trait ajaxHelper {
                 $filesToGet['firmware'] = (array)$result[0]->FileName;
                 $totalFiles += count($filesToGet['firmware']);
                 $srcDir['firmware'] = $provisionerUrl . (string)$result[0]->DirectoryPath;
-                $dstDir['firmware'] = "{$this->sccppath['tftp_firmware_path']}/{$device}";
+                // Must match getSccpModelInformation()'s validate() lookup: in the default
+                // "off" mode, firmware is expected flat in tftp_firmware_path (per the
+                // tftp_rewrite help text - "All data is in the directory TFTP Server Path").
+                // Downloading into a per-device subfolder there would never be found, so the
+                // model table keeps showing "File not found" even after a successful download.
+                $search_mode = ($this->sccpvalues['tftp_rewrite']['data'] ?? '');
+                switch ($search_mode) {
+                    case 'pro':
+                    case 'on':
+                    case 'internal':
+                        $dstDir['firmware'] = "{$this->sccppath['tftp_firmware_path']}/{$device}";
+                        break;
+                    case 'off':
+                    default:
+                        $dstDir['firmware'] = $this->sccppath['tftp_firmware_path'];
+                        break;
+                }
 
                 $msg = "Firmware for {$device} has been successfully downloaded";
                 break;
@@ -633,7 +652,7 @@ trait ajaxHelper {
                       file_get_contents($srcDir. $srcFile));
                 } catch (\Exception $e) {
                     return array('status' => false,
-                        'message' => "{$countriesSrcDir}{$srcFile} cannot be found. Check your internet connection, and that this path exists",
+                        'message' => "{$srcDir}{$srcFile} cannot be found. Check your internet connection, and that this path exists",
                         'reload' => false);
                 }
                 $filesRetrieved ++;
