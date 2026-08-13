@@ -940,7 +940,9 @@ $(document).on('click', ".input-js-add" , function () {
     var last = $("." + pcls).last(),
         ourid = last.data('nextid'),
         nextid = ourid + 1,
-        html = "<div class = '" + pcls + "' id ='" + pname + nextid + "' form-group form-inline' data-nextid=" + nextid + ">";
+        html = "<div class='" + pcls + " form-group' id='" + pname + nextid + "' data-nextid='" + nextid + "'>";
+    // input row, matching formcreate.class.php's addElementIED markup
+    html += "<div class='row'><div class='form-inline'>";
     for (var key in jdata) {
         html_opt = '';
         for (var skey in jdata[key]['options']) {
@@ -948,13 +950,15 @@ $(document).on('click', ".input-js-add" , function () {
         }
         html += "<input type='text' name='" + pname + "[" + nextid + "][" + key + "]' class " + html_opt + "> " + jdata[key]['nameseparator'] + " ";
     }
-    // add remove button
+    html += "</div></div>";
+    // add/remove-row buttons on their own row below the inputs
+    html += "<div class='row'><div>";
     html += "<button type='button' class='btn btn-danger btn-lg input-js-remove' id='" + pname + nextid + "-btn-remove' data-id='" + pname + nextid + "' data-for='" + pname + "'>";
     html += "<i class='fa fa-minus pull-right'></i></button>";
-    // add plus button
     html += "<button type='button' class='btn btn-primary btn-lg input-js-add' id='" + pname + nextid + "-btn-add' data-id='" + pname + "'";
     html += " data-row='" + nextid + "' data-for='" + pname + "' data-max='" + pmax + "' data-json='" + $(this).data('json') + "' >";
     html += "<i class='fa fa-plus pull-right'></i></button>";
+    html += "</div></div>";
     html += "</div>\n";
 
     last.after(html);
