@@ -1,11 +1,11 @@
-# SCCP Manager — версия для FreePBX 16 / Asterisk 20
+# SCCP Manager — версия для FreePBX 16/17 · Asterisk 20/23
 
 **Рабочий, пропатченный форк, который реально запускается на современном Asterisk.**
 
 [![License: GPL](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/nortien/sccp_manager/blob/work/COPYING)
 [![chan-sccp](https://img.shields.io/badge/driver-chan--sccp%204.4-informational.svg)](https://github.com/nortien/chan-sccp)
-[![Asterisk](https://img.shields.io/badge/Asterisk-20.x-orange.svg)]()
-[![FreePBX](https://img.shields.io/badge/FreePBX-16-orange.svg)]()
+[![Asterisk](https://img.shields.io/badge/Asterisk-20.x%20%7C%2023.x-orange.svg)]()
+[![FreePBX](https://img.shields.io/badge/FreePBX-16%20%7C%2017-orange.svg)]()
 [![Documentation](https://img.shields.io/badge/docs-wiki-blue.svg)](https://github.com/nortien/sccp_manager/wiki)
 
 Телефоны Cisco по протоколу SCCP (Skinny), подключённые к FreePBX без лицензированного CallManager. Это веб-часть настройки — линии, speed dial, кнопки BLF, модели телефонов, софткеи — всё управляется прямо из FreePBX, а не правкой конфигов руками.
@@ -14,9 +14,9 @@
 
 ## Коротко о сути
 
-Любая публичная сборка этого инструмента — и драйвер, и GUI — останавливается на Asterisk 18. Под Asterisk 20 её никто не обновлял. Мы обновили: пропатчили определение версии в драйвере, добавили корректную ветку кода под Asterisk 20 и перепроверили всю установку от начала до конца на реальном сервере FreePBX 16. Всё, что написано здесь, отражает именно это — а не документацию оригинального проекта с механической заменой ссылок.
+Любая публичная сборка этого инструмента — и драйвер, и GUI — останавливается на Asterisk 18. Под Asterisk 20 её никто не обновлял. Мы обновили: пропатчили определение версии в драйвере, добавили корректную ветку кода под Asterisk 20 и перепроверили всю установку от начала до конца на реальном сервере FreePBX 16. Потом пошли дальше и сделали то же самое для **FreePBX 17 / Asterisk 23 / PHP 8.2** — новая мажорная версия на другом дистрибутиве (Debian 12) и пакетном менеджере (apt), которая потребовала и реального фикса сборки (Asterisk 21+ убрал пару полей канала, которые использовал драйвер), и полного прохода по совместимости GUI-модуля с PHP 8.2. Оба окружения работают из одной ветки `work` в обоих репозиториях. Всё, что написано здесь, отражает именно это — а не документацию оригинального проекта с механической заменой ссылок.
 
-Полные заметки по сборке, каждая ошибка, с которой мы столкнулись, и точное решение каждой — в **[Wiki](https://github.com/nortien/sccp_manager/wiki)**. Этот README ориентирует вас в проекте; Wiki доводит до рабочей установки.
+Полные заметки по сборке, каждая ошибка, с которой мы столкнулись, и точное решение каждой — в **[Wiki](https://github.com/nortien/sccp_manager/wiki)**. Этот README ориентирует вас в проекте; Wiki доводит до рабочей установки. Детали по Asterisk 23 / PHP 8.2 — в **[Wiki → FreePBX 17 / Asterisk 23 Notes](https://github.com/nortien/sccp_manager/wiki/FreePBX-17-Notes)**.
 
 ## Что в этом репозитории, а что нет
 
@@ -25,7 +25,7 @@
 | | Этот репозиторий | Сопутствующий репозиторий |
 |---|---|---|
 | Что это | Модуль GUI FreePBX (PHP) | Драйвер канала Asterisk (C) |
-| Версия | `15.0.1` | `4.4` |
+| Версия | `15.1.1` | `4.4` |
 | Способ установки | `fwconsole ma install` | `./configure && make install` |
 
 ## Зачем вообще понадобился этот форк?
@@ -36,8 +36,16 @@
 
 ## Требования
 
-- FreePBX 16, Asterisk 20.x (собрано и протестировано на 20.17.0)
-- PHP 7.4.x — это потолок самого FreePBX 16, не наш; PHP 8 ломает сам FreePBX 16
+Два поддерживаемых окружения, оба из одной ветки `work` в обоих репозиториях:
+
+| | FreePBX 16 | FreePBX 17 |
+|---|---|---|
+| Asterisk | 20.x (протестировано на 20.17.0) | 23.x (протестировано на 23.4.1) |
+| PHP | 7.4.x — потолок самого FreePBX 16, не наш | 8.2.x (протестировано на 8.2.33) |
+| Дистрибутив | CentOS/Sangoma sng7 | Debian 12 / Sangoma sng12 |
+| Пакетный менеджер | yum/dnf | apt |
+
+В любом случае также нужны:
 - Собранный и загруженный [nortien/chan-sccp](https://github.com/nortien/chan-sccp)
 - Доступный TFTP-сервер для провижининга прошивок/конфигов телефонов
 
@@ -82,6 +90,8 @@ systemctl enable --now tftp.socket
 fwconsole ma install sccp_manager
 ```
 
+Путь выше — для yum/CentOS-варианта FreePBX 16. На **FreePBX 17 / Debian 12** общая схема та же, но отличается пакетный менеджер и пара флагов (apt вместо yum, `--with-asterisk-version=23.0` вместо `20.0`) — точные отличия и заметки по совместимости с PHP 8.2 см. в **[Wiki → FreePBX 17 / Asterisk 23 Notes](https://github.com/nortien/sccp_manager/wiki/FreePBX-17-Notes)**.
+
 Если `fwconsole ma install` всё же останавливается с ошибкой `chan-sccp not found` — почти всегда это значит, что исключение `chan_skinny.so` выше не сработало, см. страницу Troubleshooting в Wiki.
 
 **[Страница Building and Installation Guide в Wiki](https://github.com/nortien/sccp_manager/wiki/Building-and-Installation-Guide)** содержит тот же путь с пояснениями к каждому шагу, плюс пару граблей, которые не стоит впихивать сюда — прежде всего, особенность уровня доверия GPG-ключа, если захотите самостоятельно подписать модуль, чтобы убрать предупреждение FreePBX "Unsigned Module".
@@ -108,6 +118,10 @@ make -j2
 make install
 fwconsole restart
 ```
+
+## Переверстка GUI в процессе
+
+Слой рендеринга форм (`sccpManClasses/formcreate.class.php`) сейчас переписывается в ветке [`ui-rewrite`](https://github.com/nortien/sccp_manager/tree/ui-rewrite) ([PR #1](https://github.com/nortien/sccp_manager/pull/1)), чтобы единообразно соответствовать нативной вёрстке FreePBX, попутно исправляя реальные баги, которые маскировала старая вёрстка (переключатель "Customise/restore", который незаметно замораживал дефолты chan-sccp в БД при любом сохранении формы; скачивание прошивок не туда из-за режима `tftp_rewrite`; иконки, которые вообще не отображались под темой Bootstrap 4 в FreePBX 17), и в целом убирая визуальные несостыковки, накопившиеся за годы. Пока не смёржено в `work` — актуальный статус в PR.
 
 ## Откуда это взялось
 
