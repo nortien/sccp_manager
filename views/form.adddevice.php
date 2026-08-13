@@ -73,24 +73,22 @@ if (!empty($def_val['type'])) {
         }
         if (!empty($device_warning)) {
             ?>
-            <div class="fpbx-container container-fluid">
-                <div class="row">
-                    <div class="container">
-                        <h2 style="border:2px solid Tomato;color:Tomato;" >Warning in the SCCP Device</h2>
-                        <div class="table-responsive">
-                            <pre>
-                                <?php
-                                foreach ($device_warning as $key => $value) {
-                                    echo '<h3>'.$key.'</h3>';
-                                    if (is_array($value)) {
-                                        echo '<li>'._(implode('</li><li>', $value)).'</li>';
-                                    } else {
-                                        echo '<li>'. _($value).'</li>';
-                                    }
+            <div class="container-fluid">
+                <div class="alert alert-danger">
+                    <b><?php echo _("Warning in the SCCP Device"); ?></b>
+                    <div class="table-responsive">
+                        <pre>
+                            <?php
+                            foreach ($device_warning as $key => $value) {
+                                echo '<h3>'.$key.'</h3>';
+                                if (is_array($value)) {
+                                    echo '<li>'._(implode('</li><li>', $value)).'</li>';
+                                } else {
+                                    echo '<li>'. _($value).'</li>';
                                 }
-                                ?>
-                            </pre>
-                        </div>
+                            }
+                            ?>
+                        </pre>
                     </div>
                 </div>
             </div>

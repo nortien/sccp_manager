@@ -160,7 +160,7 @@ if (!empty($this->info_warning)) {
     <div class="fpbx-container container-fluid">
         <div class="row">
             <div class="container">
-                <h2 style="border:2px solid Tomato;color:Tomato;" >Sccp Manager Warning</h2>
+                <h2 style="border:2px solid Tomato;color:Tomato;text-align:center;" >Sccp Manager Warning</h2>
                 <div class="table-responsive">
                     <br> There are Warning in the SCCP Module:<br><pre>
                         <?php
@@ -175,7 +175,7 @@ if (!empty($this->info_warning)) {
                         }
                         ?>
                     </pre>
-                    <br><h4 style="border:2px solid Tomato;color:Green;" > Check these problems before continuing to work.</h4> <br>
+                    <br><h4 style="border:2px solid Tomato;color:Green;text-align:center;" > Check these problems before continuing to work.</h4> <br>
                 </div>
             </div>
         </div>
@@ -189,13 +189,13 @@ if (!empty($this->class_error)) {
     <div class="fpbx-container container-fluid">
         <div class="row">
             <div class="container">
-                <h2 style="border:2px solid Tomato;color:Tomato;" >Diagnostic information about SCCP Manager errors</h2>
+                <h2 style="border:2px solid Tomato;color:Tomato;text-align:center;" >Diagnostic information about SCCP Manager errors</h2>
                 <div class="table-responsive">
                     <br> There is an error in the :<br><pre>
     <?php print_r($this->class_error); ?>
                     </pre>
                     <br> Correct these problems before continuing to work. <br>
-                    <br><h3 style="border:2px solid Tomato;color:Green;" > Open 'SCCP Connectivity' -> Server Config' to change global settings</h3> <br>
+                    <br><h3 style="border:2px solid Tomato;color:Green;text-align:center;" > Open 'SCCP Connectivity' -> Server Config' to change global settings</h3> <br>
                 </div>
             </div>
         </div>
