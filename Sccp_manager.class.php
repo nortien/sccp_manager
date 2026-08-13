@@ -82,6 +82,7 @@
 
 namespace FreePBX\modules;
 
+#[\AllowDynamicProperties]
 class Sccp_manager extends \FreePBX_Helpers implements \BMO {
     /* Field Values for type  seq */
     private $pagedata = null;
@@ -158,7 +159,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
 
             foreach ($sysConfiguration['Options'] as $key => $valueArray) {
                 foreach ($valueArray['Description'] as $descKey => $descValue) {
-                    $this->sccpHelpInfo[$valueArray['Name']] .= $descValue . '<br>';
+                    $this->sccpHelpInfo[$valueArray['Name']] = ($this->sccpHelpInfo[$valueArray['Name']] ?? '') . $descValue . '<br>';
                 }
             }
             unset($sysConfiguration);
@@ -282,7 +283,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                         "page" => 'views/advserver.keyset.php'
                     )
                 );
-                if ($this->sccpvalues['siptftp']['data'] == 'on') {
+                if (($this->sccpvalues['siptftp']['data'] ?? '') == 'on') {
                     $this->pagedata["sccpdialplan"] = array(
                         "name" => _("SIP Dial Plan information"),
                         "page" => 'views/advserver.dialtemplate.php'
@@ -353,7 +354,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                         "page" => 'views/hardware.phone.php'
                     )
                 );
-                if ($this->sccpvalues['siptftp']['data'] == 'on') {
+                if (($this->sccpvalues['siptftp']['data'] ?? '') == 'on') {
                     $this->pagedata["sipdevice"] = array(
                         "name" => _("SIP CISCO Phone"),
                         "page" => 'views/hardware.sphone.php'
@@ -392,8 +393,8 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $max_btn = (!empty($get_settings['buttonscount']) ? $get_settings['buttonscount'] : 60);
 
         for ($it = 0; $it < $max_btn; $it++) {
-            if (!empty($get_settings["button${it}_type"])) {
-                $btn_t = $get_settings["button${it}_type"];
+            if (!empty($get_settings["button{$it}_type"])) {
+                $btn_t = $get_settings["button{$it}_type"];
                 $btn_n = '';
                 $btn_opt = '';
                 if ($it == 0) {
@@ -401,9 +402,9 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                 }
                 switch ($btn_t) {
                     case 'feature':
-                        $btn_f = $get_settings["button${it}_feature"];
+                        $btn_f = $get_settings["button{$it}_feature"];
                         // $btn_opt = (empty($get_settings['button' . $it . '_fvalue'])) ? '' : $get_settings['button' . $it . '_fvalue'];
-                        $btn_n = (empty($get_settings["button${it}_flabel"])) ? $def_feature[$btn_f]['name'] : $get_settings["button${it}_flabel"];
+                        $btn_n = (empty($get_settings["button{$it}_flabel"])) ? $def_feature[$btn_f]['name'] : $get_settings["button{$it}_flabel"];
                         $btn_opt = $btn_f;
                         if (!empty($def_feature[$btn_f]['value'])) {
                             if (empty($get_settings['button' . $it . '_fvalue'])) {
@@ -421,46 +422,46 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                         break;
                     case 'monitor':
                         $btn_t = 'speeddial';
-                        $btn_opt = (string) $get_settings["button${it}_line"];
+                        $btn_opt = (string) $get_settings["button{$it}_line"];
                         $db_res = $this->dbinterface->getSccpDeviceTableData('SccpExtension', array('name' => $btn_opt));
                         $btn_n = $db_res[0]['label'];
                         $btn_opt .= ',' . $btn_opt . $this->hint_context['default'];
                         break;
                     case 'speeddial':
-                        if (!empty($get_settings["button${it}_input"])) {
-                            $btn_n = $get_settings["button${it}_input"];
+                        if (!empty($get_settings["button{$it}_input"])) {
+                            $btn_n = $get_settings["button{$it}_input"];
                         }
-                        if (!empty($get_settings["button${it}_phone"])) {
-                            $btn_opt = $get_settings["button${it}_phone"];
+                        if (!empty($get_settings["button{$it}_phone"])) {
+                            $btn_opt = $get_settings["button{$it}_phone"];
                             if (empty($btn_n)) {
                                 $btn_n = $btn_opt;
                             }
                         }
 
-                        if (!empty($get_settings["button${it}_hint"])) {
-                            if ($get_settings["button${it}_hint"] == "hint") {
+                        if (!empty($get_settings["button{$it}_hint"])) {
+                            if ($get_settings["button{$it}_hint"] == "hint") {
                                 if (empty($btn_n)) {
                                     $btn_t = 'line';
-                                    $btn_n = $get_settings["button${it}_hline"] . '!silent';
+                                    $btn_n = $get_settings["button{$it}_hline"] . '!silent';
                                     $btn_opt = '';
                                 } else {
                                     // $btn_opt .= ',' . $get_settings['button' . $it . '_hline'] . $this->hint_context['default'];
-                                    $btn_opt .= ',' . $get_settings["button${it}_hline"];
+                                    $btn_opt .= ',' . $get_settings["button{$it}_hline"];
                                 }
                             }
                         }
                         break;
                     case 'adv.line':
                         $btn_t = 'line';
-                        $btn_n = (string) $get_settings["button${it}_line"];
-                        $btn_n .= '@' . (string) $get_settings["button${it}_advline"];
-                        $btn_opt = (string) $get_settings["button${it}_advopt"];
+                        $btn_n = (string) $get_settings["button{$it}_line"];
+                        $btn_n .= '@' . (string) $get_settings["button{$it}_advline"];
+                        $btn_opt = (string) $get_settings["button{$it}_advopt"];
 
                         break;
                     case 'line':
                     case 'silent':
-                        if (isset($get_settings["button${it}_line"])) {
-                            $btn_n = (string) $get_settings["button${it}_line"];
+                        if (isset($get_settings["button{$it}_line"])) {
+                            $btn_n = (string) $get_settings["button{$it}_line"];
                             if ($it > 0) {
                                 if ($btn_t == 'silent') {
                                     $btn_n .= '!silent';
@@ -563,7 +564,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $allSupported = array();
         $sccpCodec = array_fill_keys(array('alaw', 'ulaw', 'g722', 'g723', 'g726', 'g729', 'gsm', 'h264', 'h263', 'h261'),0);
         // First see if have any site defaults
-        $val = $this->sccpvalues['allow']['data'];
+        $val = ($this->sccpvalues['allow']['data'] ?? '');
         if (empty($val)) {
             // No site defaults so return chan-sccp defaults
             $val = $this->sccpvalues['allow']['systemdefault'];
@@ -609,7 +610,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $result = array();
 
         if (!file_exists("{$this->sccppath['tftp_path']}/masterFilesStructure.xml")) {
-            if (!$this->getFileListFromProvisioner($this->sccpvalues['tftp_path']['data'])) {
+            if (!$this->getFileListFromProvisioner(($this->sccpvalues['tftp_path']['data'] ?? ''))) {
                 // File does not exist and cannot get from internet.
                 return $result;
             };
@@ -681,15 +682,15 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
 
     function initializeSccpPath() {
         $this->sccppath = array(
-                    'asterisk' => $this->sccpvalues['asterisk_etc_path']['data'],
-                    'tftp_path' => $this->sccpvalues['tftp_path']['data'],
-                    'tftp_templates_path' => $this->sccpvalues['tftp_templates_path']['data'],
-                    'tftp_store_path' => $this->sccpvalues['tftp_store_path']['data'],
-                    'tftp_lang_path' => $this->sccpvalues['tftp_lang_path']['data'],
-                    'tftp_firmware_path' => $this->sccpvalues['tftp_firmware_path']['data'],
-                    'tftp_dialplan_path' => $this->sccpvalues['tftp_dialplan_path']['data'],
-                    'tftp_softkey_path' => $this->sccpvalues['tftp_softkey_path']['data'],
-                    'tftp_countries_path' => $this->sccpvalues['tftp_countries_path']['data']
+                    'asterisk' => ($this->sccpvalues['asterisk_etc_path']['data'] ?? ''),
+                    'tftp_path' => ($this->sccpvalues['tftp_path']['data'] ?? ''),
+                    'tftp_templates_path' => ($this->sccpvalues['tftp_templates_path']['data'] ?? ''),
+                    'tftp_store_path' => ($this->sccpvalues['tftp_store_path']['data'] ?? ''),
+                    'tftp_lang_path' => ($this->sccpvalues['tftp_lang_path']['data'] ?? ''),
+                    'tftp_firmware_path' => ($this->sccpvalues['tftp_firmware_path']['data'] ?? ''),
+                    'tftp_dialplan_path' => ($this->sccpvalues['tftp_dialplan_path']['data'] ?? ''),
+                    'tftp_softkey_path' => ($this->sccpvalues['tftp_softkey_path']['data'] ?? ''),
+                    'tftp_countries_path' => ($this->sccpvalues['tftp_countries_path']['data'] ?? '')
                   );
 
         // initialise $sccp_conf_init
@@ -987,7 +988,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $file_ext = array('.loads', '.sbn', '.bin', '.zup', '.sbin', '.SBN', '.LOADS');
         $dir = $this->sccppath['tftp_firmware_path'];
 
-        $search_mode = $this->sccpvalues['tftp_rewrite']['data'];
+        $search_mode = ($this->sccpvalues['tftp_rewrite']['data'] ?? '');
         switch ($search_mode) {
             case 'pro':
             case 'on':

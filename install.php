@@ -27,7 +27,7 @@ $cnf_int = \FreePBX::Config();
 // Do not create Sccp_Manager object as not required.
 // Only include required classes and create anonymous class for thisInstaller
 
-$thisInstaller = new class{
+$thisInstaller = new #[\AllowDynamicProperties] class{
     use \FreePBX\modules\Sccp_Manager\sccpManTraits\helperFunctions;
 };
 
@@ -117,10 +117,10 @@ function Get_DB_config($sccp_compatible)
             'dndFeature' => array('create' => "enum('off','on') NOT NULL default 'off'", 'modify' => "enum('off','on')"),
             'earlyrtp' => array('create' => "ENUM('yes','no') NOT NULL default 'yes'", 'modify' => "ENUM('yes','no')"),
             'monitor' => array('create' => "enum('on','off') NOT NULL default 'off'", 'modify' => "enum('on','off')"),
-            'audio_tos' => array('create' => "VARCHAR(11) NOT NULL default '0xB8'",'modify' => "0xB8"),
-            'audio_cos' => array('create' => "VARCHAR(11) NOT NULL default '0x6'",'modify' => "0x6"),
-            'video_tos' => array('create' => "VARCHAR(11) NOT NULL default '0x88'",'modify' => "0x88"),
-            'video_cos' => array('create' => "VARCHAR(11) NOT NULL default '0x5'",'modify' => "0x5"),
+            'audio_tos' => array('create' => "VARCHAR(11) NOT NULL default '0xB8'",'modify' => "VARCHAR(11) NOT NULL default '0xB8'"),
+            'audio_cos' => array('create' => "VARCHAR(11) NOT NULL default '0x6'",'modify' => "VARCHAR(11) NOT NULL default '0x6'"),
+            'video_tos' => array('create' => "VARCHAR(11) NOT NULL default '0x88'",'modify' => "VARCHAR(11) NOT NULL default '0x88'"),
+            'video_cos' => array('create' => "VARCHAR(11) NOT NULL default '0x5'",'modify' => "VARCHAR(11) NOT NULL default '0x5'"),
             'trustphoneip' => array('drop' => "yes"),
             'transfer_on_hangup' => array('create' => "enum('yes','no') NOT NULL DEFAULT 'no'", 'modify' => "enum('yes','no')"),
             'phonecodepage' => array('create' => 'VARCHAR(50) NULL DEFAULT NULL', 'modify' => "VARCHAR(50)"),
@@ -403,36 +403,36 @@ function InstallDB_updateSchema($db_config)
     foreach ($priorSchemaFields as $table => $fieldsArr) {
         // First get any data in columns to be deleted ( _Column)
         $sqlMatch = array_reduce($fieldsArr, function($carry, $column) {
-                return "${carry}  ${column} IS NOT NULL OR";
+                return "{$carry}  {$column} IS NOT NULL OR";
         });
         unset($column);
         $sqlFields = array_reduce($fieldsArr, function($carry, $column) {
-                return "${carry}  ${column} AS " . ltrim($column,"_") .",";
+                return "{$carry}  {$column} AS " . ltrim($column,"_") .",";
         });
 
         $sqlMatch = rtrim($sqlMatch, "OR");
         $sqlFields = rtrim($sqlFields, ",");
-        $stmt = $db->prepare("SELECT name, ${sqlFields} FROM ${table} WHERE ${sqlMatch}");
+        $stmt = $db->prepare("SELECT name, {$sqlFields} FROM {$table} WHERE {$sqlMatch}");
         $stmt->execute();
         $dbResult = $stmt->fetchAll(\PDO::FETCH_ASSOC|\PDO::FETCH_UNIQUE);
         // Now move any data found from _Column to Column. This is safe as the two should not exist.
         if (!empty($dbResult)) {
             foreach ($dbResult as $name => $columnArr) {
                 $sqlVar = array_reduce(array_keys($columnArr), function($carry, $key) use ($columnArr){
-                        $carry .= (isset($columnArr[$key])) ? "${key} = '${columnArr[$key]}'," : "";
+                        $carry .= (isset($columnArr[$key])) ? "{$key} = '{$columnArr[$key]}'," : "";
                         return $carry;
                 });
                 $sqlVar = rtrim($sqlVar, ",");
-                $stmt = $db->prepare("UPDATE ${table} SET ${sqlVar} WHERE name = '${name}'");
+                $stmt = $db->prepare("UPDATE {$table} SET {$sqlVar} WHERE name = '{$name}'");
                 $stmt->execute();
             }
         }
         // Processed all _Column names; now safe to delete them
         $sqlDrop = array_reduce($fieldsArr, function($carry, $column) {
-                return "${carry} DROP COLUMN ${column},";
+                return "{$carry} DROP COLUMN {$column},";
         });
         $sqlDrop = rtrim($sqlDrop, ", ");
-        $stmt = $db->prepare("ALTER TABLE ${table} ${sqlDrop}");
+        $stmt = $db->prepare("ALTER TABLE {$table} {$sqlDrop}");
         $stmt->execute();
     }
 
@@ -466,7 +466,7 @@ function InstallDB_updateSchema($db_config)
 
                 if (!empty($tab_modif[$fld_id]['modify'])) {
                     // Check if modify type is same as current type
-                    if (strtoupper($tab_modif[$fld_id]['modify']) == strtoupper($tabl_data['Type'])) {
+                    if (strtoupper((string)$tab_modif[$fld_id]['modify']) == strtoupper((string)$tabl_data['Type'])) {
                         // Type has not changed so unset
                         unset($tab_modif[$fld_id]['modify']);
                     } else {
@@ -488,7 +488,7 @@ function InstallDB_updateSchema($db_config)
 
                 if (!empty($tab_modif[$fld_id]['def_modify'])) {
                     // Check if def_modify value is same as current value
-                    if (strtoupper($tab_modif[$fld_id]['def_modify']) == strtoupper($tabl_data['Default'])) {
+                    if (strtoupper((string)$tab_modif[$fld_id]['def_modify']) == strtoupper((string)$tabl_data['Default'])) {
                         // Defaults have not changed so unset
                         unset($tab_modif[$fld_id]['def_modify']);
                     } else {
@@ -515,7 +515,7 @@ function InstallDB_updateSchema($db_config)
                             unset($tab_modif[$fld_id_newName]['create']);
                         } else {
                             // add current attributes to the new name.
-                            $existingAttrs = strtoupper($tabl_data['Type']).(($tabl_data['Null'] == 'NO') ?' NOT NULL': ' NULL') .
+                            $existingAttrs = strtoupper((string)$tabl_data['Type']).(($tabl_data['Null'] == 'NO') ?' NOT NULL': ' NULL') .
                                             ((empty($tabl_data['Default']))?'': ' DEFAULT ' . "'" . $tabl_data['Default']."'");
                             $sql_rename .= "CHANGE COLUMN {$fld_id} {$fld_id_newName} {$existingAttrs}, ";
                         }
@@ -1051,7 +1051,7 @@ function checkTftpServer() {
     // TODO: Depending on distro, do we have write permissions
     foreach ($possibleFtpDirs as $dirToTest) {
         if (is_dir($dirToTest) && is_writable($dirToTest)) {
-            $tempFile = "${dirToTest}/{$remoteFileName}";
+            $tempFile = "{$dirToTest}/{$remoteFileName}";
             file_put_contents($tempFile, $remoteFileContent);
 
             // try to pull the written file through tftp.

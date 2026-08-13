@@ -18,6 +18,7 @@
  */
 //
 namespace FreePBX\modules\Core\Drivers;
+#[\AllowDynamicProperties]
 class Sccp extends \FreePBX\modules\Core\Driver {
     // This is a map between sccpline fields and FreePBX fields.
     // TODO: List needs to be extended. Missing fields, not necessarily all required              
@@ -235,10 +236,11 @@ class Sccp extends \FreePBX\modules\Core\Driver {
             $this->xml_data = simplexml_load_file($xml_vars);
         // load metainfo from chan-sccp - help information if not in xml. Only load first time as static data.
         if (empty($this->sccpHelpInfo)) {
+            $this->sccpHelpInfo = array();
             $sysConfiguration = \FreePbx::sccp_manager()->aminterface->getSCCPConfigMetaData('general');
             foreach ($sysConfiguration['Options'] as $key => $valueArray) {
                 foreach ($valueArray['Description'] as $descKey => $descValue) {
-                    $this->sccpHelpInfo[$valueArray['Name']] .= $descValue . '<br>';
+                    $this->sccpHelpInfo[$valueArray['Name']] = ($this->sccpHelpInfo[$valueArray['Name']] ?? '') . $descValue . '<br>';
                 }
             }
             unset($sysConfiguration);
@@ -268,6 +270,8 @@ class Sccp extends \FreePBX\modules\Core\Driver {
         }
 
         // Fill Audio codecs information
+        $audioCodecButtons = array();
+        $videoCodecButtons = array();
         foreach ($siteAudioCodecs as $key => $value) {
             $audioCodecButtons[] = array('value' => "devinfo_codec_{$key}", 'text' => $key);
         }
@@ -335,7 +339,7 @@ class Sccp extends \FreePBX\modules\Core\Driver {
                 case 'IS':
                     $select = array();
                     foreach ($child->xpath('button') as $value) {
-                        $select[] = array('value' => strtolower((string)$value[@value]), 'text' => (string)$value);
+                        $select[] = array('value' => strtolower((string)$value['value']), 'text' => (string)$value);
                     }
                     $hideButton = false;
                     if (($this->line_defaults['dndFeature'] == 'off') && ($child['id'] == 5)) {
@@ -414,6 +418,7 @@ class Sccp extends \FreePBX\modules\Core\Driver {
                     break;
                 case 'SLG':
                     $elementID = (string)$child->name;
+                    $select = array();
                     $named_group = \FreePbx::sccp_manager()->dbinterface->getNamedGroup($elementID);
                     if (!empty($named_group[$elementID])) {
                         foreach ($named_group[$elementID] as $val) {
@@ -434,6 +439,7 @@ class Sccp extends \FreePBX\modules\Core\Driver {
                     unset($select);
                     break;
                 case 'SLM':
+                    $select = array();
                     if (function_exists('music_list')){
                         foreach (music_list() as $value) {
                             $select[] = array('value' => $value, 'text' => _($value));

@@ -6,7 +6,7 @@
 	<category>SCCP Connectivity</category>
 	<publisher>nortien</publisher>
 	<repo>extended</repo>
-	<description>SCCP Phone and Extension Manager</description>
+	<description>The Sccp Manager module lets you manage the chan-sccp driver.</description>
 	<menuitems>
 		<sccpsettings	sort="1">Server Config</sccpsettings>
 		<sccp_adv	sort="2">System Parameters</sccp_adv>
@@ -57,6 +57,7 @@
 	<info>https://github.com/nortien/sccp_manager</info>
 	<updateurl>https://raw.githubusercontent.com/nortien/sccp_manager/work/sccpManagerUpdater.json</updateurl>
 	<license>GPL</license>
+	<licenselink>http://www.gnu.org/licenses/gpl.txt</licenselink>
 	<md5sum></md5sum>
 	<database>
 		<table name="sccpdevice">

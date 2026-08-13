@@ -12,6 +12,7 @@ namespace FreePBX\modules\Sccp_manager\aminterface;
 
 // ************************************************************************** Event  *********************************************
 
+#[\AllowDynamicProperties]
 abstract class Event extends IncomingMessage
 {
 
@@ -30,6 +31,7 @@ abstract class Event extends IncomingMessage
     }
 }
 
+#[\AllowDynamicProperties]
 class UnknownEvent extends Event
 {
     public function __construct($rawContent = '')
@@ -37,6 +39,7 @@ class UnknownEvent extends Event
     }
 }
 
+#[\AllowDynamicProperties]
 class TableStart_Event extends Event
 {
 
@@ -46,6 +49,7 @@ class TableStart_Event extends Event
     }
 }
 
+#[\AllowDynamicProperties]
 class TableEnd_Event extends Event
 {
 
@@ -55,12 +59,14 @@ class TableEnd_Event extends Event
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPSoftKeySetEntry_Event extends Event
 {
     // This is a list of tables, each table is an entry
     protected $_data;
 }
 
+#[\AllowDynamicProperties]
 class ExtensionStatus_Event extends Event
 {
     // this is a list of tables, each table is an entry
@@ -90,11 +96,13 @@ class ExtensionStatus_Event extends Event
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPDeviceEntry_Event extends Event
 {
     // This is a list of tables, each table is an entry
 }
 
+#[\AllowDynamicProperties]
 class SCCPShowDevice_Event extends Event
 {
     // This is a list of tables
@@ -122,26 +130,33 @@ class SCCPShowDevice_Event extends Event
         return $ret;
     }
 }
+#[\AllowDynamicProperties]
 class SCCPDeviceButtonEntry_Event extends Event
 {
 }
+#[\AllowDynamicProperties]
 class SCCPDeviceFeatureEntry_Event extends Event
 {
 // Returned by SCCPShowDevice
 }
+#[\AllowDynamicProperties]
 class SCCPVariableEntry_Event extends Event
 {
 // Returned by SCCPShowDevice
 }
+#[\AllowDynamicProperties]
 class SCCPDeviceLineEntry_Event extends Event
 {
 }
+#[\AllowDynamicProperties]
 class SCCPDeviceStatisticsEntry_Event extends Event
 {
 }
+#[\AllowDynamicProperties]
 class SCCPDeviceSpeeddialEntry_Event extends Event
 {
 }
+#[\AllowDynamicProperties]
 abstract class ClosingEvent extends Event
 {
       public function __construct($message) {
@@ -153,6 +168,7 @@ abstract class ClosingEvent extends Event
     }
 
 }
+#[\AllowDynamicProperties]
 class ResponseComplete_Event extends ClosingEvent
 {
     // dummy event to avoid unnecessary testing
@@ -161,6 +177,7 @@ class ResponseComplete_Event extends ClosingEvent
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPShowDeviceComplete_Event extends ClosingEvent
 {
     public function listCorrectlyReceived($_message, $_eventCount){
@@ -172,6 +189,7 @@ class SCCPShowDeviceComplete_Event extends ClosingEvent
         return false;
     }
 }
+#[\AllowDynamicProperties]
 class SCCPShowDevicesComplete_Event extends ClosingEvent
 {
     public function listCorrectlyReceived($_message, $_eventCount) {
@@ -183,6 +201,7 @@ class SCCPShowDevicesComplete_Event extends ClosingEvent
         return false;
     }
 }
+#[\AllowDynamicProperties]
 class ExtensionStateListComplete_Event extends ClosingEvent
 {
     public function listCorrectlyReceived($_message, $_eventCount){
@@ -195,6 +214,7 @@ class ExtensionStateListComplete_Event extends ClosingEvent
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPShowSoftKeySetsComplete_Event extends ClosingEvent
 {
     public function listCorrectlyReceived($_message, $_eventCount){

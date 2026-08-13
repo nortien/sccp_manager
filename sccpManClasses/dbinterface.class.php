@@ -9,6 +9,7 @@
 
 namespace FreePBX\modules\Sccp_manager;
 
+#[\AllowDynamicProperties]
 class dbinterface
 {
 
@@ -362,7 +363,7 @@ class dbinterface
         switch ($dataid) {
             case "DeviceById":
                 // TODO: This needs to be rewritten
-                $stmt = $this->db->prepare("SELECT keyword,data FROM sip WHERE id = '${line}'");
+                $stmt = $this->db->prepare("SELECT keyword,data FROM sip WHERE id = '{$line}'");
                 $stmt->execute();
                 $tech = $stmt->fetchAll(\PDO::FETCH_COLUMN | \PDO::FETCH_GROUP);
                 foreach ($tech as &$value) {

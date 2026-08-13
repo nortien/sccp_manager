@@ -147,7 +147,7 @@ $conf_tz = $this->sccpvalues['ntp_timezone']['data'];
 $cisco_tz = $this->extconfigs->getExtConfig('sccp_timezone', $conf_tz);
 if ($cisco_tz['offset'] == 0) {
     if (!empty($conf_tz)) {
-        $tmp_dt = new DateTime(null, new DateTimeZone($conf_tz));
+        $tmp_dt = new DateTime('now', new DateTimeZone($conf_tz));
         $tmp_ofset = $tmp_dt->getOffset();
         if (($cisco_tz['offset'] != ($tmp_ofset / 60) )) {
             $this->info_warning['NTP'] = array('The selected NTP time zone is not supported by cisco devices.', 'We will use the Greenwich Time zone');

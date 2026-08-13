@@ -59,7 +59,7 @@ if (!empty($_REQUEST['id'])) {
 }
 
 if (!empty($def_val['type'])) {
-    $tmp_raw = $this->getSccpModelInformation('byid', true, 'all', array('model'=>$def_val['type']));
+    $tmp_raw = $this->getSccpModelInformation('byid', true, 'all', array('model'=>$def_val['type']['data']));
     if (!empty($tmp_raw[0])) {
         $tmp_raw = $tmp_raw[0];
     }

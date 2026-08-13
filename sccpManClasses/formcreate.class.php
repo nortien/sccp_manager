@@ -2,6 +2,7 @@
 
 namespace FreePBX\modules\Sccp_manager;
 
+#[\AllowDynamicProperties]
 class formcreate
 {
     use \FreePBX\modules\Sccp_Manager\sccpManTraits\helperFunctions;
@@ -58,9 +59,9 @@ class formcreate
             $res_n =  (string)$value->name;
             $res_name = $npref . $res_n;
             //if (!empty($fvalues[$res_n])) {
-            $value->value = $fvalues[$res_n]['data'];
+            $value->value = $fvalues[$res_n]['data'] ?? '';
             if (!empty($fvalues[$res_n]['data'])) {
-                if ($sccp_defaults[$res_n]['systemdefault'] != $fvalues[$res_n]['data']) {
+                if (($sccp_defaults[$res_n]['systemdefault'] ?? '') != ($fvalues[$res_n]['data'] ?? '')) {
                     $usingSysDefaults = false;
                 }
             }
@@ -94,7 +95,8 @@ class formcreate
                                 echo "class=sccp-edit :checked ";
                             } else {
                                 // reverting to chan-sccp default values
-                                echo "class=sccp-restore data-default={$sccp_defaults[$res_n]['systemdefault']} ";
+                                $res_sysdefault = $sccp_defaults[$res_n]['systemdefault'] ?? '';
+                                echo "class=sccp-restore data-default={$res_sysdefault} ";
                             }
                             ?>
                         >
@@ -136,7 +138,7 @@ class formcreate
                             }
                             // Default to chan-sccp defaults, not xml defaults if reverting to defaults or empty
                             if ((empty($value->value)) || ($usingSysDefaults)) {
-                                $value->value = $sccp_defaults[$res_n]['systemdefault'];
+                                $value->value = $sccp_defaults[$res_n]['systemdefault'] ?? '';
                             }
                             if (empty($value->type)) {
                                 $value->type = 'text';
@@ -206,7 +208,7 @@ class formcreate
         }
 
         if ($res_n == 'srst_ip') {
-            $res_value = $this->convertCsvToArray($sccp_defaults[$res_n]['data']);
+            $res_value = $this->convertCsvToArray($sccp_defaults[$res_n]['data'] ?? '');
         }
         if (empty($res_value)) {
             $res_value = array((string) $child->default);
@@ -286,6 +288,7 @@ class formcreate
                                 foreach ($child->xpath('input') as $value) {
                                     $field_id = (string)$value['field'];
                                     $res_n = $res_id.'['.$i.']['.$field_id.']';
+                                    $opt_at[$field_id]['class'] = $opt_at[$field_id]['class'] ?? '';
                                     if (!empty($value->class)) {
                                         $opt_at[$field_id]['class']='form-control ' .(string)$value->class;
                                     }
@@ -381,7 +384,7 @@ class formcreate
                             $res_v = (string)$fvalues[$res_n]['data'];
                         }
                     }
-                    if ($sccp_defaults[$res_n]['systemdefault'] != $res_v) {
+                    if (($sccp_defaults[$res_n]['systemdefault'] ?? '') != $res_v) {
                         $usingSysDefaults = false;
                     }
                     if (!empty($sccp_defaults[$res_n]['systemdefault'])) {
@@ -404,7 +407,8 @@ class formcreate
                                 echo " class=sccp-edit :checked ";
                             } else {
                                 // reverting to chan-sccp default values
-                                echo " data-default={$sccp_defaults[$res_n]['systemdefault']} class=sccp-restore ";
+                                $res_sysdefault = $sccp_defaults[$res_n]['systemdefault'] ?? '';
+                                echo " data-default={$res_sysdefault} class=sccp-restore ";
                             }
                             ?>
                         >
@@ -437,7 +441,7 @@ class formcreate
                         $opt_hide = '';
 
                         if ($usingSysDefaults) {
-                            $res_v = $sccp_defaults[$res_n]['systemdefault'];
+                            $res_v = $sccp_defaults[$res_n]['systemdefault'] ?? '';
                         }
                         if (!empty($child->option_hide)) {
                             $opt_hide = ' class="sccp_button_hide" data-vhide="'.$child->option_hide.'" data-clhide="'.$child->option_hide['class'].'" ';
@@ -453,7 +457,7 @@ class formcreate
                             if (in_array($value, $disabledButtons )) {
                                 $opt_disabled = 'disabled';
                             }
-                            $val_check = strtolower((string)$value[@value]);
+                            $val_check = strtolower((string)$value['value']);
                             if ($val_check == strtolower($res_v)) {
                                 $val_check = "checked";
                             } else {
@@ -463,7 +467,7 @@ class formcreate
                                    } else {$val_check = "";}
                                 } else {$val_check = "";}
                             }
-                            echo "<input type=radio name= {$res_id} id=${res_id}_{$i} value='{$value[@value]}' {$val_check} {$opt_hide} {$opt_disabled}>";
+                            echo "<input type=radio name= {$res_id} id={$res_id}_{$i} value='{$value['value']}' {$val_check} {$opt_hide} {$opt_disabled}>";
                             echo "<label for= {$res_id}_{$i}>{$value}</label>";
                             $i++;
                         }
@@ -754,12 +758,12 @@ class formcreate
                 foreach ($assignedExts as $name => $nameArr ) {
                       $select_opt[$name]['label'] .= " -  in use";
                 }
-                $child->default = $fvalues['defaultLine'];
+                $child->default = $fvalues['defaultLine'] ?? '';
                 break;
             case 'SDMF':
                 // Sip extensions
                 $select_opt = \FreePBX::Sccp_manager()->dbinterface->getSipTableData('extensionList');
-                $child->default = $fvalues['defaultLine'];
+                $child->default = $fvalues['defaultLine'] ?? '';
                 break;
             case 'SDE':
                 $extension_list = \FreePBX::Sccp_manager()->dbinterface->getDb_model_info('extension', 'model');
@@ -810,19 +814,19 @@ class formcreate
                         }
                     }
                     foreach ($select_opt as $data) {
-                        echo '<option value="' . $data[$fld] . '"';
-                        if ($key == $data[$fld]) {
+                        echo '<option value="' . ($data[$fld] ?? '') . '"';
+                        if ($key == ($data[$fld] ?? '')) {
                             echo ' selected="selected"';
                         }
                         if (!empty($flk)) {
-                            echo ' data-id="'.$data[$flk].'"';
+                            echo ' data-id="'.($data[$flk] ?? '').'"';
                         }
                         if (!empty($flkv)) {
-                            echo ' data-val="'.$data[$flkv].'"';
+                            echo ' data-val="'.($data[$flkv] ?? '').'"';
                         }
-                        echo '>' . $data[$flv];
+                        echo '>' . ($data[$flv] ?? '');
                         if (!empty($flv2)) {
-                            echo ' / '.$data[$flv2];
+                            echo ' / '.($data[$flv2] ?? '');
                         }
                         echo '</option>';
                     }
@@ -893,13 +897,13 @@ class formcreate
                 $res_opt['inp_end'] = '<span class="input-group-addon" id="bases_'.$res_n.'">'.$opt_at[$fields_id]['display_sufix'].'</span></div>';
                 switch ($value['type']) {
                     case 'date':
-                        echo $res_opt['inp_st'].'<input type="date" name="'. $res_n.'" value="'.$res_vf[$i2].'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
+                        echo $res_opt['inp_st'].'<input type="date" name="'. $res_n.'" value="'.($res_vf[$i2] ?? '').'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
                         break;
                     case 'number':
-                        echo $res_opt['inp_st'].'<input type="number" name="'. $res_n.'" value="'.$res_vf[$i2].'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
+                        echo $res_opt['inp_st'].'<input type="number" name="'. $res_n.'" value="'.($res_vf[$i2] ?? '').'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
                         break;
                     case 'input':
-                        echo $res_opt['inp_st'].'<input type="text" name="'. $res_n.'" value="'.$res_vf[$i2].'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
+                        echo $res_opt['inp_st'].'<input type="text" name="'. $res_n.'" value="'.($res_vf[$i2] ?? '').'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
                         break;
                     case 'title':
                         if ($i > 0) {
@@ -915,7 +919,7 @@ class formcreate
                         foreach ($value->xpath('data') as $optselect) {
                             $opt_at[$fields_id]['data'].= (string)$optselect.';';
                             echo '<option value="' . $optselect. '"';
-                            if (strtolower((string)$optselect) == strtolower((string)$res_vf[$i2])) {
+                            if (strtolower((string)$optselect) == strtolower((string)($res_vf[$i2] ?? ''))) {
                                 echo ' selected="selected"';
                             }
                             echo '>' . (string)$optselect. '</option>';
