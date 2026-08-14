@@ -834,6 +834,1520 @@ msgstr "Загрузить файлы для"
 msgid "Get Files from Provisioner"
 msgstr "Получить файлы от Provisioner"
 
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Server Name"
+msgstr "Имя SCCP Сервера"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Bind Address : [ Port ]"
+msgstr "Слушать SCCP на адресе: [ Порту ]"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP SERVER Keepalive"
+msgstr "Время ожидения Keepalive"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Time between Keep Alive checks. Valid range is 60-300 seconds. After much trial-and-error, the minimum (60) seems to work just fine."
+msgstr "Время ожидание keepalives в потоке SCCP после истечения устройство считается недоступным."
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP DEBUG"
+msgstr "Режим отладки"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Debug: Enable debugging level in SCCP module."
+msgstr "Урровень детализации в Логе отладки модуля SCCP."
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Networks"
+msgstr "Настройка сетевых параметров сервера SCCP"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Deny Networks / Mask"
+msgstr "Запрещенные Подсети"
+
+#: conf/sccpgeneral.xml.v433
+msgid "All RFC 1918 addresses are local networks. Should always be at least '0.0.0.0/0.0.0.0'."
+msgstr "Все адреса RFC 1918 являются локальными сетями. Всегда должно быть не менее '0.0.0.0/0.0.0.0'."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow Networks / Mask"
+msgstr "Разешенные Подсети"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Local Networks / Mask"
+msgstr "Локальные сети / Маска"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Local network settings. Blank fields will be ignored used Network 0.0.0.0."
+msgstr "Настройки локальной сети. Пустые поля будут игнорироваться в используемой сети 0.0.0.0."
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Language"
+msgstr "SCCP Натройка языков"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP System Language"
+msgstr "SCCP язык системы"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Language: This is the language for your hints and other features of the phone. If you don't have any languages installed or are using a single language, you can leave this blank."
+msgstr "Язык SCCP: это язык для ваших советов и других функций телефона. Если у вас нет каких-либо языков, установленных или использующих один язык, вы можете оставить этот пробел."
+
+#: conf/sccpgeneral.xml.v433
+msgid "First Digit Timeout"
+msgstr "Время ожидания набора"
+
+#: conf/sccpgeneral.xml.v433
+msgid "First Digit Timeout: The amount of time after your first digit to start dialing automatically. This can be over-ridden with settings in your dialplan.xml or by using the 'immediate dial' button."
+msgstr "First Digit Timeout: количество времени после набора первой цифры для автоматического набора номера. Это можно переопределить с помощью настроек в dialplan.xml или с помощью кнопки «набор» на телефоне."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Digit Timeout: The amount of time to wait after the second (or subsequent) dialed digit. Override rules are the same as for firstdigittimeout."
+msgstr "Тайм-аут набора: Время ожидания нажатия следующей цифры по истечению вызываем набраный номер. Правила такие же, как и для firstdigittimeout."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Autoanswer Ring Time"
+msgstr "Время автоответа"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Autoanswer Ring Time: The amount of time the phones will ring when being called as Intercom or Paging mode."
+msgstr "Время авотовета : время, в течение которого телефоны будут звонить при вызове в режиме внутренней связи или пейджинга."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Autoanswer Tone"
+msgstr "Тон автоответчика"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Autoanswer Tone: The tone the phone plays back when it picks up the phone in autoanswer mode. Default is '0x32'. Silence is '0x00'. There are lots of tones, all expressed as '0XNN' where 'NN' is a hexadecimal number."
+msgstr "Тональный сигнал автоответчика: тон, воспроизводимый телефоном, когда он поднимает телефон в режиме автоответчика. Значение по умолчанию - «0x32». Тишина - «0x00». Есть много тонов, все выраженные как «0XNN», где «NN» - шестнадцатеричное число."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Remote Hangup Tone"
+msgstr "Тон удалённого отбоя"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Remote Hangup Tone: The tone played by the phone when it received a remote hang-up signal. Use '0' to disable the tone."
+msgstr "Тональный сигнал отбоя: тон, воспроизводимый телефоном, когда он получил отбоя. Используйте «0» для отключения тона."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Transfer Tone"
+msgstr "Тон перевода вызова"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Transfer Tone: The tone played when a call is transferred. Use '0' to disable the tone."
+msgstr "Тон перевода вызова: тон, воспроизводимый при переводе вызова. Используйте «0» для отключения тона."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Call Waiting Tone"
+msgstr "Тон ожидания вызова"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Call Waiting Tone: The tone played when a call is waiting. If you set this one to '0', you will not get a tone in your current call if a new call comes in, so you might want to disable call waiting for this line instead."
+msgstr ""
+"220/5000\n"
+"Тональный сигнал ожидания вызова: тон, воспроизводимый при ожидании вызова. Если вы установите его на «0», вы не получите тон в текущем вызове, если произойдет новый вызов, поэтому вы можете отключить вызов, ожидающий этой строки."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Private Calling"
+msgstr "Приватный вызов"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Private Calling Enabled: Place a call with privacy Options (no Caller ID) turned on. Needs to be supported in Asterisk to work through SIP and DAHDI trunks."
+msgstr "Частный вызов включен: поместите вызов с настройками конфиденциальности (без идентификатора вызывающего абонента). Необходимо поддерживать Asterisk для работы через соединительные линии SIP и DAHDI."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Call Answer Order"
+msgstr "Порядок ответа на вызовы"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Call Answer Order: Which call should be answered first? The most common choice is \"oldestfirst\", but other orders are supported."
+msgstr "Порядок ответа на вызов: на какой вызов следует ответить в первую очередь? Наиболее распространенным вариантом является «oldestfirst», но поддерживаются другие заказы."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Message Lamp"
+msgstr "Индикатор сообщений"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Set the MWI lamp style when MWI active to on, off, wink, flash or blink"
+msgstr "Установите режим индикации лампы MWI, когда активен MWI для включения, выключения, подмигивания, вспышки или мигания"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Message Lamp On Call"
+msgstr "Индикатор сообщений во время вызова"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Device advanced config"
+msgstr "Параметры настойки для Очень умных"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Direct RTP"
+msgstr "Прямой RTP"
+
+#: conf/sccpgeneral.xml.v433
+msgid "This option set global allow devices to do direct RTP sessions (default Off)"
+msgstr "Разрешение передача сигналов сигнализации между устройстваи."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Global Enable/Disable Softkeys"
+msgstr "Порграмные кнопки на телефонах"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Call Forward"
+msgstr "Кнопка Первод звонка"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Activate the callforward softkeys. Default is On"
+msgstr "Активирует программные клавиши перевода звонков. По умолчанию включено"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Call Forward busy"
+msgstr "Кнопка Первод звонка если занят"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Activate the callforward busy softkeys. Default is On"
+msgstr "Программные клавиши управления звонками. По умолчанию включено"
+
+#: conf/sccpgeneral.xml.v433
+msgid "DND Button on Device"
+msgstr "Не беспокоить для телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Do Not Disturb. Default is Off"
+msgstr "Не беспокоить. По умолчанию = Off"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP NTP Service config"
+msgstr "SCCP Сервер Времени"
+
+#: conf/sccpgeneral.xml.v433
+msgid "NTP Server Enabled"
+msgstr "Разрешаем NTP"
+
+#: conf/sccpgeneral.xml.v433
+msgid "NTP Server name (ip)"
+msgstr "Адрес Сервера NTP (IP)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Configure NTP Server protocol time synchronization"
+msgstr "Настойка протокола синхронизации времени"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Time Service config"
+msgstr "SCCP Настройка Сервера Времени"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Date Format: The date format for the on-screen display. Can be one of the following: (D-M-YA, M.D.Y, Y/M/D) where 'D' is Day, 'M' is Month, 'Y' is Year, 'A' is 24-hour, 'a' is 12-hour, and the separators can be '.','-','/'"
+msgstr "Формат даты: формат даты для экранного дисплея. Может быть одним из следующих: (DM-YA, MDY, Y / M / D), где «D» - «День», «M» - месяц, «Y» - это год, «A» - 24 часа, составляет 12 часов, а разделители могут быть '.', '-', '/'"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Time Zone"
+msgstr "Часовой пояс"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Phone SRST"
+msgstr "Настройка SRST"
+
+#: conf/sccpgeneral.xml.v433
+msgid "HELP SRST"
+msgstr "Помощь по SRST"
+
+#: conf/sccpgeneral.xml.v433
+msgid "You can also configure a Survivable Remote Site Telephony (SRST) reference as the last device in the CallManager(CM) list. This proves especially useful in a remote site configuration where the phones and Asterisk are connected over a WAN network. SRST provides users with fallback support for the IP phones that cannot access the primary, secondary, or tertiary Asterisk Node in the CallManager List because of an Asterisk Node failure or loss of connectivity across the WAN. For the remote sites attached to multiple-service routers across the WAN, SRST ensures that your remote users receive continuous (although minimal) service by providing call handling support directly from the SRST router."
+msgstr "Вы также можете настроить Survivable Remote Site Telephony (SRST) ссылки в качестве последнего устройства в списке callmanager. Это особенно полезно в конфигурации удаленного сайта, где телефоны и Asterisk подключены по глобальной сети. SRST предоставляет пользователям резервную поддержку для IP-телефонов, которые не могут получить доступ к первичному, вторичному или третичному узлу Asterisk в списке CallManager из-за сбоя узла Asterisk или потери подключения через глобальную сеть. Для удаленных сайтов, подключенных к маршрутизаторам с несколькими службами по глобальной сети, служба SRST гарантирует, что удаленные пользователи получают непрерывную (хотя и минимальную) службу, предоставляя поддержку обработки вызовов непосредственно с маршрутизатора SRST."
+
+#: conf/sccpgeneral.xml.v433
+msgid "When IP phones lose contact with primary, secondary, and tertiary Asterisk Nodes (CM's), they must establish a connection to a local SRST router to sustain the call-processing capability necessary to place and receive calls. The IP phone retains the IP address of the local SRST router as a default router in the Network Configuration area of the Settings menu. The Settings menu supports a maximum of five default router entries; however, the cnf.xml accommodates a maximum of three entries. When a secondary Asterisk Node is not available on the network, the local SRST Router's IP address is retained as the standby connection for Asterisk Node during normal operation."
+msgstr "Когда IP-телефонов теряют связь с первичными, вторичный, и третичный узлы Asterisk (CM's), ни должны установить подключение к локальному маршрутизатору SRST для поддержания разговора-возможность обработки, необходимой для совершения и приема звонков.IP-телефон сохраняет IP-адрес локального маршрутизатора SRST в качестве маршрутизатора по умолчанию в области настройки сети меню Настройки. Меню настроек, поддерживает до пяти записей маршрутизаторов по умолчанию; однако, кнф.XML-код вмещает не более трех записей. Если дополнительный узел Asterisk недоступен в сети, IP-адрес локального маршрутизатора SRST сохраняется в качестве резервного соединения для узла Asterisk во время нормальной работы."
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP URL Service config"
+msgstr "Настройка Внеших URL сервисов"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone Service URL"
+msgstr "Service Menu URL"
+
+#: conf/sccpgeneral.xml.v433
+msgid "The above is simply a dummy authentication page.  It literally contains one word: AUTHORIZED (it receives UserId, Password, and devicename in the url - if you truly wish to implement special auth)"
+msgstr "Вышеупомянутая информация является просто фиктивной страницей аутентификации. Он буквально содержит одно слово: AUTHORIZED (он получает UserId, Password и devicename в URL-адресе - если вы действительно хотите реализовать специальный auth)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone information URL"
+msgstr "URL информации о телефоне"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone messages URL"
+msgstr "URL для сообщений"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone directory service URL"
+msgstr "URL для телефонной книги"
+
+#: conf/sccpgeneral.xml.v433
+msgid "This is the URL for a CiscoIPPhoneMenu which gets appended to the end of the Missed/Received/Placed calls.  I don't use it (I find it makes more sense to put my phone book under services)"
+msgstr "URL-адрес для CiscoIPPhoneMenu, который добавляется к концу пропущенных / полученных / помещенных вызовов. Я не использую его (я считаю, что имеет смысл разместить мою телефонную книгу под услугами)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone Idle information URL"
+msgstr "URL простоя телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "URL of CiscoIPPhoneImage. Requires a non-zero setting in idleTimeout."
+msgstr "URL-адрес CiscoIPPhoneImage. Требуется ненулевая настройка в idleTimeout."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone proxyServer URL"
+msgstr "Насторйка прокси для телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone Idle Timeout"
+msgstr "Время бездействия"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP QoS config"
+msgstr "SCCP QoS насторойка качества обслуживания"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP ToS / CoS"
+msgstr "SCCP ToS / CoS"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Audio ToS / CoS"
+msgstr "SCCP Audio ToS / CoS"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Video ToS / CoS"
+msgstr "SCCP Video ToS / CoS"
+
+#: conf/sccpgeneral.xml.v433
+msgid "HELP SCCP HotLine"
+msgstr "Небольшая Помощь по HotLine"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Setting the hotline Feature on a device, will make it connect to a predefined extension as soon as the Receiver is picked up or the \"New Call\" Button is pressed. No number has to be given. This works even on devices which have no entry in the config file or realtime database."
+msgstr "Установка функции \"hotline\" позволит регистрироваться всем неизвестным телефонам. Всем телефонам будет назначена возможность вызова только одной линии \"hotline\". Это работает даже на устройствах, которые не имеют записи в файле конфигурации или в базе данных реального времени."
+
+#: conf/sccpgeneral.xml.v433
+msgid "The hotline function can be used in :"
+msgstr "Функция \"hotline\" может быть полезна :"
+
+#: conf/sccpgeneral.xml.v433
+msgid "This will make it easier to register new devices and assign numbers"
+msgstr "Все телефоны зарегистрируются в системе. Остается назначить только номера вызова"
+
+#: conf/sccpgeneral.xml.v433
+msgid "At a door"
+msgstr "На входе"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Where you want people to be able to only call one number"
+msgstr "Звонит только секретарю или президенту. Ну а если украдут то и не жалко"
+
+#: conf/sccpgeneral.xml.v433
+msgid "For unprovisioned phones"
+msgstr "Для новых телефонов"
+
+#: conf/sccpgeneral.xml.v433
+msgid "To only be able to call the helpdesk to get their phone set up"
+msgstr "Специальный номерочек для своих и для врагов"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Hotline Enabled: This allows unregistered extensions to connect to the system and dial the number listed below."
+msgstr "Горячая линия включена: это позволяет незарегистрированным расширениям подключаться к системе и набирать номер, указанный ниже."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Hotline extension"
+msgstr "Номер горячей линии"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Hotline Extension: The number that gets called when a hotline is picked up. hint"
+msgstr "Номер горячей линии: номер, который вызывается при получении горячей линии. или Hint"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Hotline Label"
+msgstr "Как обозвать Горячую линию"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Hotline Context"
+msgstr "Контекст для Hotline"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Hotline Context: This is the context through which the phone will connect. It should probably match your other contest. The default is \"from-internal\" but \"from-internal-xfer\" would also make sense by limiting the options for the person using the phone."
+msgstr "Контекст горячей линии: это контекст, через который будет подключаться телефон. Вероятно, это должно соответствовать вашему другому конкурсу. Значение по умолчанию - «изнутри», но «from-internal-xfer» также имеет смысл, ограничивая параметры для человека, использующего телефон."
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Line config"
+msgstr "SCCP Конфигурация Линий"
+
+#: conf/sccpgeneral.xml.v433
+msgid "System Context"
+msgstr "Системный контекст"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Context: This is the context in which your phones will operate. It should match the context you are using for the rest of your phones (if you have any). The FreePBX default is 'from-internal'"
+msgstr "Контекст. Это контекст, в котором будут работать ваши телефоны. Он должен соответствовать контексту, который вы используете для остальных ваших телефонов (если есть). По умолчанию FreePBX является 'внутренним'"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Dynamically registration Context"
+msgstr "Контекст динамической регистрации SCCP устройств"
+
+#: conf/sccpgeneral.xml.v433
+msgid "If regcontext is specified in sccp.conf chan-sccp-b will dynamically create and destroy a NoOp priority 1 extension for a given peer/line which registers with the server. If the context is not specified in extension.conf, then it will be dynamically created when an chan-sccp-b agent registers"
+msgstr "Если regcontext указан в файле sccp.conf, chan-sccp-b будет динамически создавать и уничтожать расширение 1 приоритета NoOp для данного однорангового узла, который регистрируется на сервере. Если контекст не указан в файле extension.conf, он будет динамически создан, когда регистр chan-sccp-b регистрируется"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Directed Pickup Mode (Answer): If a call is sent with the \"directed pickup\" flag, the phone will answer when set to \"Yes\"."
+msgstr "Направленный режим ответа: если звонок отправлен с флагом «направленного пикапа», телефон ответит, когда установлено «Да»."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Directed Pickup"
+msgstr "Направленный перехват"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Autoselect Line"
+msgstr "Выбор линии при поднятии трубки"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Meetme Conference"
+msgstr "Конференция Meetme"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Meetme Options"
+msgstr "Опции для Meetme"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Other options (app_meetme: A,a,b,c,C,d,D,E,e,F,i,I,l,L,m,M,o,p,P,q,r,s,S,t,T,w,x,X,1) see meetme specific documentation"
+msgstr "Другие варианты (app_meetme: A, a, b, c, C, d, D, E, e, F, i, I, l, L, m, M, o, p, P, q, r, s, S , t, T, w, x, X, 1) см. соответствующую документацию"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Auto Call Select"
+msgstr "Автовыбор вызова"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Silence Suppression"
+msgstr "Подавление тишины"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Music On Hold Class"
+msgstr "Музыка в Ожидании"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Music Class: Available MOH Classes. These are the MOH classes listed in your current server."
+msgstr "Класс музыки: доступные классы MOH. Это классы MOH, см. кофигурацияю MOH Asterisk."
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Server Path config"
+msgstr "SCCP Настройка Путей и таблиц Сервера"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP TFTP SERVER Path"
+msgstr "TFTP SERVER Path"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Device Table: This is the devicetable for your realtime configuration. Don't change this unless you know what you are doing and have made all the appropriate changes in the rest of your Asterisk config files. There are two reasonable settings for this - the sccpdevice table or the sccpdeviceconfig view. If you do not want to use the realtime database anymore, you can set this to blank. NOT RECOMMENDED."
+msgstr "Таблица устройств. Это может быть полезно для вашей конфигурации в реальном времени. Не изменяйте это, если вы не знаете, что делаете, и внесли все необходимые изменения в остальные файлы конфигурации Asterisk. Для этого есть две разумные настройки: таблица sccpdevice или представление sccpdeviceconfig. Если вы больше не хотите использовать базу данных реального времени, вы можете установить ее как пустую. НЕ РЕКОМЕНДУЕТСЯ."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Line Table: This is the linetable for your realtime configuration. Don't change this unless you know what you are doing and have made all the appropriate changes in the rest of your Asterisk config files. If you do not want to use the realtime database anymore, you can set this to blank. NOT RECOMMENDED."
+msgstr "Line table: это название таблицы для вашей конфигурации реального времени. Не изменяйте это, если вы не знаете, что делаете, и внесли все необходимые изменения в остальные файлы конфигурации Asterisk. Если вы больше не хотите использовать базу данных реального времени, вы можете установить ее как пустую. НЕ РЕКОМЕНДУЕТСЯ."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Create tftp empty language dir"
+msgstr "Создание Языковых каталогв tftp"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Say 'yes' if you need to create cisco default language directory in tftp path."
+msgstr "Скажите «да», если вам нужно создать каталоги для язфковых профилей cisco в директории tftp."
+
+#: conf/sccpgeneral.xml.v433
+msgid "General Device configuration"
+msgstr "Общая конфигурация абонентского устройства"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Device ID.[XXXXXXXXXXXX]=MAC"
+msgstr "Устройство ID : [XXXXXXXXXXXX]=MAC"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Type"
+msgstr "Тип"
+
+#: conf/sccpgeneral.xml.v433
+msgid "The type of phone: 7911, 7940, 7960, etc. Important note: the 'G' models are handled as the base model (e.g., 7962G is handled as 7962). In the Display mode, this field is read-only because the MAC address and the model number are a pair."
+msgstr "Тип телефона: 7911, 7940, 7960 и т. Д. Важное примечание: модели «G» обрабатываются как базовая модель (например, 7962G обрабатывается как 7962). В режиме отображения это поле доступно только для чтения, поскольку MAC-адрес и номер модели являются парой."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Addon"
+msgstr "Модуль ресширения"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Addon: Addons are model specific and only work with certain base phones. This phone model is identified as being a phone that does not accept sidecars. Update devmodel if this is not correct."
+msgstr "Модуль ресширения являются специфичными для кажколй модели телефона и работают только с некоторыми базовыми телефонами."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Device Label"
+msgstr "Название Устройства"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Time Zone offset"
+msgstr "Часовой пояс"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Phone Device Language"
+msgstr "SCCP язык меню телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Network Device Language"
+msgstr "SCCP локализация региона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Background Image"
+msgstr "Рисунок Фона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "For phones that can display background images - display this one. Default is [empty]"
+msgstr "Для телефонов, которые могут отображать фоновые изображения - отображать это. По умолчанию [пусто]. Формат http://сервер/картинка.png"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Buttons Configuration"
+msgstr "Настройка Кнопок"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Device MAC."
+msgstr "MAC устройства."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Transfer allowed"
+msgstr "Трансфер доступен"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow the use of conference"
+msgstr "Ему можно пользоваться конференциями"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Device Properies"
+msgstr "Свойства устройства"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Playback General Announcements (like: 'You are Entering/Leaving the conference')"
+msgstr "Общие анонсы воспроизведения (например: «Ввод / Выход из конференции»)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Playback Personal/Participant Announcements, (like: 'You have been muted / You have been kicked')"
+msgstr "Воспроизведение личных / анонсов участников (например: «Вы были отключены / вы были выпнуты»)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Mute new participants from the start"
+msgstr "Отключить микрофон у новых участников с самого начала"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Show conference list"
+msgstr "Отображаем список конференций"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Automatically show conference list to the moderator"
+msgstr "Автоматически показывать список участников модератору"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Play music on hold of this class when no moderator is listening on the conference. If set to an empty string, no music on hold will be played."
+msgstr "Музыкальный класс для вызовов находящихся в ожидании, если модератор не прослушивает конференцию. Если установлена пустая строка, воспроизведение музыки не будет выполнено."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow network settings. Blank fields will be ignored used Network 0.0.0.0."
+msgstr "Список допустимых для регистрации подсетей."
+
+#: conf/sccpgeneral.xml.v433
+msgid "This option allow devices to do direct RTP sessions (default Off)"
+msgstr "Разрешает устройствам использовать прямые RTP-сессии (по умолчанию выключено)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "You can specifying 'useRedialMenu = yes' in the sccp.conf device section and the redial softkey will cause the \"placed calls\" list instead of immediately calling the last dialed number."
+msgstr "Вы можете указать «useRedialMenu = yes» в секции устройства sccp.conf — это изменит работу программной клавиши повторного набора: вместо немедленного вызова последнего набранного номера будет открываться список «помещённых вызовов»."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Context where direct pickup search for extensions. if not set current context will be use."
+msgstr "Контекст, где разрешён прямой захват звонка. Если не задан, используется текущий контекст."
+
+#: conf/sccpgeneral.xml.v433
+msgid "I'm guessing on this one, but on some devices, the background image on the display can be modified at the device. I think this is the thing that allows that to happen."
+msgstr "Предположительно, на некоторых устройствах фоновое изображение на дисплее можно изменить прямо на самом устройстве."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Silence Suppression: Silence Suppression on the phone."
+msgstr "Подавление тишины: подавление тишины на телефоне."
+
+#: conf/sccpgeneral.xml.v433
+msgid "The ringtone that the phone will default to. Can be overridden in the phone. The files RINGLIST.XML provides the basic phone ring tones, while DISTINCTIVERINGLIST.XML defines the list of possible ring tones for your other line types. They, along with the actual 'raw' ringtones, are stored in the /tftpboot/ringtones directory with the rest of the config files."
+msgstr "Мелодия, которая будет использоваться телефоном по умолчанию. Может быть переопределена на телефоне. Файл RINGLIST.XML содержит основные мелодии звонка, а DISTINCTIVERINGLIST.XML определяет список мелодий для других типов линий. Сами файлы мелодий хранятся в каталоге /tftpboot/ringtones вместе с остальными конфигурационными файлами."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Enables and Disables auto line selection."
+msgstr "Включает и отключает автоматический выбор линии."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Enable/Disable conferencing via meetme (on/off), make sure you have one of the meetme apps mentioned below is activated in module.conf"
+msgstr "Включает/отключает конференц-связь через meetme (вкл./выкл.); убедитесь, что один из указанных ниже модулей meetme активирован в module.conf."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Enable NTP settings in device configuration."
+msgstr "Включить настройки NTP в конфигурации устройства."
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP SERVER MySQL Device Table"
+msgstr "Таблица устройств MySQL SCCP-сервера"
+
+#: conf/sccpgeneral.xml.v433
+msgid "The MAC address of the phone. You must specify 12 characters in the format XXXX.XXXX.XXXX, XX:XX:XX:XX:XX:XX, XX-XX-XX-XX-XX-XX or XXXXXXXXXXXX"
+msgstr "MAC-адрес телефона. Укажите 12 знаков в формате XXXX.XXXX.XXXX, XX:XX:XX:XX:XX:XX, XX-XX-XX-XX-XX-XX или XXXXXXXXXXXX"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP SERVER MySQL Line Table"
+msgstr "Таблица линий MySQL SCCP-сервера"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Device NAT support (default Auto)"
+msgstr "Поддержка NAT на устройстве (по умолчанию Auto)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone Secure directory service URL"
+msgstr "URL защищённого сервиса телефонной книги"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Echo Cancel: Echo Cancellation (Yes or No)."
+msgstr "Эхокомпенсация: включение/отключение эхокомпенсации (Да или Нет)."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone Secure Idle information URL"
+msgstr "URL защищённой информации о простое телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Dual-Tone Multi-Frequency (DTMF)"
+msgstr "Двухтональный многочастотный набор (DTMF)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone Secure authentication URL"
+msgstr "URL защищённой аутентификации телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone Secure information URL"
+msgstr "URL защищённой информации о телефоне"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Servername: This is the name of the server; normally it will be Asterisk."
+msgstr "Servername: имя сервера; как правило, это будет Asterisk."
+
+#: conf/sccpgeneral.xml.v433
+msgid "NTP Server name or IP address"
+msgstr "Имя или IP-адрес сервера NTP"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone Secure messages URL"
+msgstr "URL защищённых сообщений телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Activate the callforward NOANSWER stuff and softkeys. Default is On"
+msgstr "Включает программные клавиши переадресации при отсутствии ответа (NOANSWER). По умолчанию включено"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Playback Conference Announcements"
+msgstr "Воспроизведение анонсов конференции"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Device general config"
+msgstr "Общая конфигурация устройства SCCP"
+
+#: conf/sccpgeneral.xml.v433
+msgid "The information in the upper right corner of the device screen. Only English letters and digits !"
+msgstr "Информация в правом верхнем углу экрана устройства. Только английские буквы и цифры!"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Playback Participant Announcements"
+msgstr "Воспроизведение анонсов участников"
+
+#: conf/sccpgeneral.xml.v433
+msgid "The user locale allows the phone to display text (menu items, soft keys etc.) native to the phone's language. If No language packs found is shown, you need to add locales in the tftp server"
+msgstr "Пользовательская локаль позволяет отображать на телефоне текст (пункты меню, программные клавиши и т.д.) на родном языке. Если отображается «No language packs found», добавьте нужные локали на TFTP-сервере."
+
+#: conf/sccpgeneral.xml.v433
+msgid "The audio stream will be open in the progress and connected state. Valid options: Yes/ No"
+msgstr "Звуковой поток будет открываться в состоянии соединения. Допустимые значения: Да/Нет"
+
+#: conf/sccpgeneral.xml.v433
+msgid "XML_Ver 433"
+msgstr "XML_Ver 433"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Hiden Server config"
+msgstr "Скрытые настройки SCCP сервера"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone ssh login"
+msgstr "SSH логин телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Help."
+msgstr "Помощь."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone ssh password"
+msgstr "SSH пароль телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone protocol"
+msgstr "Протокол телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Server config"
+msgstr "Настройки SCCP сервера"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Bind Address: The address to bind to for SCCP. In general, it should be set to '0.0.0.0'. If you find problems with one-way audio, you can set this to a specific address in the server. Note that '127.0.0.1' is always wrong here.  Also note that placing in your external IP address will cause the chan_sccp module to not load.  A manual edit of the /etc/asterisk/sccp.conf file will be needed to fix and reload the module."
+msgstr "Bind Address: адрес для привязки SCCP. Обычно должен быть '0.0.0.0'. Если возникают проблемы с однонаправленным звуком, можно указать конкретный адрес сервера. Обратите внимание, что '127.0.0.1' здесь всегда неверен. Также учтите: указание внешнего IP-адреса приведёт к тому, что модуль chan_sccp не загрузится — потребуется вручную отредактировать файл /etc/asterisk/sccp.conf, чтобы исправить это и перезагрузить модуль."
+
+#: conf/sccpgeneral.xml.v433
+msgid "External Ip / Name"
+msgstr "Внешний IP / имя"
+
+#: conf/sccpgeneral.xml.v433
+msgid "External IP Address of the firewall, required in case the PBX is running on a separate host behind it. IP Address that we're going to notify in RTP media stream as the pbx source address. Resolve Hostname (if dynamic) that we're going to resolve when setting up the RTP media stream (only active if externip=0.0.0.0 and host is natted.)"
+msgstr "Внешний IP-адрес файрвола, необходим, если PBX работает на отдельном хосте позади него. Это адрес, который будет указан в RTP медиапотоке в качестве адреса источника PBX. Resolve Hostname (если динамический) — будет разрешаться при настройке RTP медиапотока (активно только если externip=0.0.0.0 и хост находится за NAT)."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Support NAT"
+msgstr "Поддержка NAT"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Global NAT support (default Auto)"
+msgstr "Глобальная поддержка NAT (по умолчанию Auto)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Config Mode"
+msgstr "Режим конфигурации SCCP"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Help!"
+msgstr "Помощь!"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Support SIP device"
+msgstr "Поддержка SIP-устройств"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow network settings. Blank fields will be ignored used Network 0.0.0.0/0.0.0.0 to resolve any existing connections. You can use the 'internal' connections only from the networks connected to the server."
+msgstr "Список разрешённых сетей. Пустые поля игнорируются, используется сеть 0.0.0.0/0.0.0.0 для разрешения существующих соединений. Соединения 'internal' можно использовать только из сетей, подключённых к серверу."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Device Connect Address / Name"
+msgstr "Адрес / имя подключения устройства"
+
+#: conf/sccpgeneral.xml.v433
+msgid "This function is useful when the server has many interfaces, but devices must connect only to some interfaces."
+msgstr "Эта функция полезна, когда у сервера много интерфейсов, но устройства должны подключаться только через некоторые из них."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Default Device Language"
+msgstr "Язык устройства по умолчанию"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Network Country"
+msgstr "Страна сети"
+
+#: conf/sccpgeneral.xml.v433
+msgid "The Network locales allows the phone to play tones (ringing, busy etc.) native to the phone's country. If No language packs found is shown, you need to add locales in the tftp server"
+msgstr "Сетевая локаль позволяет телефону воспроизводить тональные сигналы (звонок, занято и т.д.), характерные для страны телефона. Если отображается «No language packs found», добавьте нужные локали на TFTP-сервере"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Digit Timeout"
+msgstr "Тайм-аут набора цифры"
+
+#: conf/sccpgeneral.xml.v433
+msgid "No Answer Ring Time"
+msgstr "Время звонка при отсутствии ответа"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Timeout after which callforward noanswer (when active) will be triggered. default is 30 seconds"
+msgstr "Время, после которого сработает переадресация при отсутствии ответа (если включена). По умолчанию 30 секунд"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Call history stored book"
+msgstr "Хранимая история вызовов"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Set the MWI on call."
+msgstr "Включает MWI во время вызова."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Early RTP"
+msgstr "Ранний RTP"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Simulated Enbloc Dialing"
+msgstr "Имитация блочного набора (Enbloc)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Use simulated enbloc dialing to speedup connection when dialing while onhook (older phones)"
+msgstr "Использовать имитацию блочного набора для ускорения соединения при наборе номера без снятия трубки (для старых телефонов)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow push background from server"
+msgstr "Разрешить отправку фона с сервера"
+
+#: conf/sccpgeneral.xml.v433
+msgid "This needs to be enabled to allow the server to push background or ringtones to the phone in the SEPXXXXXXXXXX.cnf.xml of each phone:"
+msgstr "Должно быть включено, чтобы сервер мог отправлять фоновые изображения или мелодии звонка на телефон в SEPXXXXXXXXXX.cnf.xml каждого телефона:"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Call Forward NOANSWER"
+msgstr "Переадресация при отсутствии ответа"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Transfer"
+msgstr "Перевод вызова"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow the use of the transfer feature"
+msgstr "Разрешить использование функции перевода вызова"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Display Day Format"
+msgstr "Формат отображения дня"
+
+#: conf/sccpgeneral.xml.v433
+msgid "System Time zone - this is set by FreePBX and can be changed in Settings : Advanced Settings"
+msgstr "Системный часовой пояс — задаётся FreePBX, изменить можно в Settings : Advanced Settings"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Device Vendor Setting"
+msgstr "Настройки производителя устройства"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Log Server"
+msgstr "Сервер логов"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Log server Address: x.x.x.x:9001"
+msgstr "Адрес сервера логов: x.x.x.x:9001"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Days Display Not Active"
+msgstr "Дни неактивности экрана"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Comma separated list of days that the phone's display is not active and will be automatically turned off after the time specified by \"displayIdleTimeout\" has elapsed (1 - Sunday, 7 - Saturday)"
+msgstr "Список дней через запятую, когда экран телефона неактивен и автоматически выключается по истечении времени, заданного в «displayIdleTimeout» (1 — воскресенье, 7 — суббота)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Display On Start Time"
+msgstr "Время включения экрана"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Time in HH:MM format to automatically turn on the phone display."
+msgstr "Время в формате ЧЧ:ММ для автоматического включения экрана телефона."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Display On Duration"
+msgstr "Длительность включённого экрана"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Time duration in HH:MM format to automatically turn off the phone display after it was turned on."
+msgstr "Длительность в формате ЧЧ:ММ, через которую экран телефона автоматически выключится после включения."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Display Idle Timeout"
+msgstr "Тайм-аут простоя экрана"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Timeout in HH:MM format to automatically turn off phone display if outside the time specified by \"daysDisplayNotActive\", \"displayOnTime\" and \"displayOnTimeout\"."
+msgstr "Тайм-аут в формате ЧЧ:ММ для автоматического выключения экрана телефона вне времени, заданного параметрами «daysDisplayNotActive», «displayOnTime» и «displayOnTimeout»."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Settings Access"
+msgstr "Доступ к настройкам"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Whether a user can access the phone settings."
+msgstr "Может ли пользователь получить доступ к настройкам телефона."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Video Capability"
+msgstr "Поддержка видео"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Web Access"
+msgstr "Веб-доступ"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Enable the phone's HTTP server."
+msgstr "Включить HTTP-сервер телефона."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Web Admin"
+msgstr "Веб-администрирование"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Enable remote administration using the phone's HTTP server. 8821 model only."
+msgstr "Включить удалённое администрирование через HTTP-сервер телефона. Только для модели 8821."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Pc Port"
+msgstr "PC-порт"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Disable the PC (computer) port"
+msgstr "Отключить PC (компьютерный) порт"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Span to PC Port"
+msgstr "Зеркалирование на PC-порт"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Forward packets sent and received on the SW (network) port to the PC (computer) port."
+msgstr "Перенаправлять пакеты, отправленные и полученные на SW (сетевом) порту, на PC (компьютерный) порт."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Voice Vlan Access"
+msgstr "Доступ к голосовому VLAN"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow devices connected to the PC (computer) port to access the voice VLAN."
+msgstr "Разрешить устройствам, подключённым к PC (компьютерному) порту, доступ к голосовому VLAN."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Cdp Sw Port"
+msgstr "CDP на SW-порту"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Enable Cisco Discovery Protocol on the SW (network) port."
+msgstr "Включить Cisco Discovery Protocol на SW (сетевом) порту."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Cdp PC Port"
+msgstr "CDP на PC-порту"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Enable Cisco Discovery Protocol on the PC (computer) port."
+msgstr "Включить Cisco Discovery Protocol на PC (компьютерном) порту."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Link Layer Discovery Sw"
+msgstr "LLDP на SW-порту"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Enable Link Layer Discovery Protocol on the SW (network) port."
+msgstr "Включить Link Layer Discovery Protocol на SW (сетевом) порту."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Link Layer Discovery PC"
+msgstr "LLDP на PC-порту"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Enable Link Layer Discovery Protocol on the PC (computer) port."
+msgstr "Включить Link Layer Discovery Protocol на PC (компьютерном) порту."
+
+#: conf/sccpgeneral.xml.v433
+msgid "SRST Server Enabled"
+msgstr "SRST сервер включён"
+
+#: conf/sccpgeneral.xml.v433
+msgid "You enabled/configured a Survivable Remote Site Telephony (SRST) reference as the last device in the CallManager(CM) list."
+msgstr "Вы включили/настроили ссылку Survivable Remote Site Telephony (SRST) как последнее устройство в списке CallManager (CM)."
+
+#: conf/sccpgeneral.xml.v433
+msgid "SRST User Modifiable"
+msgstr "Пользователь может изменять SRST"
+
+#: conf/sccpgeneral.xml.v433
+msgid "The user can change the personal SRST configuration on the device"
+msgstr "Пользователь может изменить персональную конфигурацию SRST на устройстве"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SRST Security"
+msgstr "Безопасность SRST"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SRST Config Name"
+msgstr "Имя конфигурации SRST"
+
+#: conf/sccpgeneral.xml.v433
+msgid "You enabled configure a Survivable Remote Site Telephony (SRST) reference as the last device in the CallManager(CM) list."
+msgstr "Вы включили и настроили ссылку Survivable Remote Site Telephony (SRST) как последнее устройство в списке CallManager (CM)."
+
+#: conf/sccpgeneral.xml.v433
+msgid "SRST Server list"
+msgstr "Список серверов SRST"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Add Server"
+msgstr "Добавить сервер"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SRST Sip Server list"
+msgstr "Список SIP-серверов SRST"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone Secure Service URL"
+msgstr "URL защищённого сервиса телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Phone authentication URL"
+msgstr "URL аутентификации телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Signalling Type Of Service / Class Of Service - this is modifiable, but it is not recommended to change"
+msgstr "Тип/класс обслуживания сигнализации SCCP — изменяемо, но менять не рекомендуется"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Audio Type Of Service / Class Of Service - this is modifiable, but it is not recommended to change"
+msgstr "Тип/класс обслуживания аудио — изменяемо, но менять не рекомендуется"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Video Type Of Service / Class Of Service - this is modifiable, but it is not recommended to change"
+msgstr "Тип/класс обслуживания видео — изменяемо, но менять не рекомендуется"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Hot Line config"
+msgstr "Настройка Hotline SCCP"
+
+#: conf/sccpgeneral.xml.v433
+msgid "First time configuration"
+msgstr "Первоначальная настройка"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Be careful with this function. It is recommended to restrict to internal network use; set the deny/permit to 'internal' by default. This is insecure and should be switched off before going into production. A PLAR phone is still able to ring any other extension by entering the number on the phone before going off-hook. So either setup a secure context for these types of phones or switch off hotline."
+msgstr "Будьте осторожны с этой функцией. Рекомендуется ограничить её использование внутренней сетью — задайте deny/permit как 'internal' по умолчанию. Иначе это небезопасно, и функцию следует отключить перед вводом в продакшн. PLAR-телефон всё равно может позвонить на любой другой номер, набрав его перед снятием трубки. Поэтому либо настройте безопасный контекст для таких телефонов, либо отключите hotline."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow ="
+msgstr "Allow ="
+
+#: conf/sccpgeneral.xml.v433
+msgid "Specify a list of your networks, for example: 192.168.1.0"
+msgstr "Укажите список ваших сетей, например: 192.168.1.0"
+
+#: conf/sccpgeneral.xml.v433
+msgid "deny ="
+msgstr "deny ="
+
+#: conf/sccpgeneral.xml.v433
+msgid "0.0.0.0/0.0.0.0"
+msgstr "0.0.0.0/0.0.0.0"
+
+#: conf/sccpgeneral.xml.v433
+msgid "permit ="
+msgstr "permit ="
+
+#: conf/sccpgeneral.xml.v433
+msgid "internal"
+msgstr "internal"
+
+#: conf/sccpgeneral.xml.v433
+msgid "hotline_context ="
+msgstr "hotline_context ="
+
+#: conf/sccpgeneral.xml.v433
+msgid "sccp"
+msgstr "sccp"
+
+#: conf/sccpgeneral.xml.v433
+msgid "hotline_label ="
+msgstr "hotline_label ="
+
+#: conf/sccpgeneral.xml.v433
+msgid "hotline"
+msgstr "hotline"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Hotline"
+msgstr "Горячая линия"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Hotline Label: The label on the device"
+msgstr "Название Hotline: подпись на устройстве"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Directed pickup context"
+msgstr "Контекст направленного перехвата"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Default pickup group"
+msgstr "Группа перехвата по умолчанию"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Directed Pickup Answer"
+msgstr "Ответ при направленном перехвате"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Enable/disable Pickup button to do directed pickup from a specific extension."
+msgstr "Включает/отключает кнопку Pickup для направленного перехвата с конкретного номера."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Transfer on hangup"
+msgstr "Перевод по отбою"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Complete transfer on hangup, without pressing transfer a second time. Will complete transfer, when the transferer puts the receiver on hook, after the destination has been reached. To cancel the transfer, either press resume on the transferred channel, press the 'endcall' softkey, or have the receiving party hangup first."
+msgstr "Завершает перевод вызова по отбою, без повторного нажатия кнопки перевода. Перевод завершится, когда переводящий положит трубку после того, как адресат ответил. Чтобы отменить перевод, нажмите resume на переводимом канале, программную клавишу «endcall», либо дождитесь, пока принимающая сторона положит трубку первой."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Default Dial Plan"
+msgstr "План набора по умолчанию"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow change Background Image"
+msgstr "Разрешить смену фонового изображения"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow BLF in Phone Directory"
+msgstr "Разрешить BLF в телефонной книге"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Show numbers you can redial, but also include their current device state, so you know when they are currently busy. Note that the other phonebook entries will now also monitor the remove device state and show the current device state"
+msgstr "Показывать номера, на которые можно перезвонить, вместе с текущим статусом устройства, чтобы видеть, когда они заняты. Обратите внимание, что остальные записи телефонной книги также будут отслеживать состояние удалённого устройства и показывать текущий статус"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Echo Cancel"
+msgstr "Эхокомпенсация"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Rewrite HELP"
+msgstr "Справка по Rewrite"
+
+#: conf/sccpgeneral.xml.v433
+msgid "This section is responsible for the modes of operation of external services: tftp http."
+msgstr "Этот раздел отвечает за режимы работы внешних сервисов: tftp, http."
+
+#: conf/sccpgeneral.xml.v433
+msgid "* off - Flat model cisco. All data is in the directory TFTP Server Path"
+msgstr "* off — плоская модель Cisco. Все данные находятся в каталоге, заданном TFTP Server Path"
+
+#: conf/sccpgeneral.xml.v433
+msgid "* Provision - The directory structure is strictly defined in the manager. Requires tftpd mapping support."
+msgstr "* Provision — структура каталогов строго задаётся в менеджере. Требует поддержки маппинга tftpd."
+
+#: conf/sccpgeneral.xml.v433
+msgid "The mode is determined by Sccp_manager based on the presence of a mapping file in TFTP defaults"
+msgstr "Режим определяется Sccp_manager по наличию файла маппинга в настройках TFTP по умолчанию"
+
+#: conf/sccpgeneral.xml.v433
+msgid "and must be the same as the tftp server, or the phones will not find required files"
+msgstr "и должен совпадать с настройками TFTP-сервера, иначе телефоны не найдут нужные файлы"
+
+#: conf/sccpgeneral.xml.v433
+msgid "To change the mode, add or remove the -m option."
+msgstr "Чтобы изменить режим, добавьте или уберите опцию -m."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Path to tftp home directory. This was determined by the Sccp_manager installer and should only be changed if the tftp root has been modified since installation"
+msgstr "Путь к домашнему каталогу tftp. Определяется установщиком Sccp_manager и должен изменяться только если корень tftp был изменён после установки"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Provision SERVER Path"
+msgstr "Путь сервера Provision"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Use path from provision index.cnf file. You must first make sure that you have properly configured the \"Provision\""
+msgstr "Использовать путь из файла provision index.cnf. Сначала убедитесь, что «Provision» настроен правильно"
+
+#: conf/sccpgeneral.xml.v433
+msgid "TFTP SERVER remapping support"
+msgstr "Поддержка ремаппинга TFTP-сервера"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Support the use of regular-expression-based filename remapping"
+msgstr "Поддержка переименования файлов на основе регулярных выражений"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Get data files from Provision"
+msgstr "Получать файлы данных из Provision"
+
+#: conf/sccpgeneral.xml.v433
+msgid "If this is set to yes, Sccp_manager will try to get data files from dkgroot/Provision (languages, ring tones, firmware etc). This is enabled at your own risk - Sccp_Manager cannot vouch for the security or accuracy of these files, and this option is included to assist in getting up to speed as rapidly as possible."
+msgstr "Если включено, Sccp_manager будет пытаться получать файлы данных из dkgroot/Provision (языки, мелодии звонка, прошивки и т.д.). Используется на свой риск — Sccp_Manager не может ручаться за безопасность или точность этих файлов, опция добавлена, чтобы как можно быстрее приступить к работе."
+
+#: conf/sccpgeneral.xml.v433
+msgid "User Roaming"
+msgstr "Роуминг пользователя"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Experimental Function Roaming Users"
+msgstr "Экспериментальная функция роуминга пользователей"
+
+#: conf/sccpgeneral.xml.v433
+msgid "The MAC address of the phone"
+msgstr "MAC-адрес телефона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Default Line"
+msgstr "Линия по умолчанию"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Select the default line for this device"
+msgstr "Выберите линию по умолчанию для этого устройства"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Soft Keyset"
+msgstr "Набор программных клавиш"
+
+#: conf/sccpgeneral.xml.v433
+msgid "System Default Softkey"
+msgstr "Системный набор программных клавиш по умолчанию"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Ringtone"
+msgstr "Мелодия звонка"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Enable/Disable Softkeys"
+msgstr "Включение/отключение программных клавиш"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Park"
+msgstr "Парковка"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Take a look to the compile how-to. Park stuff is not compiled by default."
+msgstr "Ознакомьтесь с инструкцией по сборке. Функционал парковки не собирается по умолчанию."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Conference"
+msgstr "Конференция"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Redial using Phonebook"
+msgstr "Повтор набора через телефонную книгу"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Some phone models with bad firmware do send dtmf in a messed up order and need to be forced to skinny mode."
+msgstr "Некоторые модели телефонов с неисправной прошивкой отправляют DTMF в неправильном порядке — их нужно принудительно переводить в режим skinny."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Message Waiting Indication (MWI)"
+msgstr "Индикация ожидающих сообщений (MWI)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Do not update history for this Phonebook if answered by another extension"
+msgstr "Не обновлять историю этой телефонной книги, если вызов принят другим номером"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Start Muted"
+msgstr "Начинать с выключенным микрофоном"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Select Networks Actions"
+msgstr "Действие для выбранных сетей"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Select Networks Type"
+msgstr "Тип выбранной сети"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Network IP"
+msgstr "IP сети"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Network"
+msgstr "Сеть"
+
+#: conf/sccpgeneral.xml.v433
+msgid "NAT"
+msgstr "NAT"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Template Name"
+msgstr "Имя шаблона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Device Template Function"
+msgstr "Функция шаблона устройства"
+
+#: conf/sccpgeneral.xml.v433
+msgid "HELP SCCP Server Name"
+msgstr "Справка: имя SCCP сервера"
+
+#: conf/sccpgeneral.xml.v433
+msgid "0 1 2 3 4 5 6 7 8 9"
+msgstr "0 1 2 3 4 5 6 7 8 9"
+
+#: conf/sccpgeneral.xml.v433
+msgid "."
+msgstr "."
+
+#: conf/sccpgeneral.xml.v433
+msgid "*"
+msgstr "*"
+
+#: conf/sccpgeneral.xml.v433
+msgid "\\*"
+msgstr "\\*"
+
+#: conf/sccpgeneral.xml.v433
+msgid ","
+msgstr ","
+
+#: conf/sccpgeneral.xml.v433
+msgid "%0"
+msgstr "%0"
+
+#: conf/sccpgeneral.xml.v433
+msgid "%1 %2 %3 %4 %5"
+msgstr "%1 %2 %3 %4 %5"
+
+#: conf/sccpgeneral.xml.v433
+msgid "%%"
+msgstr "%%"
+
+#: conf/sccpgeneral.xml.v433
+msgid "User ID"
+msgstr "ID пользователя"
+
+#: conf/sccpgeneral.xml.v433
+msgid "User Display Name"
+msgstr "Отображаемое имя пользователя"
+
+#: conf/sccpgeneral.xml.v433
+msgid "User Pincode"
+msgstr "PIN-код пользователя"
+
+#: conf/sccpgeneral.xml.v433
+msgid "User password"
+msgstr "Пароль пользователя"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Roaming"
+msgstr "Роуминг"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Auto Logout"
+msgstr "Автовыход"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Link Buttons from Home Device"
+msgstr "Связать кнопки с домашним устройством"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Time Work configuration"
+msgstr "Настройка рабочего времени"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Logof after Work Time"
+msgstr "Выход по окончании рабочего времени"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Time Group"
+msgstr "Временная группа"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Out of time session length"
+msgstr "Длительность сессии вне рабочего времени"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SIP Device config"
+msgstr "Настройка SIP-устройства"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Dial Templates"
+msgstr "Шаблоны набора"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Dial templates control what number patterns are valid and how many seconds to wait for extra digits before dialing."
+msgstr "Шаблоны набора определяют, какие последовательности цифр допустимы и сколько секунд ждать дополнительные цифры перед набором."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Set Vars"
+msgstr "Установка переменных"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Extension Details"
+msgstr "Параметры номера SCCP"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Mailbox"
+msgstr "Почтовый ящик"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Name or id of linked maibox: Voicemail has to be enabled for this to be available"
+msgstr "Имя или ID связанного почтового ящика: для этого должна быть включена голосовая почта"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Incoming Call Limit"
+msgstr "Лимит входящих вызовов"
+
+#: conf/sccpgeneral.xml.v433
+msgid "The SCCP channel number for this port. If you are planning to use this line as 'Shared' or use on several devices - leave this field blank or set limit to 10 calls."
+msgstr "Номер SCCP-канала для этого порта. Если планируется использовать эту линию как 'Shared' или на нескольких устройствах — оставьте поле пустым или установите лимит в 10 вызовов."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Line Context"
+msgstr "Контекст линии"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Named Call Group"
+msgstr "Именованная группа вызова"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Sets the named caller groups this line is a member of"
+msgstr "Задаёт именованные группы вызова, в которые входит эта линия"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Named Pickup Group"
+msgstr "Именованная группа перехвата"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Named PickupGroup - the list is of pickup groups used on the system"
+msgstr "Именованная группа перехвата — список групп перехвата, используемых в системе"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Secondary dialtone digits"
+msgstr "Цифры вторичного гудка"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Digits to indicate an external line to user (secondary dialtone) Sample 9 or 8 (max 9 digits)"
+msgstr "Цифры, обозначающие для пользователя внешнюю линию (вторичный гудок). Например 9 или 8 (максимум 9 цифр)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Secondary dialtone"
+msgstr "Вторичный гудок"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Outside dialtone frequency (default 0x22)"
+msgstr "Частота внешнего гудка (по умолчанию 0x22)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "DND"
+msgstr "Не беспокоить (DND)"
+
+#: conf/sccpgeneral.xml.v433
+msgid ""
+"DND: Means how will dnd react when it is set on the device level dnd can have three states: off / busy(reject) / silent / Cycle\n"
+"                  Cycle  - DND that cycles through all three states off -> reject -> silent -> off (this is the normal behaviour)\n"
+"                  Reject - Users can only switch off and on (in reject/busy mode)\n"
+"                  Silent - Users can only switch off and on (in silent mode)"
+msgstr ""
+"DND: определяет, как будет вести себя режим «не беспокоить» на уровне устройства. Возможны три состояния: off / busy(reject) / silent / Cycle\n"
+"                  Cycle  — DND циклически переключается между off -> reject -> silent -> off (обычное поведение)\n"
+"                  Reject — пользователь может только включать/выключать (в режиме reject/busy)\n"
+"                  Silent — пользователь может только включать/выключать (в режиме silent)"
+
+#: conf/sccpgeneral.xml.v433
+msgid "SCCP Config Mode "
+msgstr "Режим конфигурации SCCP"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow network settings. Blank fields will be ignored used Network 0.0.0.0/0.0.0.0 to resolve any existing connections. You can use the 'internal' connections only from the networks connected to the server. "
+msgstr "Список разрешённых сетей. Пустые поля игнорируются, используется сеть 0.0.0.0/0.0.0.0 для разрешения существующих соединений. Соединения 'internal' можно использовать только из сетей, подключённых к серверу."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Device Connect Address / Name "
+msgstr "Адрес / имя подключения устройства"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Allow push background from server "
+msgstr "Разрешить отправку фона с сервера"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Log server Address: x.x.x.x:9001 "
+msgstr "Адрес сервера логов: x.x.x.x:9001"
+
+#: conf/sccpgeneral.xml.v433
+msgid " Enable Link Layer Discovery Protocol on the PC (computer) port."
+msgstr "Включить Link Layer Discovery Protocol на PC (компьютерном) порту."
+
+#: conf/sccpgeneral.xml.v433
+msgid "hotline_label = "
+msgstr "hotline_label ="
+
+#: conf/sccpgeneral.xml.v433
+msgid "Rewrite HELP "
+msgstr "Справка по Rewrite"
+
+#: conf/sccpgeneral.xml.v433
+msgid " * off - Flat model cisco. All data is in the directory TFTP Server Path"
+msgstr "* off — плоская модель Cisco. Все данные находятся в каталоге, заданном TFTP Server Path"
+
+#: conf/sccpgeneral.xml.v433
+msgid " * Provision - The directory structure is strictly defined in the manager. Requires tftpd mapping support."
+msgstr "* Provision — структура каталогов строго задаётся в менеджере. Требует поддержки маппинга tftpd."
+
+#: conf/sccpgeneral.xml.v433
+msgid " The mode is determined by Sccp_manager based on the presence of a mapping file in TFTP defaults"
+msgstr "Режим определяется Sccp_manager по наличию файла маппинга в настройках TFTP по умолчанию"
+
+#: conf/sccpgeneral.xml.v433
+msgid " and must be the same as the tftp server, or the phones will not find required files"
+msgstr "и должен совпадать с настройками TFTP-сервера, иначе телефоны не найдут нужные файлы"
+
+#: conf/sccpgeneral.xml.v433
+msgid " To change the mode, add or remove the -m option."
+msgstr "Чтобы изменить режим, добавьте или уберите опцию -m."
+
+#: conf/sccpgeneral.xml.v433
+msgid "Template Name "
+msgstr "Имя шаблона"
+
+#: conf/sccpgeneral.xml.v433
+msgid "Dial templates control what number patterns are valid and how many seconds to wait for extra digits before dialing. "
+msgstr "Шаблоны набора определяют, какие последовательности цифр допустимы и сколько секунд ждать дополнительные цифры перед набором."
+
+#: views/advserver.keyset.php
+msgid "Display Onhook"
+msgstr "Отображение: трубка положена (Onhook)"
+
+#: views/advserver.keyset.php
+msgid "Display Connected"
+msgstr "Отображение: соединён (Connected)"
+
+#: views/advserver.keyset.php
+msgid "Display onhold"
+msgstr "Отображение: на удержании (Onhold)"
+
+#: views/advserver.keyset.php
+msgid "Display ringin"
+msgstr "Отображение: входящий звонок (Ringin)"
+
+#: views/advserver.keyset.php
+msgid "Display offhook"
+msgstr "Отображение: трубка снята (Offhook)"
+
+#: views/advserver.keyset.php
+msgid "Display conntrans"
+msgstr "Отображение: перевод во время разговора (Conntrans)"
+
+#: views/advserver.keyset.php
+msgid "Display digitsfoll"
+msgstr "Отображение: набор цифр (Digitsfoll)"
+
+#: views/advserver.keyset.php
+msgid "Display connconf"
+msgstr "Отображение: конференция во время разговора (Connconf)"
+
+#: views/advserver.keyset.php
+msgid "Display ringout"
+msgstr "Отображение: исходящий вызов (Ringout)"
+
+#: views/advserver.keyset.php
+msgid "Display offhookfeat"
+msgstr "Отображение: функции при снятой трубке (Offhookfeat)"
+
+#: views/advserver.keyset.php
+msgid "Display onhint"
+msgstr "Отображение: на линии-подсказке (Onhint)"
+
+#: views/advserver.keyset.php
+msgid "Display onstealable"
+msgstr "Отображение: линия доступна для перехвата (Onstealable)"
+
+#: views/advserver.keyset.php
+msgid "Display holdconf"
+msgstr "Отображение: конференция на удержании (Holdconf)"
+
+#: views/advserver.keyset.php
+msgid "Display uriaction"
+msgstr "Отображение: URI-действие (Uriaction)"
+
+#: views/advserver.keyset.php
+msgid "Name Keyset"
+msgstr "Имя набора клавиш"
+
 #~ msgid "SCCP Connectivity"
 #~ msgstr "Сервер SCCP"
 
@@ -861,15 +2375,9 @@ msgstr "Получить файлы от Provisioner"
 #~ msgid "Blink"
 #~ msgstr "Мерцать"
 
-#~ msgid "SCCP Server Name"
-#~ msgstr "Имя SCCP Сервера"
-
 #~ msgid ""
 #~ "Servername: This is the type of server - usually, it will be Asterisk."
 #~ msgstr "Servername: это Имя сервера - обычно это будет Asterisk."
-
-#~ msgid "Bind Address : [ Port ]"
-#~ msgstr "Слушать SCCP на адресе: [ Порту ]"
 
 #~ msgid ""
 #~ "Bind Address: The address to bind to for SCCP. In general, it should be "
@@ -893,50 +2401,8 @@ msgstr "Получить файлы от Provisioner"
 #~ "которое динамически обновляется. Например - myhomerouter.dyndns.org "
 #~ "(параметр externhost)"
 
-#~ msgid "SCCP SERVER Keepalive"
-#~ msgstr "Время ожидения Keepalive"
-
-#~ msgid ""
-#~ "Time between Keep Alive checks. Valid range is 60-300 seconds. After much "
-#~ "trial-and-error, the minimum (60) seems to work just fine."
-#~ msgstr ""
-#~ "Время ожидание keepalives в потоке SCCP после истечения устройство "
-#~ "считается недоступным."
-
-#~ msgid "SCCP DEBUG"
-#~ msgstr "Режим отладки"
-
-#~ msgid "Debug: Enable debugging level in SCCP module."
-#~ msgstr "Урровень детализации в Логе отладки модуля SCCP."
-
-#~ msgid "SCCP Networks"
-#~ msgstr "Настройка сетевых параметров сервера SCCP"
-
-#~ msgid ""
-#~ "Local network settings. Blank fields will be ignored used Network 0.0.0.0."
-#~ msgstr ""
-#~ "Настройки локальной сети. Пустые поля будут игнорироваться в используемой "
-#~ "сети 0.0.0.0."
-
-#~ msgid ""
-#~ "Allow network settings. Blank fields will be ignored used Network 0.0.0.0."
-#~ msgstr "Список допустимых для регистрации подсетей."
-
-#~ msgid "Deny Networks / Mask"
-#~ msgstr "Запрещенные Подсети"
-
 #~ msgid "Add Deny network"
 #~ msgstr "Еще Deny Net"
-
-#~ msgid ""
-#~ "All RFC 1918 addresses are local networks. Should always be at least "
-#~ "'0.0.0.0/0.0.0.0'."
-#~ msgstr ""
-#~ "Все адреса RFC 1918 являются локальными сетями. Всегда должно быть не "
-#~ "менее '0.0.0.0/0.0.0.0'."
-
-#~ msgid "Local Networks / Mask"
-#~ msgstr "Локальные сети / Маска"
 
 #~ msgid "Add local networks"
 #~ msgstr "Больше LoaclNet"
@@ -948,31 +2414,10 @@ msgstr "Получить файлы от Provisioner"
 #~ "Все адреса RFC 1918 являются локальными сетями, например "
 #~ "'192.168.1.0/255.255.255.0'"
 
-#~ msgid "SCCP Language"
-#~ msgstr "SCCP Натройка языков"
-
-#~ msgid "SCCP System Language"
-#~ msgstr "SCCP язык системы"
-
-#~ msgid ""
-#~ "SCCP Language: This is the language for your hints and other features of "
-#~ "the phone. If you don't have any languages installed or are using a "
-#~ "single language, you can leave this blank."
-#~ msgstr ""
-#~ "Язык SCCP: это язык для ваших советов и других функций телефона. Если у "
-#~ "вас нет каких-либо языков, установленных или использующих один язык, вы "
-#~ "можете оставить этот пробел."
-
-#~ msgid "SCCP Network Device Language"
-#~ msgstr "SCCP локализация региона"
-
 #~ msgid ""
 #~ "The Network locales allows the phone to play tones (ringing, busy etc.) "
 #~ "native to the phone's country."
 #~ msgstr "Настройка региональных параметров диал-тона, занято и т.д."
-
-#~ msgid "SCCP Phone Device Language"
-#~ msgstr "SCCP язык меню телефона"
 
 #~ msgid ""
 #~ "The user locale allows the phone to display text (menu items, soft keys "
@@ -982,152 +2427,11 @@ msgstr "Получить файлы от Provisioner"
 #~ msgid "SCCP Device config"
 #~ msgstr "SCCP Настойка Абонентских Устройств"
 
-#~ msgid "First Digit Timeout"
-#~ msgstr "Время ожидания набора"
-
-#~ msgid ""
-#~ "First Digit Timeout: The amount of time after your first digit to start "
-#~ "dialing automatically. This can be over-ridden with settings in your "
-#~ "dialplan.xml or by using the 'immediate dial' button."
-#~ msgstr ""
-#~ "First Digit Timeout: количество времени после набора первой цифры для "
-#~ "автоматического набора номера. Это можно переопределить с помощью "
-#~ "настроек в dialplan.xml или с помощью кнопки «набор» на телефоне."
-
-#~ msgid ""
-#~ "Digit Timeout: The amount of time to wait after the second (or "
-#~ "subsequent) dialed digit. Override rules are the same as for "
-#~ "firstdigittimeout."
-#~ msgstr ""
-#~ "Тайм-аут набора: Время ожидания нажатия следующей цифры по истечению "
-#~ "вызываем набраный номер. Правила такие же, как и для firstdigittimeout."
-
-#~ msgid "Autoanswer Ring Time"
-#~ msgstr "Время автоответа"
-
-#~ msgid ""
-#~ "Autoanswer Ring Time: The amount of time the phones will ring when being "
-#~ "called as Intercom or Paging mode."
-#~ msgstr ""
-#~ "Время авотовета : время, в течение которого телефоны будут звонить при "
-#~ "вызове в режиме внутренней связи или пейджинга."
-
-#~ msgid "Autoanswer Tone"
-#~ msgstr "Autoanswer Tone"
-
-#~ msgid ""
-#~ "Autoanswer Tone: The tone the phone plays back when it picks up the phone "
-#~ "in autoanswer mode. Default is '0x32'. Silence is '0x00'. There are lots "
-#~ "of tones, all expressed as '0XNN' where 'NN' is a hexadecimal number."
-#~ msgstr ""
-#~ "Тональный сигнал автоответчика: тон, воспроизводимый телефоном, когда он "
-#~ "поднимает телефон в режиме автоответчика. Значение по умолчанию - «0x32». "
-#~ "Тишина - «0x00». Есть много тонов, все выраженные как «0XNN», где «NN» - "
-#~ "шестнадцатеричное число."
-
-#~ msgid "Remote Hangup Tone"
-#~ msgstr "Remote Hangup Tone"
-
-#~ msgid ""
-#~ "Remote Hangup Tone: The tone played by the phone when it received a "
-#~ "remote hang-up signal. Use '0' to disable the tone."
-#~ msgstr ""
-#~ "Тональный сигнал отбоя: тон, воспроизводимый телефоном, когда он получил "
-#~ "отбоя. Используйте «0» для отключения тона."
-
-#~ msgid "Transfer Tone"
-#~ msgstr "Transfer Tone"
-
-#~ msgid ""
-#~ "Transfer Tone: The tone played when a call is transferred. Use '0' to "
-#~ "disable the tone."
-#~ msgstr ""
-#~ "Тон перевода вызова: тон, воспроизводимый при переводе вызова. "
-#~ "Используйте «0» для отключения тона."
-
-#~ msgid "Call Waiting Tone"
-#~ msgstr "Call Waiting Tone"
-
-#~ msgid ""
-#~ "Call Waiting Tone: The tone played when a call is waiting. If you set "
-#~ "this one to '0', you will not get a tone in your current call if a new "
-#~ "call comes in, so you might want to disable call waiting for this line "
-#~ "instead."
-#~ msgstr ""
-#~ "220/5000\n"
-#~ "Тональный сигнал ожидания вызова: тон, воспроизводимый при ожидании "
-#~ "вызова. Если вы установите его на «0», вы не получите тон в текущем "
-#~ "вызове, если произойдет новый вызов, поэтому вы можете отключить вызов, "
-#~ "ожидающий этой строки."
-
 #~ msgid "Echo Cancel: Echo Cancellation (On or Off)."
 #~ msgstr "Включение отключеня эхокомпенсации."
 
-#~ msgid "Silence Suppression"
-#~ msgstr "Подавление тишины"
-
 #~ msgid "Silence Suppression: Slience Suppression on the phone."
 #~ msgstr "Подавление тишины: подавление тишины на телефоне."
-
-#~ msgid "Private Calling"
-#~ msgstr "Private Calling"
-
-#~ msgid ""
-#~ "Private Calling Enabled: Place a call with privacy Options (no Caller ID) "
-#~ "turned on. Needs to be supported in Asterisk to work through SIP and "
-#~ "DAHDI trunks."
-#~ msgstr ""
-#~ "Частный вызов включен: поместите вызов с настройками конфиденциальности "
-#~ "(без идентификатора вызывающего абонента). Необходимо поддерживать "
-#~ "Asterisk для работы через соединительные линии SIP и DAHDI."
-
-#~ msgid "Directed Pickup"
-#~ msgstr "Directed Pickup"
-
-#~ msgid ""
-#~ "Directed Pickup Mode (Answer): If a call is sent with the \"directed "
-#~ "pickup\" flag, the phone will answer when set to \"Yes\"."
-#~ msgstr ""
-#~ "Направленный режим ответа: если звонок отправлен с флагом «направленного "
-#~ "пикапа», телефон ответит, когда установлено «Да»."
-
-#~ msgid "Call Answer Order"
-#~ msgstr "Call Answer Order"
-
-#~ msgid ""
-#~ "Call Answer Order: Which call should be answered first? The most common "
-#~ "choice is \"oldestfirst\", but other orders are supported."
-#~ msgstr ""
-#~ "Порядок ответа на вызов: на какой вызов следует ответить в первую "
-#~ "очередь? Наиболее распространенным вариантом является «oldestfirst», но "
-#~ "поддерживаются другие заказы."
-
-#~ msgid "Message Lamp"
-#~ msgstr "Message Lamp"
-
-#~ msgid ""
-#~ "Set the MWI lamp style when MWI active to on, off, wink, flash or blink"
-#~ msgstr ""
-#~ "Установите режим индикации лампы MWI, когда активен MWI для включения, "
-#~ "выключения, подмигивания, вспышки или мигания"
-
-#~ msgid "Message Lamp On Call"
-#~ msgstr "Message Lamp On Call"
-
-#~ msgid "SCCP Device advanced config"
-#~ msgstr "Параметры настойки для Очень умных"
-
-#, fuzzy
-#~| msgid "Directed Pickup"
-#~ msgid "Direct RTP"
-#~ msgstr "Directed Pickup"
-
-#, fuzzy
-#~| msgid "This option allow devices to do direct RTP sessions (default Off)"
-#~ msgid ""
-#~ "This option set global allow devices to do direct RTP sessions (default "
-#~ "Off)"
-#~ msgstr "Разрешение передача сигналов сигнализации между устройстваи."
 
 #, fuzzy
 #~| msgid ""
@@ -1141,112 +2445,17 @@ msgstr "Получить файлы от Provisioner"
 #~ "\"none, progress, offhook, dial, ringout\". По умолчанию может быть "
 #~ "\"progress\"."
 
-#~ msgid "Global Enable/Disable Softkeys"
-#~ msgstr "Порграмные кнопки на телефонах"
-
-#~ msgid "Call Forward"
-#~ msgstr "Кнопка Первод звонка"
-
-#~ msgid "Call Forward busy"
-#~ msgstr "Кнопка Первод звонка если занят"
-
-#~ msgid "Activate the callforward busy softkeys. Default is On"
-#~ msgstr "Программные клавиши управления звонками. По умолчанию включено"
-
-#~ msgid "SCCP NTP Service config"
-#~ msgstr "SCCP Сервер Времени"
-
-#~ msgid "NTP Server Enabled"
-#~ msgstr "Разрешаем NTP"
-
 #~ msgid "Enabling NTP settings in device configuration."
 #~ msgstr "Включение параметров NTP в конфигурации устройства."
-
-#~ msgid "NTP Server name (ip)"
-#~ msgstr "Адрес Сервера NTP (IP)"
 
 #~ msgid "NTP Server name or IP"
 #~ msgstr "Адрес Сервера NTP"
 
-#~ msgid "Configure NTP Server protocol time synchronization"
-#~ msgstr "Настойка протокола синхронизации времени"
-
-#~ msgid "SCCP Time Service config"
-#~ msgstr "SCCP Настройка Сервера Времени"
-
-#~ msgid ""
-#~ "Date Format: The date format for the on-screen display. Can be one of the "
-#~ "following: (D-M-YA, M.D.Y, Y/M/D) where 'D' is Day, 'M' is Month, 'Y' is "
-#~ "Year, 'A' is 24-hour, 'a' is 12-hour, and the separators can be "
-#~ "'.','-','/'"
-#~ msgstr ""
-#~ "Формат даты: формат даты для экранного дисплея. Может быть одним из "
-#~ "следующих: (DM-YA, MDY, Y / M / D), где «D» - «День», «M» - месяц, «Y» - "
-#~ "это год, «A» - 24 часа, составляет 12 часов, а разделители могут быть "
-#~ "'.', '-', '/'"
-
-#~ msgid "Time Zone"
-#~ msgstr "Часовой пояс"
-
 #~ msgid "Date Format: Time zone"
 #~ msgstr "Date Format: Часовой пояс"
 
-#~ msgid "SCCP URL Service config"
-#~ msgstr "Настройка Внеших URL сервисов"
-
-#~ msgid "Phone Service URL"
-#~ msgstr "Service Menu URL"
-
 #~ msgid "Phone authentication URLe"
 #~ msgstr "URL для авторизации на телефоне"
-
-#~ msgid ""
-#~ "The above is simply a dummy authentication page.  It literally contains "
-#~ "one word: AUTHORIZED (it receives UserId, Password, and devicename in the "
-#~ "url - if you truly wish to implement special auth)"
-#~ msgstr ""
-#~ "Вышеупомянутая информация является просто фиктивной страницей "
-#~ "аутентификации. Он буквально содержит одно слово: AUTHORIZED (он получает "
-#~ "UserId, Password и devicename в URL-адресе - если вы действительно хотите "
-#~ "реализовать специальный auth)"
-
-#~ msgid "Phone Idle information URL"
-#~ msgstr "Phone Idle information URL"
-
-#~ msgid ""
-#~ "URL of CiscoIPPhoneImage. Requires a non-zero setting in idleTimeout."
-#~ msgstr ""
-#~ "URL-адрес CiscoIPPhoneImage. Требуется ненулевая настройка в idleTimeout."
-
-#~ msgid "Phone information URL"
-#~ msgstr "Phone information URL"
-
-#~ msgid "Phone messages URL"
-#~ msgstr "URL для сообщений"
-
-#~ msgid "Phone directory service URL"
-#~ msgstr "URL для телефонной книги"
-
-#~ msgid ""
-#~ "This is the URL for a CiscoIPPhoneMenu which gets appended to the end of "
-#~ "the Missed/Received/Placed calls.  I don't use it (I find it makes more "
-#~ "sense to put my phone book under services)"
-#~ msgstr ""
-#~ "URL-адрес для CiscoIPPhoneMenu, который добавляется к концу пропущенных / "
-#~ "полученных / помещенных вызовов. Я не использую его (я считаю, что имеет "
-#~ "смысл разместить мою телефонную книгу под услугами)"
-
-#~ msgid "Phone proxyServer URL"
-#~ msgstr "Насторйка прокси для телефона"
-
-#~ msgid "Phone Idle Timeout"
-#~ msgstr "Время бездействия"
-
-#~ msgid "SCCP QoS config"
-#~ msgstr "SCCP QoS насторойка качества обслуживания"
-
-#~ msgid "SCCP ToS / CoS"
-#~ msgstr "SCCP ToS / CoS"
 
 #~ msgid ""
 #~ "SCCP Type Of Service / Class Of Service: SCCP Type or Class of Service - "
@@ -1255,93 +2464,15 @@ msgstr "Получить файлы от Provisioner"
 #~ "SCCP класс обслуживания: тип SCCP или класс обслуживания. Не торж если не "
 #~ "знаешь !."
 
-#~ msgid "SCCP Audio ToS / CoS"
-#~ msgstr "SCCP Audio ToS / CoS"
-
 #~ msgid ""
 #~ "Audio Type Of Service / Class Of Service: Audio Type or Class of Service "
 #~ "- this is modifiable, but don't."
 #~ msgstr "Не торж если не знаешь !."
 
-#~ msgid "SCCP Video ToS / CoS"
-#~ msgstr "SCCP Video ToS / CoS"
-
 #~ msgid ""
 #~ "Video Type Of Service / Class Of Service: Video Type or Class of Service "
 #~ "- this is modifiable, but don't."
 #~ msgstr "Не торж если не знаешь !."
-
-#~ msgid "SCCP Line config"
-#~ msgstr "SCCP Конфигурация Линий"
-
-#~ msgid ""
-#~ "Hotline Enabled: This allows unregistered extensions to connect to the "
-#~ "system and dial the number listed below."
-#~ msgstr ""
-#~ "Горячая линия включена: это позволяет незарегистрированным расширениям "
-#~ "подключаться к системе и набирать номер, указанный ниже."
-
-#~ msgid "Hotline extension"
-#~ msgstr "Номер горячей линии"
-
-#~ msgid "Hotline Label"
-#~ msgstr "Как обозвать Горячую линию"
-
-#~ msgid ""
-#~ "Hotline Extension: The number that gets called when a hotline is picked "
-#~ "up. hint"
-#~ msgstr ""
-#~ "Номер горячей линии: номер, который вызывается при получении горячей "
-#~ "линии. или Hint"
-
-#~ msgid "Hotline Context"
-#~ msgstr "Контекст для Hotline"
-
-#~ msgid ""
-#~ "Hotline Context: This is the context through which the phone will "
-#~ "connect. It should probably match your other contest. The default is "
-#~ "\"from-internal\" but \"from-internal-xfer\" would also make sense by "
-#~ "limiting the options for the person using the phone."
-#~ msgstr ""
-#~ "Контекст горячей линии: это контекст, через который будет подключаться "
-#~ "телефон. Вероятно, это должно соответствовать вашему другому конкурсу. "
-#~ "Значение по умолчанию - «изнутри», но «from-internal-xfer» также имеет "
-#~ "смысл, ограничивая параметры для человека, использующего телефон."
-
-#~ msgid "HELP SCCP HotLine"
-#~ msgstr "Небольшая Помощь по HotLine"
-
-#~ msgid ""
-#~ "Setting the hotline Feature on a device, will make it connect to a "
-#~ "predefined extension as soon as the Receiver is picked up or the \"New "
-#~ "Call\" Button is pressed. No number has to be given. This works even on "
-#~ "devices which have no entry in the config file or realtime database."
-#~ msgstr ""
-#~ "Установка функции \"hotline\" позволит регистрироваться всем неизвестным "
-#~ "телефонам. Всем телефонам будет назначена возможность вызова только одной "
-#~ "линии \"hotline\". Это работает даже на устройствах, которые не имеют "
-#~ "записи в файле конфигурации или в базе данных реального времени."
-
-#~ msgid "The hotline function can be used in :"
-#~ msgstr "Функция \"hotline\" может быть полезна :"
-
-#~ msgid "This will make it easier to register new devices and assign numbers"
-#~ msgstr ""
-#~ "Все телефоны зарегистрируются в системе. Остается назначить только номера "
-#~ "вызова"
-
-#~ msgid "At a door"
-#~ msgstr "На входе"
-
-#~ msgid "Where you want people to be able to only call one number"
-#~ msgstr ""
-#~ "Звонит только секретарю или президенту. Ну а если украдут то и не жалко"
-
-#~ msgid "For unprovisioned phones"
-#~ msgstr "Для новых телефонов"
-
-#~ msgid "To only be able to call the helpdesk to get their phone set up"
-#~ msgstr "Специальный номерочек для своих и для врагов"
 
 #~ msgid ""
 #~ "Be careful with this function. Especially not to the internet. So i would "
@@ -1353,52 +2484,8 @@ msgstr "Получить файлы от Provisioner"
 #~ "подобрать MAC существующих в системе телефонов и совершать звонки от "
 #~ "вашего имени."
 
-#~ msgid "System Context"
-#~ msgstr "Системный контекст"
-
-#~ msgid ""
-#~ "Context: This is the context in which your phones will operate. It should "
-#~ "match the context you are using for the rest of your phones (if you have "
-#~ "any). The FreePBX default is 'from-internal'"
-#~ msgstr ""
-#~ "Контекст. Это контекст, в котором будут работать ваши телефоны. Он должен "
-#~ "соответствовать контексту, который вы используете для остальных ваших "
-#~ "телефонов (если есть). По умолчанию FreePBX является 'внутренним'"
-
-#~ msgid "Dynamically registration Context"
-#~ msgstr "Контекст динамической регистрации SCCP устройств"
-
-#~ msgid ""
-#~ "If regcontext is specified in sccp.conf chan-sccp-b will dynamically "
-#~ "create and destroy a NoOp priority 1 extension for a given peer/line "
-#~ "which registers with the server. If the context is not specified in "
-#~ "extension.conf, then it will be dynamically created when an chan-sccp-b "
-#~ "agent registers"
-#~ msgstr ""
-#~ "Если regcontext указан в файле sccp.conf, chan-sccp-b будет динамически "
-#~ "создавать и уничтожать расширение 1 приоритета NoOp для данного "
-#~ "однорангового узла, который регистрируется на сервере. Если контекст не "
-#~ "указан в файле extension.conf, он будет динамически создан, когда регистр "
-#~ "chan-sccp-b регистрируется"
-
-#~ msgid "Music On Hold Class"
-#~ msgstr "Музыка в Ожидании"
-
-#~ msgid ""
-#~ "Music Class: Available MOH Classes. These are the MOH classes listed in "
-#~ "your current server."
-#~ msgstr ""
-#~ "Класс музыки: доступные классы MOH. Это классы MOH, см. кофигурацияю MOH "
-#~ "Asterisk."
-
-#~ msgid "Autoselect Line"
-#~ msgstr "Выбор линии при поднятии трубки"
-
 #~ msgid "Enables and disables auto line selection."
 #~ msgstr "Включает и отключает автоматический выбор линии."
-
-#~ msgid "Meetme Conference"
-#~ msgstr "Конференция Meetme"
 
 #~ msgid ""
 #~ "enable/disable conferencing via meetme (on/off), make sure you have one "
@@ -1408,23 +2495,6 @@ msgstr "Получить файлы от Provisioner"
 #~ "убедитесь, что у вас есть одно из приложений meetme, упомянутых ниже, "
 #~ "активированных в модуле.conf"
 
-#~ msgid "Meetme Options"
-#~ msgstr "Опции для Meetme"
-
-#~ msgid ""
-#~ "Other options (app_meetme: A,a,b,c,C,d,D,E,e,F,i,I,l,L,m,M,o,p,P,q,r,s,S,"
-#~ "t,T,w,x,X,1) see meetme specific documentation"
-#~ msgstr ""
-#~ "Другие варианты (app_meetme: A, a, b, c, C, d, D, E, e, F, i, I, l, L, m, "
-#~ "M, o, p, P, q, r, s, S , t, T, w, x, X, 1) см. соответствующую "
-#~ "документацию"
-
-#~ msgid "Auto Call Select"
-#~ msgstr "Auto Call Select"
-
-#~ msgid "Background Image"
-#~ msgstr "Рисунок Фона"
-
 #~ msgid ""
 #~ "I'm guessing on this one, but on some devices, the background image on "
 #~ "the display can be modified at the device. I think this is the thing that "
@@ -1433,33 +2503,11 @@ msgstr "Получить файлы от Provisioner"
 #~ "Я предполагаю, что но на некоторых устройствах фоновое изображение на "
 #~ "дисплее может быть изменено на самом устройстве."
 
-#~ msgid "SCCP Server Path config"
-#~ msgstr "SCCP Настройка Путей и таблиц Сервера"
-
-#~ msgid "SCCP TFTP SERVER Path"
-#~ msgstr "TFTP SERVER Path"
-
 #~ msgid "Path to tftp home directory"
 #~ msgstr "Путь к  tftp"
 
 #~ msgid "SCCP SERVER MySQL Device Table Name"
 #~ msgstr "MySQL Device Table"
-
-#~ msgid ""
-#~ "Device Table: This is the devicetable for your realtime configuration. "
-#~ "Don't change this unless you know what you are doing and have made all "
-#~ "the appropriate changes in the rest of your Asterisk config files. There "
-#~ "are two reasonable settings for this - the sccpdevice table or the "
-#~ "sccpdeviceconfig view. If you do not want to use the realtime database "
-#~ "anymore, you can set this to blank. NOT RECOMMENDED."
-#~ msgstr ""
-#~ "Таблица устройств. Это может быть полезно для вашей конфигурации в "
-#~ "реальном времени. Не изменяйте это, если вы не знаете, что делаете, и "
-#~ "внесли все необходимые изменения в остальные файлы конфигурации Asterisk. "
-#~ "Для этого есть две разумные настройки: таблица sccpdevice или "
-#~ "представление sccpdeviceconfig. Если вы больше не хотите использовать "
-#~ "базу данных реального времени, вы можете установить ее как пустую. НЕ "
-#~ "РЕКОМЕНДУЕТСЯ."
 
 #~ msgid "SCCP SERVER MySQL Line Table Name"
 #~ msgstr "MySqL Line Table"
@@ -1468,85 +2516,17 @@ msgstr "Получить файлы от Provisioner"
 #~ msgstr "lineTable"
 
 #~ msgid ""
-#~ "Line Table: This is the linetable for your realtime configuration. Don't "
-#~ "change this unless you know what you are doing and have made all the "
-#~ "appropriate changes in the rest of your Asterisk config files. If you do "
-#~ "not want to use the realtime database anymore, you can set this to blank. "
-#~ "NOT RECOMMENDED."
-#~ msgstr ""
-#~ "Line table: это название таблицы для вашей конфигурации реального "
-#~ "времени. Не изменяйте это, если вы не знаете, что делаете, и внесли все "
-#~ "необходимые изменения в остальные файлы конфигурации Asterisk. Если вы "
-#~ "больше не хотите использовать базу данных реального времени, вы можете "
-#~ "установить ее как пустую. НЕ РЕКОМЕНДУЕТСЯ."
-
-#~ msgid "Create tftp empty language dir"
-#~ msgstr "Создание Языковых каталогв tftp"
-
-#~ msgid ""
-#~ "Say 'yes' if you need to create cisco default language directory in tftp "
-#~ "path."
-#~ msgstr ""
-#~ "Скажите «да», если вам нужно создать каталоги для язфковых профилей cisco "
-#~ "в директории tftp."
-
-#, fuzzy
-#~ msgid "General Device configuration"
-#~ msgstr "Абонентского устройство"
-
-#~ msgid "Device ID.[XXXXXXXXXXXX]=MAC"
-#~ msgstr "Устройство ID : [XXXXXXXXXXXX]=MAC"
-
-#~ msgid ""
 #~ "The MAC address of the phone. You must specify 12 characters in the "
 #~ "format XXXX.XXXX.XXXX or XX-XX-XX-XX-XX-XX or XXXXXXXXXXXX"
 #~ msgstr ""
 #~ "Укажите MAC устройства. 12 знаков MAC в формате XXXX.XXXX.XXXX / XX-XX-XX-"
 #~ "XX-XX-XX / XXXXXXXXXXXX"
 
-#~ msgid "Type"
-#~ msgstr "Тип"
-
-#~ msgid ""
-#~ "The type of phone: 7911, 7940, 7960, etc. Important note: the 'G' models "
-#~ "are handled as the base model (e.g., 7962G is handled as 7962). In the "
-#~ "Display mode, this field is read-only because the MAC address and the "
-#~ "model number are a pair."
-#~ msgstr ""
-#~ "Тип телефона: 7911, 7940, 7960 и т. Д. Важное примечание: модели «G» "
-#~ "обрабатываются как базовая модель (например, 7962G обрабатывается как "
-#~ "7962). В режиме отображения это поле доступно только для чтения, "
-#~ "поскольку MAC-адрес и номер модели являются парой."
-
-#~ msgid "Addon"
-#~ msgstr "Модуль ресширения"
-
-#~ msgid ""
-#~ "Addon: Addons are model specific and only work with certain base phones. "
-#~ "This phone model is identified as being a phone that does not accept "
-#~ "sidecars. Update devmodel if this is not correct."
-#~ msgstr ""
-#~ "Модуль ресширения являются специфичными для кажколй модели телефона и "
-#~ "работают только с некоторыми базовыми телефонами."
-
-#~ msgid "Device Label"
-#~ msgstr "Название Устройства"
-
 #~ msgid "The information in the upper right corner of the device screen"
 #~ msgstr "Информация в правом верхнем углу экрана устройства"
 
 #~ msgid "System default softkey"
 #~ msgstr "Настройка пронрамных кнопок"
-
-#~ msgid "Time Zone offset"
-#~ msgstr "Часовой пояс"
-
-#~ msgid ""
-#~ "For phones that can display background images - display this one. Default "
-#~ "is [empty]"
-#~ msgstr ""
-#~ "Для телефонов, которые могут отображать фоновые изображения - отображать "
-#~ "это. По умолчанию [пусто]. Формат http://сервер/картинка.png"
 
 #~ msgid ""
 #~ "The ringtone that the phone will default to. Can be overridden in the "
@@ -1562,24 +2542,8 @@ msgstr "Получить файлы от Provisioner"
 #~ "мелодиями хранятся в каталоге / tftpboot / с остальными конфигурационными "
 #~ "файлами."
 
-#~ msgid "Buttons Configuration"
-#~ msgstr "Настройка Кнопок"
-
-#~ msgid "Device MAC."
-#~ msgstr "Прямое подключение."
-
-#~ msgid "Device Properies"
-#~ msgstr "Прямое подключение"
-
-#~ msgid "Transfer allowed"
-#~ msgstr "Трансфер доступен"
-
 #~ msgid "Callforward softkeys"
 #~ msgstr "Кнопка Первод"
-
-#~ msgid "Activate the callforward softkeys. Default is On"
-#~ msgstr ""
-#~ "Активирует программные клавиши перевода звонков. По умолчанию включено"
 
 #~ msgid "Callforward busy softkeys"
 #~ msgstr "Кнопка Первод если занят"
@@ -1595,12 +2559,6 @@ msgstr "Получить файлы от Provisioner"
 #~ "Вы можете указать «useRedialMenu = yes», Это изменит работу программной "
 #~ "клавиша повторного набора и приведет к списку «помещенных вызовов» вместо "
 #~ "немедленного вызова последнего набранного номера."
-
-#~ msgid "DND Button on Device"
-#~ msgstr "Не беспокоить для телефона"
-
-#~ msgid "Do Not Disturb. Default is Off"
-#~ msgstr "Не беспокоить. По умолчанию = Off"
 
 #~ msgid "Dual-Tone Multi-Frequency"
 #~ msgstr "DTMF"
@@ -1642,54 +2600,17 @@ msgstr "Получить файлы от Provisioner"
 #~ msgid "Enabled Conference function"
 #~ msgstr "Конференция разрешена"
 
-#~ msgid "Allow the use of conference"
-#~ msgstr "Ему можно пользоваться конференциями"
-
 #~ msgid "Playback General Announcements"
 #~ msgstr "Общие анонс конференции"
-
-#~ msgid ""
-#~ "Playback General Announcements (like: 'You are Entering/Leaving the "
-#~ "conference')"
-#~ msgstr ""
-#~ "Общие анонсы воспроизведения (например: «Ввод / Выход из конференции»)"
 
 #~ msgid "Playback Personal Announcements"
 #~ msgstr "Воспроизведение личных сообщений"
 
-#~ msgid ""
-#~ "Playback Personal/Participant Announcements, (like: 'You have been "
-#~ "muted / You have been kicked')"
-#~ msgstr ""
-#~ "Воспроизведение личных / анонсов участников (например: «Вы были "
-#~ "отключены / вы были выпнуты»)"
-
 #~ msgid "Mute on start"
 #~ msgstr "Микрофон ВЫКЛ. при подключении"
 
-#~ msgid "Mute new participants from the start"
-#~ msgstr "Отключить микрофон у новых участников с самого начала"
-
-#~ msgid "Show conference list"
-#~ msgstr "Отображаем список конференций"
-
-#~ msgid "Automatically show conference list to the moderator"
-#~ msgstr "Автоматически показывать список участников модератору"
-
-#~ msgid ""
-#~ "Play music on hold of this class when no moderator is listening on the "
-#~ "conference. If set to an empty string, no music on hold will be played."
-#~ msgstr ""
-#~ "Музыкальный класс для вызовов находящихся в ожидании, если модератор не "
-#~ "прослушивает конференцию. Если установлена пустая строка, воспроизведение "
-#~ "музыки не будет выполнено."
-
 #~ msgid "Device Network Function"
 #~ msgstr "Сетевые настройки"
-
-#, fuzzy
-#~ msgid "Allow Networks / Mask"
-#~ msgstr "Разешенные Подсети"
 
 #~ msgid ""
 #~ "IP deny: IP Address deny netmask. Should always be at least "
@@ -1699,9 +2620,6 @@ msgstr "Получить файлы от Provisioner"
 #~ msgid "Device NAT support (default Off)"
 #~ msgstr "Влкючение поддержки NAT на устройствах"
 
-#~ msgid "This option allow devices to do direct RTP sessions (default Off)"
-#~ msgstr "Разрешение передача сигналов сигнализации между устройстваи."
-
 #~ msgid ""
 #~ "The audio strem will be open in the progress and connected state. Valid "
 #~ "options: none, progress, offhook, dial, ringout. Default may be Progress."
@@ -1709,60 +2627,6 @@ msgstr "Получить файлы от Provisioner"
 #~ "Звуковой поток будет открыт в процессе соединения. Действующие параметры: "
 #~ "\"none, progress, offhook, dial, ringout\". По умолчанию может быть "
 #~ "\"progress\"."
-
-#~ msgid "SCCP Phone SRST"
-#~ msgstr "Настройка SRST"
-
-#~ msgid "HELP SRST"
-#~ msgstr "Помощь по SRST"
-
-#~ msgid ""
-#~ "You can also configure a Survivable Remote Site Telephony (SRST) "
-#~ "reference as the last device in the CallManager(CM) list. This proves "
-#~ "especially useful in a remote site configuration where the phones and "
-#~ "Asterisk are connected over a WAN network. SRST provides users with "
-#~ "fallback support for the IP phones that cannot access the primary, "
-#~ "secondary, or tertiary Asterisk Node in the CallManager List because of "
-#~ "an Asterisk Node failure or loss of connectivity across the WAN. For the "
-#~ "remote sites attached to multiple-service routers across the WAN, SRST "
-#~ "ensures that your remote users receive continuous (although minimal) "
-#~ "service by providing call handling support directly from the SRST router."
-#~ msgstr ""
-#~ "Вы также можете настроить Survivable Remote Site Telephony (SRST) ссылки "
-#~ "в качестве последнего устройства в списке callmanager. Это особенно "
-#~ "полезно в конфигурации удаленного сайта, где телефоны и Asterisk "
-#~ "подключены по глобальной сети. SRST предоставляет пользователям резервную "
-#~ "поддержку для IP-телефонов, которые не могут получить доступ к "
-#~ "первичному, вторичному или третичному узлу Asterisk в списке CallManager "
-#~ "из-за сбоя узла Asterisk или потери подключения через глобальную сеть. "
-#~ "Для удаленных сайтов, подключенных к маршрутизаторам с несколькими "
-#~ "службами по глобальной сети, служба SRST гарантирует, что удаленные "
-#~ "пользователи получают непрерывную (хотя и минимальную) службу, "
-#~ "предоставляя поддержку обработки вызовов непосредственно с маршрутизатора "
-#~ "SRST."
-
-#~ msgid ""
-#~ "When IP phones lose contact with primary, secondary, and tertiary "
-#~ "Asterisk Nodes (CM's), they must establish a connection to a local SRST "
-#~ "router to sustain the call-processing capability necessary to place and "
-#~ "receive calls. The IP phone retains the IP address of the local SRST "
-#~ "router as a default router in the Network Configuration area of the "
-#~ "Settings menu. The Settings menu supports a maximum of five default "
-#~ "router entries; however, the cnf.xml accommodates a maximum of three "
-#~ "entries. When a secondary Asterisk Node is not available on the network, "
-#~ "the local SRST Router's IP address is retained as the standby connection "
-#~ "for Asterisk Node during normal operation."
-#~ msgstr ""
-#~ "Когда IP-телефонов теряют связь с первичными, вторичный, и третичный узлы "
-#~ "Asterisk (CM's), ни должны установить подключение к локальному "
-#~ "маршрутизатору SRST для поддержания разговора-возможность обработки, "
-#~ "необходимой для совершения и приема звонков.IP-телефон сохраняет IP-адрес "
-#~ "локального маршрутизатора SRST в качестве маршрутизатора по умолчанию в "
-#~ "области настройки сети меню Настройки. Меню настроек, поддерживает до "
-#~ "пяти записей маршрутизаторов по умолчанию; однако, кнф.XML-код вмещает не "
-#~ "более трех записей. Если дополнительный узел Asterisk недоступен в сети, "
-#~ "IP-адрес локального маршрутизатора SRST сохраняется в качестве резервного "
-#~ "соединения для узла Asterisk во время нормальной работы."
 
 #~ msgid "Buttons "
 #~ msgstr "Кнопки "
