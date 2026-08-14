@@ -288,6 +288,20 @@ trait helperfunctions {
         return $sccp_conf_init;
     }
 
+    /**
+     * Comparator for array_udiff_assoc() in saveSccpSettings(): treats two
+     * per-key settings rows (each an associative array with keyword/data/
+     * seq/type/systemdefault) as equal (0) when they don't differ, so
+     * array_udiff_assoc only returns the rows that actually changed since
+     * load - the non-zero return doesn't need to mean greater/less, just
+     * "not equal", which is all array_udiff_assoc requires.
+     */
+    public function compareArrays(array $a, array $b){
+        if (array_diff_assoc($a, $b)===[]) {
+          return 0;
+          }
+          return ($a>$b)?1:-1;
+    }
 
     public function checkTftpMapping(){
         exec('in.tftpd -V', $tftpInfo);
