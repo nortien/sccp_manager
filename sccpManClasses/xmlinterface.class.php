@@ -190,7 +190,7 @@ class xmlinterface
         if (!empty($dev_config['nametemplate'])) {
             $xml_template = "{$data_path}/{$dev_config['nametemplate']}";
         } else {
-            $xml_template = "{$data_path}/templates/SEP0000000000.cnf.xml_79df_template";
+            $xml_template = "{$data_path}/SEP0000000000.cnf.xml_79df_template";
         }
         $xml_name = "{$store_path}/{$dev_id}.cnf.xml";
         if (!file_exists($xml_template)) {

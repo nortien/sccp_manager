@@ -294,8 +294,9 @@ trait ajaxHelper {
                 $activeDevices = $this->aminterface->sccp_get_active_device();
                 $uniqueLineList = array();
                 foreach ($lineList as $key => &$lineArr) {
-                    if (array_key_exists($lineArr['mac'], $activeDevices)) {
-                        $lineArr['line_status'] = "{$activeDevices[$lineArr['mac']]['status']} | {$activeDevices[$lineArr['mac']]['act']}";
+                    $activeDev = $this->sccpFindActiveDeviceByName($lineArr['mac'], $activeDevices);
+                    if ($activeDev !== null) {
+                        $lineArr['line_status'] = "{$activeDev['status']} | {$activeDev['act']}";
                     }
                     if (array_key_exists($lineArr['name'], $uniqueLineList)) {
                         $lineList[$uniqueLineList[$lineArr['name']]]['mac'] .= '<br>' . $lineArr['mac'];
@@ -321,14 +322,15 @@ trait ajaxHelper {
                 $activeDevices = $this->aminterface->sccp_get_active_device();
 
                 foreach ($dbDevices as &$dev_id) {
-                    if (!empty($activeDevices[$dev_id['name']])) {
+                    $activeKey = $this->sccpActiveDeviceKeyUsed($dev_id['name'], $activeDevices);
+                    if ($activeKey !== null) {
                         // Device is in db and is connected
-                        $dev_id['description'] = $activeDevices[$dev_id['name']]['descr'];
-                        $dev_id['status'] = $activeDevices[$dev_id['name']]['status'];
-                        $dev_id['address'] = $activeDevices[$dev_id['name']]['address'];
+                        $dev_id['description'] = $activeDevices[$activeKey]['descr'];
+                        $dev_id['status'] = $activeDevices[$activeKey]['status'];
+                        $dev_id['address'] = $activeDevices[$activeKey]['address'];
                         $dev_id['new_hw'] = 'N';
                         // No further action required on this active device
-                        unset($activeDevices[$dev_id['name']]);
+                        unset($activeDevices[$activeKey]);
                     }
                 }
                 unset($dev_id); // unset reference.
@@ -641,18 +643,18 @@ trait ajaxHelper {
                 // No request for this section
                 continue;
             }
-            $srcDir = $srcDir[$section];
-            $dstDir = $dstDir[$section];
-            if (!is_dir($dstDir)) {
-                mkdir($dstDir, 0755);
+            $srcDirSection = $srcDir[$section];
+            $dstDirSection = $dstDir[$section];
+            if (!is_dir($dstDirSection)) {
+                mkdir($dstDirSection, 0755);
             }
             foreach ($filesToGet[$section] as $srcFile) {
                 try {
-                  file_put_contents("{$dstDir}/{$srcFile}",
-                      file_get_contents($srcDir. $srcFile));
+                  file_put_contents("{$dstDirSection}/{$srcFile}",
+                      file_get_contents($srcDirSection. $srcFile));
                 } catch (\Exception $e) {
                     return array('status' => false,
-                        'message' => "{$srcDir}{$srcFile} cannot be found. Check your internet connection, and that this path exists",
+                        'message' => "{$srcDirSection}{$srcFile} cannot be found. Check your internet connection, and that this path exists",
                         'reload' => false);
                 }
                 $filesRetrieved ++;

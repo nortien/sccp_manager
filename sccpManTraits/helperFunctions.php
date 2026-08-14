@@ -303,6 +303,31 @@ trait helperfunctions {
           return ($a>$b)?1:-1;
     }
 
+    /**
+     * chan-sccp reports MAC addresses / device names to AMI in whatever case
+     * it was configured with, which does not always match the case stored
+     * in our DB (or entered by the user). array_key_exists()/isset() are
+     * exact-case, so a plain lookup into $activeDevices silently misses a
+     * device that is actually online. These two helpers do the same lookup
+     * case-insensitively.
+     */
+    public function sccpActiveDeviceKeyUsed($key, array $activeDevices) {
+        if (array_key_exists($key, $activeDevices)) {
+            return $key;
+        }
+        foreach (array_keys($activeDevices) as $activeKey) {
+            if (strcasecmp($key, $activeKey) === 0) {
+                return $activeKey;
+            }
+        }
+        return null;
+    }
+
+    public function sccpFindActiveDeviceByName($name, array $activeDevices) {
+        $key = $this->sccpActiveDeviceKeyUsed($name, $activeDevices);
+        return ($key === null) ? null : $activeDevices[$key];
+    }
+
     public function checkTftpMapping(){
         exec('in.tftpd -V', $tftpInfo);
         $info['TFTP Server'] = array('Version' => 'Not Found', 'about' => 'Mapping not available');

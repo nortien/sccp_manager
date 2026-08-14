@@ -138,7 +138,8 @@ class dbinterface
                 $stmtU = $this->db->prepare("SELECT DISTINCT name, name FROM sccpbuttonconfig WHERE buttontype = 'line' AND instance =1");
                 break;
             case 'getDefaultLine':
-                $stmt = $this->db->prepare("SELECT name FROM sccpbuttonconfig WHERE ref = '{$data['id']}' and instance =1 and buttontype = 'line'");
+                $stmt = $this->db->prepare("SELECT name FROM sccpbuttonconfig WHERE ref = :ref and instance =1 and buttontype = 'line'");
+                $stmt->bindParam(':ref', $data['id'],\PDO::PARAM_STR);
                 break;
             case 'get_sccpdevice_buttons':
                 $sql = '';

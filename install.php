@@ -888,7 +888,28 @@ function createBackUpConfig()
     $dir = $cnf_int->get('ASTETCDIR');
 
     $fsql = $dir.'/sccp_backup_'.date("Ymd").'.sql';
-    $result = exec('mysqldump '.$amp_conf['AMPDBNAME'].' --password='.$amp_conf['AMPDBPASS'].' --user='.$amp_conf['AMPDBUSER'].' --single-transaction >'.$fsql);
+
+    // Credentials go in a defaults-extra-file (0600, removed right after) instead of on the
+    // command line, where they'd be readable via `ps` and end up in the shell error output.
+    $credFile = tempnam(sys_get_temp_dir(), 'sccpdump_');
+    file_put_contents($credFile, "[client]\nuser={$amp_conf['AMPDBUSER']}\npassword={$amp_conf['AMPDBPASS']}\n");
+    chmod($credFile, 0600);
+
+    $cmd = "mysqldump --defaults-extra-file=" . escapeshellarg($credFile)
+         . " --single-transaction " . escapeshellarg($amp_conf['AMPDBNAME'])
+         . " > " . escapeshellarg($fsql) . " 2>" . escapeshellarg($fsql . '.err');
+    exec($cmd, $output, $return_var);
+    unlink($credFile);
+
+    $dumpOk = ($return_var === 0) && file_exists($fsql) && filesize($fsql) > 0;
+    if (!$dumpOk) {
+        outn("<li><font color='red'>" . _("Error creating database backup - mysqldump failed:") . "</font></li>");
+        outn("<pre>" . htmlspecialchars(@file_get_contents($fsql . '.err')) . "</pre>");
+        @unlink($fsql);
+        @unlink($fsql . '.err');
+        die_freepbx();
+    }
+    @unlink($fsql . '.err');
 
     try {
         $zip = new \ZipArchive();

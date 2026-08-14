@@ -14,7 +14,7 @@ $forminfo =array(
 $buttons_type=  array("empty","line","silent","monitor","speeddial","feature","adv.line");
 $feature_list=  array('parkinglot'=>'Park Slots','monitor'=> "Record Calls",'devstate'=> "Change Status");
 
-if ($_REQUEST['tech_hardware'] === 'cisco') {
+if (($_REQUEST['tech_hardware'] ?? '') === 'cisco') {
     $lines_list = $this->dbinterface->getSccpDeviceTableData('SccpExtension');
 } else {
     $lines_list = $this->dbinterface->getSipTableData('extensionList');
@@ -32,21 +32,31 @@ if (!empty($_REQUEST['id'])) {
     $dev_id = $_REQUEST['id'];
     $db_buttons = $this->dbinterface->getSccpDeviceTableData('get_sccpdevice_buttons', array("id" => $dev_id));
     $db_device = $this->dbinterface->getSccpDeviceTableData('get_sccpdevice_byid', array("id" => $dev_id));
-    $show_buttons = $db_device['buttons'];
-    if (!empty($db_device['addon_buttons'])) {
-        $show_buttons += $db_device['addon_buttons'];
+    if (!empty($db_device)) {
+        $show_buttons = $db_device['buttons'];
+        if (!empty($db_device['addon_buttons'])) {
+            $show_buttons += $db_device['addon_buttons'];
+        }
+    } else {
+        // No matching device row (stale/deleted id) - keep the pre-set default instead
+        // of reading offsets off a false PDO fetch() result.
+        $db_device = array();
     }
     //$show_buttons = $max_buttons;
 }
 if (!empty($_REQUEST['new_id'])) {
-    $val = $_REQUEST['type'];
+    $val = $_REQUEST['type'] ?? '';
     $dev_schema =  $this-> getSccpModelInformation('byid', false, "all", array('model' =>$val));
 //   $db_device = $this->dbinterface->getSccpDeviceTableData('get_sccpdevice_byid', array("id" => $val));
-    $show_buttons = $dev_schema[0]['buttons'];
+    if (!empty($dev_schema[0]['buttons'])) {
+        $show_buttons = $dev_schema[0]['buttons'];
+    }
     if (!empty($_REQUEST['addon'])) {
         $val = $_REQUEST['addon'];
         $dev_schema =  $this-> getSccpModelInformation('byid', false, "all", array('model' =>$val));
-        $show_buttons += $dev_schema[0]['buttons'];
+        if (!empty($dev_schema[0]['buttons'])) {
+            $show_buttons += $dev_schema[0]['buttons'];
+        }
     }
     //$show_buttons = $max_buttons;
 }

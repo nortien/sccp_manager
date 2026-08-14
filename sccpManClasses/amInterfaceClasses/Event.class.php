@@ -183,7 +183,7 @@ class SCCPShowDeviceComplete_Event extends ClosingEvent
     public function listCorrectlyReceived($_message, $_eventCount){
         // Have end of list event. Check with number of lines received and send true if match.
         // Remove 9 for the start and end events, and then 4.
-        if ($this->getKey('listitems') === substr_count( $_message, "\n") -13) {
+        if ((int)$this->getKey('listitems') === substr_count( $_message, "\n") -13) {
             return true;
         }
         return false;
@@ -195,7 +195,7 @@ class SCCPShowDevicesComplete_Event extends ClosingEvent
     public function listCorrectlyReceived($_message, $_eventCount) {
         // Have end of list event. Check with number of events received and send true if match.
         // Remove 9 for the lines in the list start and end, and the 2 blank lines.
-        if ($this->getKey('listitems') === substr_count( $_message, "\n") -11) {
+        if ((int)$this->getKey('listitems') === substr_count( $_message, "\n") -11) {
             return true;
         }
         return false;
@@ -207,7 +207,7 @@ class ExtensionStateListComplete_Event extends ClosingEvent
     public function listCorrectlyReceived($_message, $_eventCount){
         // Have end of list event. Check with number of events received and send true if match.
         // Remove 1 as the closing event is included in the count.
-        if ($this->getKey('listitems') === $_eventCount -1) {
+        if ((int)$this->getKey('listitems') === (int)$_eventCount -1) {
             return true;
         }
         return false;
@@ -220,7 +220,7 @@ class SCCPShowSoftKeySetsComplete_Event extends ClosingEvent
     public function listCorrectlyReceived($_message, $_eventCount){
         // Have the end of list event. Check the number of lines received and
         // return true if match. Remove 8 for the complete event.
-        if ($this->getKey('listitems') === substr_count( $_message, "\n") -11) {
+        if ((int)$this->getKey('listitems') === substr_count( $_message, "\n") -11) {
             return true;
         }
         return false;
