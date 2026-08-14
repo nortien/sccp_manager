@@ -2,7 +2,7 @@
 
 **A working, patched fork that actually runs on modern Asterisk.**
 
-[![License: GPL](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/nortien/sccp_manager/blob/work/COPYING)
+[![License: GPL](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/nortien/sccp_manager/blob/stable/COPYING)
 [![chan-sccp](https://img.shields.io/badge/driver-chan--sccp%204.4-informational.svg)](https://github.com/nortien/chan-sccp)
 [![Asterisk](https://img.shields.io/badge/Asterisk-20.x%20%7C%2023.x-orange.svg)]()
 [![FreePBX](https://img.shields.io/badge/FreePBX-16%20%7C%2017-orange.svg)]()
@@ -14,7 +14,7 @@ Cisco IP phones (SCCP/Skinny) talking to FreePBX, without a licensed CallManager
 
 ## The short version
 
-Every public build of this tool — the driver and the GUI alike — stops at Asterisk 18. Nobody had updated it for Asterisk 20. So we did: patched the driver's version detection, added a proper code path for Asterisk 20, and re-tested the whole install end to end on a real FreePBX 16 box. Then we went further and did the same for **FreePBX 17 / Asterisk 23 / PHP 8.2** — a newer major on a different distro (Debian 12) and package manager (apt), which needed both a real build fix (Asterisk 21+ removed a couple of channel-field APIs the driver used) and a full PHP 8.2 compatibility pass on the GUI module. Both environments work from the same `work` branch in both repos. Everything here reflects that — not the upstream project's docs with a find-and-replace.
+Every public build of this tool — the driver and the GUI alike — stops at Asterisk 18. Nobody had updated it for Asterisk 20. So we did: patched the driver's version detection, added a proper code path for Asterisk 20, and re-tested the whole install end to end on a real FreePBX 16 box. Then we went further and did the same for **FreePBX 17 / Asterisk 23 / PHP 8.2** — a newer major on a different distro (Debian 12) and package manager (apt), which needed both a real build fix (Asterisk 21+ removed a couple of channel-field APIs the driver used) and a full PHP 8.2 compatibility pass on the GUI module. Both environments work from the same `stable` branch in both repos. Everything here reflects that — not the upstream project's docs with a find-and-replace.
 
 Full build notes, every error message we hit, and the exact fix for each one — plus the complete general reference (features, hardware, config options, dialplan, provisioning) — live on the **[Wiki](https://github.com/nortien/sccp_manager/wiki)**. This README gets you oriented and installed; the Wiki is where you go for everything after that. The Asterisk 23 / PHP 8.2 specifics are on **[Wiki → FreePBX 17 / Asterisk 23 Notes](https://github.com/nortien/sccp_manager/wiki/FreePBX-17-Notes)**.
 
@@ -36,7 +36,7 @@ We fixed that at the build-configuration level rather than touching the actual t
 
 ## Requirements
 
-Two supported environments, both from the same `work` branch in both repos:
+Two supported environments, both from the same `stable` branch in both repos:
 
 | | FreePBX 16 | FreePBX 17 |
 |---|---|---|
@@ -61,7 +61,7 @@ yum install -y asterisk20-devel autoconf automake gcc git gettext-devel
 cd /usr/src
 git clone https://github.com/nortien/chan-sccp.git
 cd chan-sccp
-git checkout work   # or a tagged release, e.g. v4.4
+git checkout stable   # or a tagged release, e.g. v4.4
 
 ./tools/bootstrap.sh
 ./configure --with-asterisk-version=20.0 \
@@ -80,7 +80,7 @@ asterisk -rx "sccp show version"
 # --- GUI: sccp_manager ---
 git clone https://github.com/nortien/sccp_manager.git /var/www/html/admin/modules/sccp_manager
 cd /var/www/html/admin/modules/sccp_manager
-git checkout work   # or a tagged release, e.g. v15.0.1
+git checkout stable   # or a tagged release, e.g. v15.0.1
 
 fwconsole chown
 
@@ -102,7 +102,7 @@ Pull a newer commit or tag, then re-run the installer — it handles DB migratio
 
 ```bash
 cd /var/www/html/admin/modules/sccp_manager
-git pull origin work        # or: git fetch --tags && git checkout vX.Y.Z
+git pull origin stable      # or: git fetch --tags && git checkout vX.Y.Z
 fwconsole chown
 fwconsole ma install sccp_manager
 ```
@@ -111,7 +111,7 @@ If the driver was also updated, rebuild and reinstall **it first**, then do a fu
 
 ```bash
 cd /usr/src/chan-sccp
-git pull origin work
+git pull origin stable
 ./tools/bootstrap.sh
 ./configure --with-asterisk-version=20.0 --enable-conference --enable-advanced-functions --enable-distributed-devicestate --enable-video
 make -j2
@@ -119,9 +119,9 @@ make install
 fwconsole restart
 ```
 
-## GUI rewrite in progress
+## GUI rewrite
 
-The form-rendering layer (`sccpManClasses/formcreate.class.php`) is being reworked on the [`ui-rewrite`](https://github.com/nortien/sccp_manager/tree/ui-rewrite) branch ([PR #1](https://github.com/nortien/sccp_manager/pull/1)) to match FreePBX's own native layout conventions consistently, fix several real bugs the old layout was masking (a customise/restore toggle that silently froze chan-sccp defaults into the DB on any save, firmware downloads landing in the wrong TFTP path depending on `tftp_rewrite` mode, icons that rendered as nothing under FreePBX 17's Bootstrap 4 theme), and generally clean up visual inconsistencies accumulated over the years. Not yet merged into `work` — see the PR for current status.
+The form-rendering layer (`sccpManClasses/formcreate.class.php`) was reworked to match FreePBX's own native layout conventions consistently, fixing several real bugs the old layout was masking (a customise/restore toggle that silently froze chan-sccp defaults into the DB on any save, firmware downloads landing in the wrong TFTP path depending on `tftp_rewrite` mode, icons that rendered as nothing under FreePBX 17's Bootstrap 4 theme), and generally cleaning up visual inconsistencies accumulated over the years. This is now part of `stable`.
 
 ## Where this came from
 
