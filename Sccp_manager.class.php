@@ -593,7 +593,8 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
 
     public function getCodecs($type, $showDefaults = false) {
         $allSupported = array();
-        $sccpCodec = array_fill_keys(array('alaw', 'ulaw', 'g722', 'g723', 'g726', 'g729', 'gsm', 'h264', 'h263', 'h261'),0);
+        // ilbc/opus/h263p confirmed as real chan-sccp codec keywords (src/sccp_codec.c skinny_codecs[] table) that were missing here, so the GUI could never expose them even though the driver supports them.
+        $sccpCodec = array_fill_keys(array('alaw', 'ulaw', 'g722', 'g723', 'g726', 'g729', 'gsm', 'ilbc', 'opus', 'h264', 'h263', 'h263p', 'h261'),0);
         // First see if have any site defaults
         $val = ($this->sccpvalues['allow']['data'] ?? '');
         if (empty($val)) {

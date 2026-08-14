@@ -159,12 +159,17 @@ class Sccp extends \FreePBX\modules\Core\Driver {
         }
 
         // only store values that have been set; if need to display a default, must show in page.
-        $sqlSet = "name='{$id}'";
+        // Quote every value via PDO::quote() - $id and free-text fields (label/description/etc.)
+        // were previously interpolated into the SQL string unescaped (SQL injection).
+        $idEsc = $this->database->quote($id, \PDO::PARAM_STR);
+        $setParts = array("name={$idEsc}");
         foreach($this->data_fld as $key => $val) {
-            if (!empty($settings[$val]['value'])) {
-                $sqlSet .= ", {$key}='{$settings[$val]['value']}'";
+            $v = $settings[$val]['value'] ?? '';
+            if ($v !== '' && $v !== null) {
+                $setParts[] = $key . '=' . $this->database->quote((string) $v, \PDO::PARAM_STR);
             }
         }
+        $sqlSet = implode(', ', $setParts);
 
         $stmt = "INSERT INTO sccpline SET {$sqlSet} ON DUPLICATE KEY UPDATE {$sqlSet}";
         $sth = $this->database->prepare($stmt);
@@ -205,7 +210,7 @@ class Sccp extends \FreePBX\modules\Core\Driver {
         foreach($this->data_fld as $key => $val) {
                         $sql .= ", {$key} AS {$val}";
         }
-        $sql .= " FROM sccpline WHERE name = '{$id}'";
+        $sql .= " FROM sccpline WHERE name = ?";
         $sth = $this->database->prepare($sql);
         $tech = array();
         try {

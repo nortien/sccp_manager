@@ -20,7 +20,7 @@ if (!empty($_REQUEST['new_id'])) {
     // Overwrite some specific defaults based on $_REQUEST
     $def_val['type'] = array("keyword" => 'type', "data" => $_REQUEST['type'], "seq" => "99");
     if (!empty($_REQUEST['addon'])) {
-        $def_val['addon'] = array("keyword" => 'type', "data" => $_REQUEST['addon'], "seq" => "99");
+        $def_val['addon'] = array("keyword" => 'addon', "data" => $_REQUEST['addon'], "seq" => "99");
     }
 }
 

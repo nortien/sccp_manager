@@ -41,7 +41,7 @@ $coreVCode = $this->escapeHtml($core['vCode'] ?? '');
 $coreRevisionNum = $this->escapeHtml($core['RevisionNum'] ?? '');
 $coreRevisionHash = $this->escapeHtml($core['RevisionHash'] ?? '');
 $coreBuildInfo = is_array($core['buildInfo'] ?? null) ? $core['buildInfo'] : array();
-$info['sccp_class'] = $this->escapeHtml($driver['sccp'] ?? '');
+$info['sccp_class'] = $driver['sccp'] ?? array();
 $info['Core_sccp'] = array('Version' => $coreVersion,
                             'about' => "Sccp ver: {$coreVersion}   r{$coreVCode}   Revision: {$coreRevisionNum}   Hash: {$coreRevisionHash}");
 $capabilityArray = array( "park", "pickup", "realtime", "video", "conference", "dirtrfr", "feature_monitor", "functions", "manager_events",

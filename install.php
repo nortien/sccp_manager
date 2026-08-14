@@ -769,6 +769,7 @@ function InstallDbCreateViews($sccp_compatible)
     global $db;
     outn("<li>" . _("(Re)Create sccpdeviceconfig view") . "</li>");
     $sql = "DROP VIEW IF EXISTS sccpdeviceconfig;
+            DROP TABLE IF EXISTS sccpdeviceconfig;
             DROP VIEW IF EXISTS sccpuserconfig;
             ";
     ///    global $hw_mobil;
@@ -822,6 +823,7 @@ function InstallDbCreateViews($sccp_compatible)
     outn("<li>" . _("(Re)Create sccplineconfig view") . "</li>");
 
     $sql = "DROP VIEW IF EXISTS sccplineconfig;
+            DROP TABLE IF EXISTS sccplineconfig;
             ";
     $sql .= "CREATE OR REPLACE
             VIEW sccplineconfig AS
