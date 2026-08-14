@@ -854,7 +854,15 @@ function installDbPopulateSccpline() {
     $stmt = $db->prepare($sql);
     $stmt->execute();
     $sccpExts = $stmt->fetchAll(\PDO::FETCH_ASSOC|\PDO::FETCH_UNIQUE);
-    $linesToCreate = array_diff_assoc($freePbxExts, $sccpExts);
+    // array_diff_assoc() compares values too, and each value here is itself
+    // an associative array (accountcode/label) - PHP can't compare arrays as
+    // strings, so under FreePBX's global E_ALL error handler that "Array to
+    // string conversion" notice becomes a fatal error (only triggers once
+    // both tables actually have rows, which is why this wasn't caught by an
+    // install against empty tables). The actual intent is just "which
+    // FreePBX extensions don't have a matching sccpline row yet" - a
+    // key-only comparison, which is what's needed to create them.
+    $linesToCreate = array_diff_key($freePbxExts, $sccpExts);
 
     foreach ($linesToCreate as $key => $valArr) {
         $stmt = $db->prepare("INSERT into sccpline (name, accountcode, description, label) VALUES (:name, :accountcode, :description, :label)");
