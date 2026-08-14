@@ -88,7 +88,12 @@ class formcreate
             $child->nameseparator = ' / ';
         }
 
-        $hasSysDefault = !empty($sccp_defaults[$shortId]['systemdefault']);
+        // Not !empty() - "0" is a real, meaningful systemdefault (e.g.
+        // transfer_tone's "no tone" value) but PHP's empty("0") is true,
+        // which silently hid the reset button for any field whose real
+        // default happens to be the string "0".
+        $sysDefaultVal = $sccp_defaults[$shortId]['systemdefault'] ?? '';
+        $hasSysDefault = ($sysDefaultVal !== '' && $sysDefaultVal !== null);
 
         $this->elementOpen($res_id, _($child->label), $res_sec_class);
 
@@ -309,7 +314,10 @@ class formcreate
         if (!empty($child ->class)) {
             $res_sec_class = (string)$child ->class;
         }
-        $hasSysDefault = !empty($sccp_defaults[$res_n]['systemdefault']);
+        // Not !empty() - see addElementIE's identical fix; "0" is a valid
+        // real systemdefault value, not an absent one.
+        $sysDefaultVal = $sccp_defaults[$res_n]['systemdefault'] ?? '';
+        $hasSysDefault = ($sysDefaultVal !== '' && $sysDefaultVal !== null);
         $curData = $fvalues[$res_n]['data'] ?? '';
 
         // set res_v according to precedence Default here, value here, supplied value

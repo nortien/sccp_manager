@@ -1,8 +1,8 @@
-# timspb/sccp_manager commit-history review (2026-08-14)
+# the fork author/sccp_manager commit-history review (2026-08-14)
 
-Follow-up to the two-round file-diff review (`scratch-timspb-full-review.md`,
+Follow-up to the two-round file-diff review (`scratch-the fork author-full-review.md`,
 which covered `pr-17.0.1.1`'s end state only). This pass walks actual commit
-history on **two** timspb branches to recover intent/context a flat diff
+history on **two** the fork author branches to recover intent/context a flat diff
 can't show, per the owner's explicit follow-up request. Unlike the earlier
 two rounds, findings from this pass were verified and then **applied
 directly** where the fix was concrete and well-evidenced (same standard as
@@ -13,7 +13,7 @@ flagged explicitly for extra caution per today's `075df95` incident.
 
 ## Method / branch relationship (read this first)
 
-`timspb/sccp_manager` has two branches: `develop` (the repo's default) and
+`the fork author/sccp_manager` has two branches: `develop` (the repo's default) and
 `pr-17.0.1.1` (what both prior review rounds covered). **They do not share
 git history** - `git compare` between them returns `404 No common ancestor`,
 and the same is true comparing `develop` against upstream
@@ -29,7 +29,7 @@ Comparing file trees confirms `develop`'s root is a near-snapshot of
 `pr-17.0.1.1`'s state as of ~2026-02-13: every one of 99 blob paths in
 `develop`'s root commit also exists in `pr-17.0.1.1`'s HEAD (0 files unique
 to develop's root), 61/99 byte-identical, the rest differing by small
-amounts. In short: **timspb squashed his work-to-date into a fresh orphan
+amounts. In short: **the fork author squashed his work-to-date into a fresh orphan
 branch around 2026-02-13, then kept working on `develop` from there**,
 eventually reaching content parity with `pr-17.0.1.1`'s actual HEAD (both
 reach an equivalent "Fix row background" commit around 2026-02-16) before
@@ -133,7 +133,7 @@ finding:**
   mismatch only (install.php's imperative schema logic is what actually
   runs), not applied in this pass since it's zero-impact and touches a
   manifest file rather than fixing a live bug.
-- The "SCCPShowSoftKeySetsComplete casing mismatch" timspb's own
+- The "SCCPShowSoftKeySetsComplete casing mismatch" the fork author's own
   `Technical.notes/chan-sccp-requirements.md`/`chan-sccp-verification-report.md`
   (added in his commit `c019a42e`, both Russian-language driver-contract
   audit docs) flags as a *possible* bug - checked against our actual
@@ -201,7 +201,7 @@ $sqlSet = implode(', ', $setParts);
 ```
 
 (Also folded in the same `!empty()` → `$v !== '' && $v !== null` change
-timspb made in the same spot - `empty()` treats the string `"0"` as empty,
+the fork author made in the same spot - `empty()` treats the string `"0"` as empty,
 so any field whose valid value is literally `"0"` was being silently
 dropped from the SQL entirely, not just failing to escape. Real, separate,
 same-commit bug.)
@@ -225,7 +225,7 @@ family, same underlying discipline gap, previously unnoticed because it's
 in a *different* function (`getDevice`/`addDevice` vs `getDefaultLine`) in
 a file whose own docs warn "check before assuming it's live."
 
-Timspb fixed this too (commit `896d4c3b`, "Extensions (Line): driver
+The fork author fixed this too (commit `896d4c3b`, "Extensions (Line): driver
 codec/devinfo fix, SQL escaping, required fields fallback") - our fix
 follows the same `PDO::quote()` approach for the SET-clause portion (a
 prepared-statement placeholder doesn't cleanly fit a dynamic-column-count
@@ -242,7 +242,7 @@ $def_val['addon'] = array("keyword" => 'type', "data" => $_REQUEST['addon'], "se
 $def_val['addon'] = array("keyword" => 'addon', "data" => $_REQUEST['addon'], "seq" => "99");
 ```
 
-From timspb's commit `67bf686d` ("Fix critical device save issues (addon
+From the fork author's commit `67bf686d` ("Fix critical device save issues (addon
 mapping, zero-value persistence)"). Confirmed present verbatim in our
 current file before the fix. Low severity on its own (affects only the
 "adding a device that's connected but not yet in the DB, with an addon
@@ -251,7 +251,7 @@ clean, obviously-correct, zero-risk one-line fix.
 
 ### A.3 `install.php`: `DROP TABLE IF EXISTS` before view (re)creation
 
-Timspb's commit `559aeb36` (`pr-17.0.1.1`) / `bcfce8f7` (`develop`, same
+The fork author's commit `559aeb36` (`pr-17.0.1.1`) / `bcfce8f7` (`develop`, same
 change) adds a `DROP TABLE IF EXISTS sccpdeviceconfig`/`sccplineconfig`
 step before the existing `DROP VIEW IF EXISTS` + `CREATE OR REPLACE VIEW`
 sequence, with a README note explaining the motivating scenario: if either
@@ -290,7 +290,7 @@ array('alaw', 'ulaw', 'g722', 'g723', 'g726', 'g729', 'gsm', 'ilbc', 'opus', 'h2
 
 From `develop` commit `ad000491`. Verified against chan-sccp's actual
 `src/sccp_codec.c` `skinny_codecs[]` table (byte-identical between our fork
-and timspb's, confirmed in the file-diff review) that `ilbc`, `opus`, and
+and the fork author's, confirmed in the file-diff review) that `ilbc`, `opus`, and
 `h263p` are real, distinct, driver-supported codec keywords - `h263p` in
 particular needed checking since chan-sccp has *two* H.263-family rows
 sharing one internal key (`"h263"`) but distinct config-string keys
@@ -327,7 +327,7 @@ d8dff1be 2026-02-16 Revert "UI: align form columns (label/value/actions), sectio
 A same-day try-then-revert on a CSS/layout change. Net effect at HEAD is
 correctly "no change" (which the file-diff review would have already
 reflected correctly, since it compares end states) - noted here only as
-confirmation that timspb does revert things that don't work out, which is
+confirmation that the fork author does revert things that don't work out, which is
 useful context for weighing confidence in *other*, non-reverted UI changes
 from the same period (i.e. the file-diff review's blanket "not
 adopting - cosmetic" verdict on the surrounding UI work doesn't need
@@ -346,7 +346,7 @@ approach (a narrow inline fix, then a second field gets the same treatment,
 then a proper `is_array()`-aware helper function replaces the ad-hoc
 casts). This iterative-refinement shape recurs in the `develop`-only tail
 too (§C, `Setup_RealTime`'s two-commit AMPDBNAME fix) - useful to know this
-is timspb's normal working style (fix narrowly, then generalize once the
+is the fork author's normal working style (fix narrowly, then generalize once the
 gap is noticed), not evidence any specific fix is unreliable.
 
 ## §C. `develop`'s unique tail (2026-02-20 through 2026-05-17) - full list
@@ -434,7 +434,7 @@ array-shaped value fatals with "Array to string conversion" under FreePBX's
 strict error handler (the exact same class of fatal this project's own
 `array_diff_assoc()` bug pattern documents) - so a naive string-cast
 "defense" doesn't actually defend against the thing it's defending against,
-and timspb had to build a real `is_array()`-aware helper to safely degrade
+and the fork author had to build a real `is_array()`-aware helper to safely degrade
 instead. That's a genuinely useful, independently-arrived-at parallel to
 the caution in this repo's "Known bug pattern: `escapeHtml()` on a value
 that isn't actually a string" section - **assuming a value's shape without
@@ -455,7 +455,7 @@ first, the same way this note was reached.
 
 ### D.2 QoS/ToS/CoS hex-vs-decimal value format - real pattern, not ported
 
-Across three commits (`bf3f9ae7`, `63e6b2d4`-family, `3517a2b5`), timspb's
+Across three commits (`bf3f9ae7`, `63e6b2d4`-family, `3517a2b5`), the fork author's
 history shows a recurring, evidently-real problem: ToS/CoS values coming
 back from chan-sccp or the DB sometimes appear in decimal (`4`/`6`/`5`)
 instead of the hex format (`0x68`/`0xB8`/`0x88`) the config schema expects,

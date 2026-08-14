@@ -1,16 +1,16 @@
-# timspb/sccp_manager fork review — remaining 31 files
+# the fork author/sccp_manager fork review — remaining 31 files
 
 Reviewed against our `stable` branch (live source at
 `/var/www/html/admin/modules/sccp_manager`), commit `83b3c43` HEAD at the time
-of this review (2026-08-14). timspb's fork fetched from
-`https://raw.githubusercontent.com/timspb/sccp_manager/pr-17.0.1.1/<path>`.
+of this review (2026-08-14). the fork author's fork fetched from
+`https://raw.githubusercontent.com/the fork author/sccp_manager/pr-17.0.1.1/<path>`.
 
 This continues the earlier review that covered 8 files (`dbinterface.class.php`,
 `ajaxHelper.php`, `xmlinterface.class.php`, `install.php`, `uninstall.php`,
 `aminterface.class.php`, `form.buttons.php`, `Event.class.php`) — those are
 **not** revisited here.
 
-Method: `diff -u` of each file against timspb's version, then for every
+Method: `diff -u` of each file against the fork author's version, then for every
 non-cosmetic difference, traced the actual call chain in our live source to
 establish whether it's reachable, and for the more serious claims, wrote small
 standalone PHP reproductions run against the box's actual PHP 8.2.33 with a
@@ -138,7 +138,7 @@ single highest-reachability finding in this whole review. `getCountOfEvents()`
 is called right after `getClosingEvent()` in `aminterface.class.php:194-196`,
 on the "did we receive everything" check for list-type AMI responses.
 
-timspb's fix:
+the fork author's fix:
 
 ```php
 public function getClosingEvent() {
@@ -178,7 +178,7 @@ public function getMessage()
 Note `isList()` (line 58) does **not** need this treatment —
 `$this->getKey('EventList') === 'start'` is a strict comparison, and PHP
 doesn't warn on strict comparisons of mismatched types (verified: no warning
-either way). timspb changed it anyway (`?? ''`); harmless but unnecessary.
+either way). the fork author changed it anyway (`?? ''`); harmless but unnecessary.
 
 ### (A) `Table2Array()` — unguarded foreach on possibly-absent table entries
 
@@ -228,7 +228,7 @@ public function Table2Array( $tablename )
 }
 ```
 
-(Adopting only the guard, not timspb's `is_object()/method_exists()` belt —
+(Adopting only the guard, not the fork author's `is_object()/method_exists()` belt —
 though that's harmless too and cheap to include.)
 
 ### (A) `SCCPShowDevice_Response::getResult()` — unguarded `strtok()` on possibly-missing device field
@@ -273,7 +273,7 @@ AMI `Command` action), which is far less structured than normal AMI
 if narrow, possibility.
 
 **Proposed fix**: guard with `count($content) >= 2` before the switch, and
-`$content[1] ?? ''` at each use, matching timspb.
+`$content[1] ?? ''` at each use, matching the fork author.
 
 ### (B)/(C) — not adopting
 - `#[\AllowDynamicProperties]` attribute removals across all classes in this
@@ -297,7 +297,7 @@ if narrow, possibility.
   custom grouping algorithm plus a hardcoded `mapModeToKey()` table for mode
   names like `HOLDCONF`/`INUSEHINT`/`ONHOOKSTEALABLE`, again wrapped in
   `error_log()` debug calls and comments like "For debugging, let's be more
-  lenient". This is clearly timspb working around something specific to
+  lenient". This is clearly the fork author working around something specific to
   *their* chan-sccp fork's exact SoftKeySets AMI event shape — not something
   to blind-port without independently confirming our own chan-sccp emits a
   materially different SoftKeySets format that needs it. Not adopting.
@@ -317,7 +317,7 @@ if narrow, possibility.
   legitimate non-ASCII data (accented names, non-English hint labels) by
   silently stripping it byte-by-byte. Not adopting.
 - **Do NOT port**: `SCCPJSON_Response::getResult()` still reads
-  `getKey('JSON')` in timspb's fork:
+  `getKey('JSON')` in the fork author's fork:
   ```php
   $jsonData = $this->getKey('JSON') ?? '';
   if (($json = json_decode($jsonData, true)) != false) {
@@ -326,7 +326,7 @@ if narrow, possibility.
   key-name typo bug our own CLAUDE.md documents as found and fixed
   ("`getVariable()` stored the parsed AMI JSON under `'JSONRAW'`... plain
   key-name typo... silently produced the 'driver not found' symptom"). We are
-  already correct; timspb's fork still has the bug we already fixed. This is
+  already correct; the fork author's fork still has the bug we already fixed. This is
   exactly the kind of thing the task warned about — don't trust diff
   direction blindly.
 
@@ -422,7 +422,7 @@ good* `masterFilesStructure.xml` gets silently replaced with garbage. See the
 on the very next page load.
 
 **Proposed fix** (validate before accepting; keep our own provisioner URL —
-do **not** adopt timspb's `dkgroot/provision_sccp` source or their
+do **not** adopt the fork author's `dkgroot/provision_sccp` source or their
 cURL/fallback infrastructure, that's their own upstream choice, unrelated to
 the actual bug):
 ```php
@@ -517,7 +517,7 @@ foreach (($firmwareDir[0] ?? array()) as $child) {
     }
 }
 ```
-(Deliberately **not** adopting timspb's accompanying "Load Image" dropdown /
+(Deliberately **not** adopting the fork author's accompanying "Load Image" dropdown /
 `firmwareOptionsByModel` / "Get Settings from Provisioner" / "Get Ringtones
 from Provisioner" buttons in the same file — that's new UI functionality tied
 to backend AJAX support we haven't verified we have, out of scope for a bug
@@ -600,11 +600,11 @@ handler. This feeds `createDefaultSccpXml()`'s `server_if_list`
 (`Sccp_manager.class.php`), which runs on regular provisioning-refresh paths,
 not just install.
 
-**Proposed fix**: guard with `if (!isset($vals[1], $vals[2], $vals[3])) { continue; }` before use, matching timspb.
+**Proposed fix**: guard with `if (!isset($vals[1], $vals[2], $vals[3])) { continue; }` before use, matching the fork author.
 
 ### (B)/(C) — not adopting
 - Trait declared as `trait helperfunctions {` (line 5, lowercase 'f') vs
-  timspb's `trait helperFunctions {` (uppercase, matching the filename and
+  the fork author's `trait helperFunctions {` (uppercase, matching the filename and
   the `use \...\helperFunctions;` statement in `Sccp_manager.class.php:107`).
   PHP resolves trait/class names case-insensitively, so this is **not** a
   functional bug (confirmed: the module works today) — purely a naming
@@ -613,10 +613,10 @@ not just install.
 - `checkTftpMapping()`'s `?? '/tftpboot'` vs our `?? ''` — both already
   guarded, just a different fallback value; not a bug either way.
 - The `compareArrays()` / `sccpActiveDeviceKeyUsed()` /
-  `sccpFindActiveDeviceByName()` functions timspb's diff removes are **our
+  `sccpFindActiveDeviceByName()` functions the fork author's diff removes are **our
   own** additions (case-insensitive AMI device-name matching, and the
   `array_udiff_assoc` comparator for the since-changed `saveSccpSettings()`
-  diffing logic) that timspb's older/simpler fork snapshot doesn't have —
+  diffing logic) that the fork author's older/simpler fork snapshot doesn't have —
   we're ahead here, nothing to port.
 - `before()`'s new behavior (return the *whole string* instead of `''` when
   the delimiter isn't found) is a genuine, if low-severity, behavior fix —
@@ -717,7 +717,7 @@ this small block; any one being absent is fatal.
 
 **Proposed fix**: `$driver['sccp'] ?? ''`, and pull `$core[...]` into local
 `?? ''`-guarded variables before building the strings/arrays (matches
-timspb's approach).
+the fork author's approach).
 
 ### (A, lower severity) `$mysql_info['Value']`
 
@@ -749,7 +749,7 @@ consolidated escaping finding below — this file is the single largest
 concentration of the gap.
 
 ### (B)/(C)
-- The `'<div class="alert ...">'` → plain-text `about` values (timspb moves
+- The `'<div class="alert ...">'` → plain-text `about` values (the fork author moves
   the alert-styling out of the data and into markup, plus adds `_()`
   wrapping for a few labels) is a reasonable cleanup but purely cosmetic —
   not adopting as a bug fix, though harmless if picked up incidentally.
@@ -812,7 +812,7 @@ convention elsewhere, I'd still adopt them, but as insurance rather than a
 confirmed fix — flagging the confidence difference explicitly per the task's
 instructions.
 
-**Proposed fix** (adopting timspb's guards as-is):
+**Proposed fix** (adopting the fork author's guards as-is):
 ```php
 $adv_config = array('tftproot' => $settingsFromDb['tftp_path']['data'] ?? '/tftpboot', ...);
 ...
@@ -828,14 +828,14 @@ switch ($settingsFromDb['tftp_rewrite']['data'] ?? 'off') {
 ```
 
 ### (B) `#[\AllowDynamicProperties]` → explicit property declarations
-timspb drops the attribute and instead explicitly declares `public
+the fork author drops the attribute and instead explicitly declares `public
 $paren_class = null;` / `public $sccpvalues = array();`. We already suppress
 the PHP 8.2 dynamic-property deprecation via the attribute (broader coverage
 — any property, not just these two). Functionally equivalent for the actual
 issue; not adopting, no benefit.
 
 ### (C) — not adopting
-- Dropped `ru_RU` locale entry: this is timspb's fork **missing** something
+- Dropped `ru_RU` locale entry: this is the fork author's fork **missing** something
   we have, not the other way around. Nothing to port; note only.
 
 ---
@@ -875,14 +875,14 @@ public function __construct($freepbx = null) {
 Given how many "fatal under sparse data" paths this review turned up across
 the codebase, an uncaught exception here currently means a bare fatal with
 whatever FreePBX's default error page shows — not actionable for an admin.
-timspb wraps the whole body in try/catch, records the exception into
+the fork author wraps the whole body in try/catch, records the exception into
 `$this->class_error` (which `views/server.info.php` already displays, in the
 "Diagnostic information about SCCP Manager errors" block), logs it via
 FreePBX's logger where available, and **re-throws** — so behavior for
 existing callers is unchanged, this purely adds a diagnostic trail.
 
 **Proposed fix** (adapted to keep our current constructor body, including
-the `$this->dbsccpvalues` line which timspb's fork removed — see the
+the `$this->dbsccpvalues` line which the fork author's fork removed — see the
 `saveSccpSettings()` warning below, do **not** drop that assignment):
 ```php
 public function __construct($freepbx = null) {
@@ -942,7 +942,7 @@ Since `initializeSccpPath()` runs on every construction (per the
 sparse right after fresh install as a real, recurring window, this is worth
 hardening to something that at least stays inside the expected TFTP tree.
 
-**Proposed fix** (matches timspb's intent; adopting the "default to
+**Proposed fix** (matches the fork author's intent; adopting the "default to
 `/tftpboot`-relative path" idea, not necessarily their exact helper-closure
 styling):
 ```php
@@ -982,7 +982,7 @@ private function saveSccpSettings($save_value = array()) {
     return true;
 }
 ```
-timspb's version:
+the fork author's version:
 ```php
 private function saveSccpSettings($save_value = array()) {
     if (empty($save_value)) {
@@ -995,7 +995,7 @@ private function saveSccpSettings($save_value = array()) {
 ```
 (with the matching `private $dbsccpvalues = array();` property, and the
 `$this->dbsccpvalues = $this->sccpvalues;` constructor line, **both removed**
-in timspb's diff.)
+in the fork author's diff.)
 
 Per `dbinterface.class.php::write()`, `'replace'` mode for the `sccpsettings`
 table does `TRUNCATE sccpsettings` followed by a bulk `INSERT` of every
@@ -1005,7 +1005,7 @@ the constructor, which per the findings above runs on every request). This
 is **exactly** the bug our own commit `96acb02` ("Only write changed settings
 to DB instead of truncate+reinsert on every load") already fixed — the diff
 logic (`array_udiff_assoc($this->sccpvalues, $this->dbsccpvalues, ...)`) that
-timspb's diff removes *is* that fix. Porting any part of this change —
+the fork author's diff removes *is* that fix. Porting any part of this change —
 including, critically, dropping the now-apparently-unused-looking
 `$this->dbsccpvalues` property/assignment, which is easy to do by accident
 while cleaning up nearby code — would silently reintroduce a real,
@@ -1016,7 +1016,7 @@ through the rest of this same diff (the surrounding lines look identical in
 shape to genuinely good changes).
 
 ### (C) — not adopting
-- `use \FreePBX\modules\Sccp_Manager\...` (capital `M`) vs timspb's
+- `use \FreePBX\modules\Sccp_Manager\...` (capital `M`) vs the fork author's
   `Sccp_manager` (lowercase, matching the trait files' own namespace
   declaration and the class's own `Sccp_manager` name) — PHP resolves
   namespaces case-insensitively; confirmed the module works today as-is.
@@ -1029,10 +1029,10 @@ shape to genuinely good changes).
   we already have the (correctly-qualified) attribute either way.
 - `processPageData()`'s removal of the `$device_warning` → `$page['banner']`
   wiring, and the dropped `"banner" => _(...)` entries in
-  `settingsShowPage()`: timspb's fork doesn't have our page-level shared
+  `settingsShowPage()`: the fork author's fork doesn't have our page-level shared
   warning-banner mechanism (see `page.html.php`/`server.device.php`/
   `server.setting.php`/`form.adddevice.php` below) — this is our own,
-  cleaner architecture that timspb doesn't have, not something missing on
+  cleaner architecture that the fork author doesn't have, not something missing on
   our side.
 - `getSccpModelInformation()`'s large firmware-file-detection rewrite
   (multiple `.loads`-extension-variant / per-model-subdirectory / tftp-root
@@ -1079,7 +1079,7 @@ the only admin who ever *views* it back).
   from DB data) is **not** escaped, unlike the main input-value path in the
   same file.
 
-**Proposed fix**: add a small helper (matching timspb's, since it's exactly
+**Proposed fix**: add a small helper (matching the fork author's, since it's exactly
 the right shape) to `Sccp_manager.class.php`:
 ```php
 /**
@@ -1103,7 +1103,7 @@ manually-coded spots that bypass it.
 ## `sccpManClasses/formcreate.class.php` (1295 diff lines) — do not port
 
 This is the single largest diff in the whole review, and none of it should
-be ported. timspb's version is a wholesale reversion of the form-rendering
+be ported. the fork author's version is a wholesale reversion of the form-rendering
 rework this project's own CLAUDE.md documents as an intentional, already-completed fix:
 
 > The form-rendering layer (`sccpManClasses/formcreate.class.php`) was
@@ -1113,7 +1113,7 @@ rework this project's own CLAUDE.md documents as an intentional, already-complet
 > landing in the wrong TFTP path depending on `tftp_rewrite` mode, and icons
 > rendering as nothing under FreePBX 17's theme.
 
-timspb's `addElementIE()`/`addElementIS()` (and others) reintroduce exactly
+the fork author's `addElementIE()`/`addElementIS()` (and others) reintroduce exactly
 that toggle: a hidden checkbox (`sccp-edit`/`sccp-restore` classes,
 `data-default="..."` attributes) that switches between "using system
 defaults" and "customised", plus a separate hidden `edit_<res_id>` row with
@@ -1126,7 +1126,7 @@ lines up with the "icons rendering as nothing under FreePBX 17's theme" bug
 our rework separately fixed — FreePBX 17 ships Bootstrap 4 + Font Awesome,
 not Bootstrap 3 glyphicons, so this would very plausibly render as invisible
 icons on our actual GUI. Both of these line up too precisely with
-already-diagnosed, already-fixed bugs to be coincidence; timspb's fork
+already-diagnosed, already-fixed bugs to be coincidence; the fork author's fork
 appears to be maintained against an older FreePBX/Bootstrap-3-era target, not
 FreePBX 17.
 
@@ -1157,7 +1157,7 @@ existing (non-toggle) rendering structure.
 
 ## Fork-specific UI features — not adopting (not bugs, out of scope)
 
-These are genuine new functionality in timspb's fork, not correctness fixes,
+These are genuine new functionality in the fork author's fork, not correctness fixes,
 so out of scope for this bug-focused review even where they look nice:
 
 - `views/hardware.phone.php` / `views/hardware.extension.php` — green/red row
@@ -1169,7 +1169,7 @@ so out of scope for this bug-focused review even where they look nice:
   Provisioner" buttons — new functionality tied to backend AJAX support not
   verified to exist on our side.
 - `views/hardware.phone.php`'s `LineFormatter()` JS: `result = '';` (no
-  `var`/`let`, an accidental implicit global in non-strict JS) vs timspb's
+  `var`/`let`, an accidental implicit global in non-strict JS) vs the fork author's
   `var result = '';`, plus a friendlier "No line" placeholder instead of
   `-- EMPTY --`. Real but very minor (single-page scope, no observed
   collision); not worth a dedicated fix, mentioning for completeness only.
@@ -1198,12 +1198,12 @@ so out of scope for this bug-focused review even where they look nice:
   no action); `sanitizeInput()` param rename (cosmetic); the new
   non-ASCII-stripping branch is a trade-off, not a clean win (see Response.class.php
   section above for the shared reasoning — this file has the same change).
-- `views/page.html.php` — timspb's escaping additions for `$display_info`/
+- `views/page.html.php` — the fork author's escaping additions for `$display_info`/
   tab `$key`/`$page['name']` are unnecessary: I traced all of these back to
   `Sccp_manager.class.php`'s `settingsShowPage()`/`phoneShowPage()`/
   `advServerShowPage()`/`infoServerShowPage()` and confirmed every value is a
   hardcoded string literal (`"general"`, `_("Site Default Settings")`, etc.),
-  never user input. Not a real gap. Also: timspb's version **removes** our
+  never user input. Not a real gap. Also: the fork author's version **removes** our
   own custom banner-sync `<script>` block (the mechanism behind the
   `"banner" => _(...)` entries throughout `Sccp_manager.class.php`) — that's
   their fork simply not having a feature we built, not something to adopt.
