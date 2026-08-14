@@ -503,11 +503,11 @@ class formcreate
                                     $opt_key = $val;
                                     $opt_val = $val;
                                 }
-                                echo '<option value="' . $opt_key . '"';
+                                echo '<option value="' . htmlspecialchars($opt_key, ENT_QUOTES) . '"';
                                 if ($opt_key == $child->value) {
                                     echo ' selected="selected"';
                                 }
-                                echo "> {$opt_val} </option>";
+                                echo "> " . htmlspecialchars($opt_val, ENT_QUOTES) . " </option>";
                             }
                             ?>
                             </select>
@@ -578,11 +578,11 @@ class formcreate
                             foreach ($select_opt as $key => $val) {
                                     $opt_key = $key;
                                     $opt_val = $val;
-                                echo '<option value="' . $opt_val . '"';
+                                echo '<option value="' . htmlspecialchars($opt_val, ENT_QUOTES) . '"';
                                 if ($opt_val == $child->value) {
                                     echo ' selected="selected"';
                                 }
-                                echo "> {$opt_val} </option>";
+                                echo "> " . htmlspecialchars($opt_val, ENT_QUOTES) . " </option>";
                             }
                             ?>
                             </select>
@@ -683,19 +683,19 @@ class formcreate
                         }
                     }
                     foreach ($select_opt as $data) {
-                        echo '<option value="' . ($data[$fld] ?? '') . '"';
+                        echo '<option value="' . htmlspecialchars($data[$fld] ?? '', ENT_QUOTES) . '"';
                         if ($key == ($data[$fld] ?? '')) {
                             echo ' selected="selected"';
                         }
                         if (!empty($flk)) {
-                            echo ' data-id="'.($data[$flk] ?? '').'"';
+                            echo ' data-id="'.htmlspecialchars($data[$flk] ?? '', ENT_QUOTES).'"';
                         }
                         if (!empty($flkv)) {
-                            echo ' data-val="'.($data[$flkv] ?? '').'"';
+                            echo ' data-val="'.htmlspecialchars($data[$flkv] ?? '', ENT_QUOTES).'"';
                         }
-                        echo '>' . ($data[$flv] ?? '');
+                        echo '>' . htmlspecialchars($data[$flv] ?? '', ENT_QUOTES);
                         if (!empty($flv2)) {
-                            echo ' / '.($data[$flv2] ?? '');
+                            echo ' / '.htmlspecialchars($data[$flv2] ?? '', ENT_QUOTES);
                         }
                         echo '</option>';
                     }

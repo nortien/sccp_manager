@@ -91,7 +91,7 @@ if (!empty($def_val['type']['data'])) {
         $val = str_replace(array('SEP','ATA','VG'), '', $dev_id);
         $val = implode(':', sscanf($val, '%2s%2s%2s%2s%2s%2s')); // Convert to Cisco display Format
         $def_val['mac'] = array("keyword" => 'mac', "data" => $val, "seq" => "99");
-        echo '<input type="hidden" name="sccp_device_id" value="'.$dev_id.'">';
+        echo '<input type="hidden" name="sccp_device_id" value="'.$this->escapeHtml($dev_id).'">';
     }
 
     if ($_REQUEST['tech_hardware'] == 'cisco') {

@@ -154,16 +154,20 @@ global $amp_conf;
 $selectArray = array();
 //below probably unnecessary as installer should ensure that a copy always exists
 // TODO: Maybe should always check here to ensure that have latest
-if (!file_exists("{$this->sccppath['tftp_path']}/masterFilesStructure.xml")) {
-    if (!$this->getFileListFromProvisioner($this->sccppath['tftp_path'])) {
-        // File does not exist and cannot get from internet.
-        return;
-    };
+$masterXmlPath = "{$this->sccppath['tftp_path']}/masterFilesStructure.xml";
+if (!file_exists($masterXmlPath) || @simplexml_load_file($masterXmlPath) === false) {
+    $this->getFileListFromProvisioner($this->sccppath['tftp_path']);
 }
-$tftpBootXml = simplexml_load_file("{$this->sccppath['tftp_path']}/masterFilesStructure.xml");
-$firmwareDir = $tftpBootXml->xpath("//Directory[@name='firmware']");
+$tftpBootXml = @simplexml_load_file($masterXmlPath);
+if ($tftpBootXml === false) {
+    // Fetched/on-disk copy is missing or corrupt - fall back to the module's own bundled copy
+    // rather than fataling the whole page.
+    $bundled = dirname(__DIR__) . '/contrib/masterFilesStructure.xml';
+    $tftpBootXml = is_readable($bundled) ? @simplexml_load_file($bundled) : false;
+}
+$firmwareDir = $tftpBootXml ? $tftpBootXml->xpath("//Directory[@name='firmware']") : array();
 
-foreach ($firmwareDir[0] as $child) {
+foreach (($firmwareDir[0] ?? array()) as $child) {
     if (!empty((string)$child['name'])) {
         $selectArray[(string)$child['name']] = (string)$child['name'];
     }

@@ -88,6 +88,9 @@ trait helperfunctions {
         }
         foreach ($result as $line) {
             $vals = preg_split("/\s+/", $line);
+            if (!isset($vals[1], $vals[2], $vals[3])) {
+                continue;
+            }
             if ($vals[3] == "mtu") {
                 continue;
             }
@@ -277,8 +280,9 @@ trait helperfunctions {
 
     public function initialiseConfInit(){
         $read_config = \FreePBX::LoadConfig()->getConfig('sccp.conf');
-        $sccp_conf_init['general'] = $read_config['general'];
-        foreach ($read_config as $key => $value) {
+        $sccp_conf_init = array();
+        $sccp_conf_init['general'] = $read_config['general'] ?? array();
+        foreach (is_array($read_config) ? $read_config : array() as $key => $value) {
             if (isset($read_config[$key]['type'])) { // copy soft key
                 if ($read_config[$key]['type'] == 'softkeyset') {
                     $sccp_conf_init[$key] = $read_config[$key];
@@ -372,7 +376,16 @@ trait helperfunctions {
        $dom->preserveWhiteSpace = false;
        $dom->formatOutput = true;
        $dom->loadXML($xml->asXML());
-       $dom->save($filename);
+       $dir = dirname($filename);
+       if (!is_dir($dir)) {
+           @mkdir($dir, 0755, true);
+       }
+       if (@$dom->save($filename) === false) {
+           throw new \RuntimeException(sprintf(
+               _('Failed to save XML to "%s". Check permissions (e.g. sudo fwconsole chown).'),
+               $filename
+           ));
+       }
     }
 
     public function getFileListFromProvisioner(string $tftpRootPath) {
@@ -383,11 +396,15 @@ trait helperfunctions {
         $provisionerUrl = "https://raw.githubusercontent.com/nortien/provision_sccp/master/";
         // Get master tftpboot directory structure
         try {
-            file_put_contents("{$tftpRootPath}/masterFilesStructure.xml",file_get_contents("{$provisionerUrl}tools/tftpbootFiles.xml"));
+            $content = file_get_contents("{$provisionerUrl}tools/tftpbootFiles.xml");
         } catch (\Exception $e) {
             return false;
         }
-        return true;
+        if (empty($content) || @simplexml_load_string($content) === false) {
+            // Fetched content isn't valid XML - leave the existing file (if any) alone.
+            return false;
+        }
+        return file_put_contents("{$tftpRootPath}/masterFilesStructure.xml", $content) !== false;
     }
 
     public function getChanSccpSettings() {

@@ -36,13 +36,18 @@ $info['extconfigs'] = $this->extconfigs->info();
 $info['dbinterface'] = $this->dbinterface->info();
 $info['aminterface'] = $this->aminterface->info();
 $info['XML'] = $this->xmlinterface->info();
-$info['sccp_class'] = $driver['sccp'];
-$info['Core_sccp'] = array('Version' => $core['Version'],
-                            'about' => "Sccp ver: {$core['Version']}   r{$core['vCode']}   Revision: {$core['RevisionNum']}   Hash: {$core['RevisionHash']}");
+$coreVersion = $this->escapeHtml($core['Version'] ?? '');
+$coreVCode = $this->escapeHtml($core['vCode'] ?? '');
+$coreRevisionNum = $this->escapeHtml($core['RevisionNum'] ?? '');
+$coreRevisionHash = $this->escapeHtml($core['RevisionHash'] ?? '');
+$coreBuildInfo = is_array($core['buildInfo'] ?? null) ? $core['buildInfo'] : array();
+$info['sccp_class'] = $this->escapeHtml($driver['sccp'] ?? '');
+$info['Core_sccp'] = array('Version' => $coreVersion,
+                            'about' => "Sccp ver: {$coreVersion}   r{$coreVCode}   Revision: {$coreRevisionNum}   Hash: {$coreRevisionHash}");
 $capabilityArray = array( "park", "pickup", "realtime", "video", "conference", "dirtrfr", "feature_monitor", "functions", "manager_events",
                           "devicestate", "devstate_feature", "dynamic_speeddial", "dynamic_speeddial_cid", "experimental", "debug");
 
-$info['chan-sccp build info'] = array('Version' => $core['Version'], 'about' => 'Following options NOT built:  ' . implode('; ',array_diff($capabilityArray, $core['buildInfo'])));
+$info['chan-sccp build info'] = array('Version' => $coreVersion, 'about' => 'Following options NOT built:  ' . implode('; ',array_diff($capabilityArray, $coreBuildInfo)));
 $info['Asterisk'] = array('Version' => FreePBX::Config()->get('ASTVERSION'), 'about' => 'Asterisk.');
 
 if (!empty($this->sccpvalues['SccpDBmodel'])) {
@@ -50,14 +55,17 @@ if (!empty($this->sccpvalues['SccpDBmodel'])) {
 }
 
 exec('in.tftpd -V', $tftpInfo);
+$tftpParts = array();
 $info['TFTP Server'] = array('Version' => 'Not Found', 'about' => 'Mapping not available');
 
 if (isset($tftpInfo[0])) {
-    $tftpInfo = explode(',',$tftpInfo[0]);
-    $info['TFTP Server'] = array('Version' => $tftpInfo[0], 'about' => 'Mapping not available');
-    $tftpInfo[1] = trim($tftpInfo[1]);
-    if ($tftpInfo[1] == 'with remap') {
-        $info['TFTP Server'] = array('Version' => $tftpInfo[0], 'about' => $tftpInfo[1]);
+    $tftpParts = explode(',',$tftpInfo[0]);
+    $info['TFTP Server'] = array('Version' => $tftpParts[0] ?? '', 'about' => 'Mapping not available');
+    if (isset($tftpParts[1])) {
+        $tftpParts[1] = trim($tftpParts[1]);
+        if ($tftpParts[1] == 'with remap') {
+            $info['TFTP Server'] = array('Version' => $tftpParts[0] ?? '', 'about' => $tftpParts[1]);
+        }
     }
 }
 
@@ -68,7 +76,7 @@ if (!empty($this->sccpvalues['tftp_rewrite']['data'])) {
           $info['Provision_SCCP'] = array('Version' => 'base', 'about' => 'Provision Sccp enabled');
           break;
       default:
-          if ($tftpInfo[1] == 'with remap') {
+          if (isset($tftpParts[1]) && $tftpParts[1] == 'with remap') {
               $info['TFTP_Mapping'] = array('Version' => 'off', 'about' => "TFTP mapping is available but the mapping file is not included in tftpd-hpa default settings.<br>
                                             To enable Provision mode, add option <br>
                                             -m /etc/asterisk/sccpManagerRewrite.rules <br>
@@ -103,15 +111,15 @@ if (empty($ast_realtime)) {
         if ($key == $ast_realm) {
             if ($value['status'] == 'OK') {
                 $rt_sccp = 'TEST OK';
-                $rt_info .= '<div> Using SCCP connection found to database: '.$value['realm'] . ' with connector: ['. $key .']</div>';
+                $rt_info .= '<div> Using SCCP connection found to database: '.$this->escapeHtml($value['realm']) . ' with connector: ['. $this->escapeHtml($key) .']</div>';
             } else {
                 $rt_sccp = 'SCCP ERROR';
-                $rt_info .= '<div class="alert signature alert-danger"> Error : ' . $value['message'] . '</div>';
+                $rt_info .= '<div class="alert signature alert-danger"> Error : ' . $this->escapeHtml($value['message']) . '</div>';
             }
         } elseif ($value['status'] == 'ERROR') {
-            $rt_info .= '<div> No connector found for [' . $key . '] : ' . $value['message'] . '</div>';
+            $rt_info .= '<div> No connector found for [' . $this->escapeHtml($key) . '] : ' . $this->escapeHtml($value['message']) . '</div>';
         } elseif ($value['status'] == 'OK') {
-            $rt_info .= '<div> Alternative connector found to database '.$value['realm'] . ' with connector: ['. $key . '] </div>';
+            $rt_info .= '<div> Alternative connector found to database '.$this->escapeHtml($value['realm']) . ' with connector: ['. $this->escapeHtml($key) . '] </div>';
         }
     }
     $info['RealTime'] = array('Version' => $rt_sccp, 'about' => $rt_info);
@@ -135,7 +143,7 @@ if (empty($conf_realtime)) {
     }
 }
 // $mysql_info
-if ($mysql_info['Value'] <= '2000') {
+if (!empty($mysql_info) && isset($mysql_info['Value']) && $mysql_info['Value'] <= '2000') {
     $this->info_warning['MySql'] = array('Increase Mysql Group Concat Max. Length', 'Step 1: Go to mysql path <br> nano /etc/my.cnf',
         'Step 2: And add the following line below [mysqld] as shown below <br> [mysqld] <br>group_concat_max_len = 4096 or more',
         'Step 3: Save and restart <br> systemctl restart mariadb.service<br> Or <br> service mysqld restart');
@@ -145,7 +153,7 @@ if ($mysql_info['Value'] <= '2000') {
 // Check Time Zone compatibility
 $conf_tz = $this->sccpvalues['ntp_timezone']['data'] ?? '';
 $cisco_tz = $this->extconfigs->getExtConfig('sccp_timezone', $conf_tz);
-if ($cisco_tz['offset'] == 0) {
+if (isset($cisco_tz['offset']) && $cisco_tz['offset'] == 0) {
     if (!empty($conf_tz)) {
         $tmp_dt = new DateTime('now', new DateTimeZone($conf_tz));
         $tmp_ofset = $tmp_dt->getOffset();
@@ -192,7 +200,7 @@ if (!empty($this->class_error)) {
                 <h2 style="border:2px solid Tomato;color:Tomato;text-align:center;" >Diagnostic information about SCCP Manager errors</h2>
                 <div class="table-responsive">
                     <br> There is an error in the :<br><pre>
-    <?php print_r($this->class_error); ?>
+    <?php echo $this->escapeHtml(print_r($this->class_error, true)); ?>
                     </pre>
                     <br> Correct these problems before continuing to work. <br>
                     <br><h3 style="border:2px solid Tomato;color:Green;text-align:center;" > Open 'SCCP Connectivity' -> Server Config' to change global settings</h3> <br>

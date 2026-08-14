@@ -109,40 +109,55 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
     use \FreePBX\modules\Sccp_Manager\sccpManTraits\bmoFunctions;
 
     public function __construct($freepbx = null) {
-        if ($freepbx == null) {
-            throw new Exception("Not given a FreePBX Object");
-        }
-        $this->class_error = array();
-        $this->FreePBX = $freepbx;
-        $this->db = $freepbx->Database;
-        $this->cnf_wr = \FreePBX::WriteConfig();
-        $this->cnf_read = \FreePBX::LoadConfig();
-        $driverNamespace = "\\FreePBX\\Modules\\Sccp_manager";
-        if (class_exists($driverNamespace, false)) {
-            foreach (glob(__DIR__ . "/sccpManClasses/*.class.php") as $driver) {
-                if (preg_match("/\/([a-z1-9]*)\.class\.php$/i", $driver, $matches)) {
-                    $name = $matches[1];
-                    $class = $driverNamespace . "\\" . $name;
-                    if (!class_exists($class, false)) {
-                        include($driver);
-                    }
-                    if (class_exists($class, false)) {
-                        $this->$name = new $class($this);
-                    } else {
-                        throw new \Exception("Invalid Class inside in the include folder" . print_r($freepbx));
+        try {
+            if ($freepbx == null) {
+                throw new \Exception("Not given a FreePBX Object");
+            }
+            $this->class_error = array();
+            $this->FreePBX = $freepbx;
+            $this->db = $freepbx->Database;
+            $this->cnf_wr = \FreePBX::WriteConfig();
+            $this->cnf_read = \FreePBX::LoadConfig();
+            $driverNamespace = "\\FreePBX\\Modules\\Sccp_manager";
+            if (class_exists($driverNamespace, false)) {
+                foreach (glob(__DIR__ . "/sccpManClasses/*.class.php") as $driver) {
+                    if (preg_match("/\/([a-z1-9]*)\.class\.php$/i", $driver, $matches)) {
+                        $name = $matches[1];
+                        $class = $driverNamespace . "\\" . $name;
+                        if (!class_exists($class, false)) {
+                            include($driver);
+                        }
+                        if (class_exists($class, false)) {
+                            $this->$name = new $class($this);
+                        } else {
+                            throw new \Exception("Invalid Class inside in the include folder" . print_r($freepbx));
+                        }
                     }
                 }
+            } else {
+                return;
             }
-        } else {
-            return;
-        }
 
-        $this->sccpvalues = $this->dbinterface->get_db_SccpSetting(); //Initialise core settings
-        $this->dbsccpvalues = $this->sccpvalues; //Copy settings from DB for future reference
-        $this->initializeSccpPath();  //Set required Paths
-        $this->updateTimeZone();   // Get timezone from FreePBX
-        //$this->findInstLangs();
-        $this->saveSccpSettings();
+            $this->sccpvalues = $this->dbinterface->get_db_SccpSetting(); //Initialise core settings
+            $this->dbsccpvalues = $this->sccpvalues; //Copy settings from DB for future reference
+            $this->initializeSccpPath();  //Set required Paths
+            $this->updateTimeZone();   // Get timezone from FreePBX
+            //$this->findInstLangs();
+            $this->saveSccpSettings();
+        } catch (\Throwable $e) {
+            $this->class_error = array('Sccp_manager load' => $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            error_log('Sccp_manager: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            throw $e;
+        }
+    }
+
+    /**
+     * Escape string for safe HTML output (XSS prevention).
+     * @param string $s
+     * @return string
+     */
+    public function escapeHtml($s) {
+        return htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
     /*
@@ -697,16 +712,27 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
      */
 
     function initializeSccpPath() {
+        // A blank path here isn't just a crash risk - it's silently worse: something like
+        // "{$this->sccppath['tftp_templates_path']}/somefile" collapses to "/somefile"
+        // (filesystem root) instead of erroring, so a sparse-settings window can lead to
+        // mkdir()/fopen() calls outside the intended TFTP tree. Fall back to sensible
+        // /tftpboot-relative defaults instead of empty strings.
+        $tftpBase = $this->sccpvalues['tftp_path']['data'] ?? '';
+        $tftpBase = ($tftpBase !== '') ? rtrim($tftpBase, '/') : '/tftpboot';
+        $pathOrDefault = function ($key, $suffix) use ($tftpBase) {
+            $v = $this->sccpvalues[$key]['data'] ?? '';
+            return ($v !== '') ? $v : ($tftpBase . $suffix);
+        };
         $this->sccppath = array(
-                    'asterisk' => ($this->sccpvalues['asterisk_etc_path']['data'] ?? ''),
-                    'tftp_path' => ($this->sccpvalues['tftp_path']['data'] ?? ''),
-                    'tftp_templates_path' => ($this->sccpvalues['tftp_templates_path']['data'] ?? ''),
-                    'tftp_store_path' => ($this->sccpvalues['tftp_store_path']['data'] ?? ''),
-                    'tftp_lang_path' => ($this->sccpvalues['tftp_lang_path']['data'] ?? ''),
-                    'tftp_firmware_path' => ($this->sccpvalues['tftp_firmware_path']['data'] ?? ''),
-                    'tftp_dialplan_path' => ($this->sccpvalues['tftp_dialplan_path']['data'] ?? ''),
-                    'tftp_softkey_path' => ($this->sccpvalues['tftp_softkey_path']['data'] ?? ''),
-                    'tftp_countries_path' => ($this->sccpvalues['tftp_countries_path']['data'] ?? '')
+                    'asterisk' => ($this->sccpvalues['asterisk_etc_path']['data'] ?? '/etc/asterisk'),
+                    'tftp_path' => $tftpBase,
+                    'tftp_templates_path' => $pathOrDefault('tftp_templates_path', '/templates'),
+                    'tftp_store_path' => $pathOrDefault('tftp_store_path', '/settings'),
+                    'tftp_lang_path' => $pathOrDefault('tftp_lang_path', '/locales'),
+                    'tftp_firmware_path' => $pathOrDefault('tftp_firmware_path', '/firmware'),
+                    'tftp_dialplan_path' => $pathOrDefault('tftp_dialplan_path', '/dialplan'),
+                    'tftp_softkey_path' => $pathOrDefault('tftp_softkey_path', '/softkey'),
+                    'tftp_countries_path' => $pathOrDefault('tftp_countries_path', '/locales/countries')
                   );
 
         // initialise $sccp_conf_init
