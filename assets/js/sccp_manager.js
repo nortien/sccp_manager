@@ -923,12 +923,25 @@ $(document).on('click', ".sccp-reset-default", function () {
     $('input[id="' + id + '"]').val('').first().focus();
 });
 
-// Same idea for addElementIS radio groups: unchecking every radio in the
-// group means nothing is submitted for that field name, so chan-sccp's own
-// default keeps applying instead of freezing in whatever was last selected.
+// Same idea for addElementIS radio groups, but radios (unlike text inputs)
+// have no placeholder to show what the default actually is - so rather than
+// just unchecking everything, select the radio matching chan-sccp's default
+// value (see data-default, set from $sccp_defaults[...]['systemdefault'] in
+// formcreate.class.php::addElementIS) to make it visible. If the default
+// value doesn't match any rendered button (legacy on/off vs yes/no data, for
+// example), fall back to unchecking all so the field still submits nothing.
 $(document).on('click', ".sccp-reset-radio-default", function () {
     var name = $(this).data('for');
-    $('input[name="' + name + '"]').prop('checked', false);
+    var defaultVal = $(this).data('default');
+    var $radios = $('input[name="' + name + '"]');
+    var $match = $radios.filter('[value="' + defaultVal + '"]');
+    $radios.prop('checked', false);
+    if ($match.length) {
+        // .prop() alone doesn't fire the .sccp_button_hide click handler that
+        // shows/hides dependent options based on the selected radio, so
+        // trigger it explicitly.
+        $match.prop('checked', true).trigger('click');
+    }
 });
 
 // call from here not document.ready as have dynamic content

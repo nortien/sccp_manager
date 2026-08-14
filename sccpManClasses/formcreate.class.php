@@ -136,7 +136,7 @@ class formcreate
             $i ++;
         }
         if ($hasSysDefault) {
-            echo '<button type="button" class="btn btn-warning sccp-reset-default" data-for="'.$res_id.'">'.sprintf(_('Use %s defaults'), $this->buttonDefLabel).'</button>';
+            echo '<button type="button" class="btn btn-default sccp-reset-default" data-for="'.$res_id.'">'.sprintf(_('Use %s defaults'), $this->buttonDefLabel).'</button>';
             echo '</div>';
         }
         $this->elementCloseRow();
@@ -373,9 +373,9 @@ class formcreate
                     <div class="radioset"><?php $renderButtons(); ?></div>
         <?php
         if ($hasSysDefault) {
-            echo '<button type="button" class="btn btn-warning sccp-reset-radio-default" data-for="'.$res_id.'">'.sprintf(_('Use %s defaults'), $this->buttonDefLabel).'</button>';
+            $sysDefault = $sccp_defaults[$res_n]['systemdefault'] ?? '';
+            echo '<button type="button" class="btn btn-default sccp-reset-radio-default" data-for="'.$res_id.'" data-default="'.htmlspecialchars($sysDefault, ENT_QUOTES).'">'.sprintf(_('Use %s defaults'), $this->buttonDefLabel).'</button>';
             if ($curData === '') {
-                $sysDefault = $sccp_defaults[$res_n]['systemdefault'] ?? '';
                 echo ' <small class="text-muted">('.htmlspecialchars($sysDefault, ENT_QUOTES).')</small>';
             }
             echo '</div>';
