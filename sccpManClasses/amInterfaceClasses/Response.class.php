@@ -170,7 +170,7 @@ class SCCPJSON_Response extends Generic_Response
     }
     public function getResult()
     {
-        if (($json = json_decode($this->getKey('JSONRAW'), true)) != false) {
+        if (($json = json_decode((string) ($this->getKey('JSONRAW') ?? ''), true)) != false) {
             return $json;
         }
     }
