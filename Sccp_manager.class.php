@@ -1061,8 +1061,22 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                             break;
                         case 'off':
                         default: // Place in root TFTP dir
-                            if (in_array("{$dir}/{$raw_settings['loadimage']}", $dir_list, true)) {
-                                $raw_settings['validate'] = 'yes;';
+                            // 'dirFileBaseName' mode prefixes each found file with the
+                            // directory it actually lives in, which is only ever $dir
+                            // itself if it's placed flat. A file recursively found in a
+                            // per-model subdirectory (e.g. commercially-downloaded
+                            // firmware bundles often come pre-organized that way) has a
+                            // different prefix, so the flat "$dir/$loadimage" match never
+                            // fires - a real, empirically confirmed false "not found"
+                            // (2026-08-14, tested against actual files under /tftpboot).
+                            // Match by basename instead: "does this firmware exist
+                            // anywhere under the TFTP root" is what actually matters here,
+                            // not which exact subdirectory it's in.
+                            foreach ($dir_list as $foundFirmware) {
+                                if (basename($foundFirmware) === $raw_settings['loadimage']) {
+                                    $raw_settings['validate'] = 'yes;';
+                                    break;
+                                }
                             }
                             break;
                     }
