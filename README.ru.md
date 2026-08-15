@@ -3,7 +3,7 @@
 **Рабочий, пропатченный форк, который реально запускается на современном Asterisk.**
 
 [![License: GPL](https://img.shields.io/badge/license-GPL-blue.svg)](https://github.com/nortien/sccp_manager/blob/stable/COPYING)
-[![chan-sccp](https://img.shields.io/badge/driver-chan--sccp%204.4-informational.svg)](https://github.com/nortien/chan-sccp)
+[![chan-sccp](https://img.shields.io/badge/driver-chan--sccp%204.3.5-informational.svg)](https://github.com/nortien/chan-sccp)
 [![Asterisk](https://img.shields.io/badge/Asterisk-20.x%20%7C%2023.x-orange.svg)]()
 [![FreePBX](https://img.shields.io/badge/FreePBX-16%20%7C%2017-orange.svg)]()
 [![Documentation](https://img.shields.io/badge/docs-wiki-blue.svg)](https://github.com/nortien/sccp_manager/wiki)
@@ -25,7 +25,7 @@
 | | Этот репозиторий | Сопутствующий репозиторий |
 |---|---|---|
 | Что это | Модуль GUI FreePBX (PHP) | Драйвер канала Asterisk (C) |
-| Версия | `15.1.1` | `4.4` |
+| Версия | `17.0.1` | `4.3.5` |
 | Способ установки | `fwconsole ma install` | `./configure && make install` |
 
 ## Зачем вообще понадобился этот форк?
@@ -61,7 +61,7 @@ yum install -y asterisk20-devel autoconf automake gcc git gettext-devel
 cd /usr/src
 git clone https://github.com/nortien/chan-sccp.git
 cd chan-sccp
-git checkout stable   # или помеченный релиз, например v4.4
+git checkout stable   # или помеченный релиз, например v4.3.5
 
 ./tools/bootstrap.sh
 ./configure --with-asterisk-version=20.0 \
@@ -80,7 +80,7 @@ asterisk -rx "sccp show version"
 # --- GUI: sccp_manager ---
 git clone https://github.com/nortien/sccp_manager.git /var/www/html/admin/modules/sccp_manager
 cd /var/www/html/admin/modules/sccp_manager
-git checkout stable   # или помеченный релиз, например v15.0.1
+git checkout stable   # или помеченный релиз, например v17.0.1
 
 fwconsole chown
 

@@ -679,11 +679,19 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                     break;
             }
 
-            foreach (array_diff(scandir($searchDir),array('.', '..')) as $subDir) {
-                if (is_dir($searchDir . DIRECTORY_SEPARATOR . $subDir)) {
-                    $filename = $searchDir . DIRECTORY_SEPARATOR . $subDir . DIRECTORY_SEPARATOR . $fileToFind;
-                    if (file_exists($filename)) {
-                        $result[$pack]['have'][] = $subDir;
+            // $searchDir (tftp_lang_path/tftp_countries_path) may not exist yet -
+            // e.g. no language/country packs ever downloaded from the provisioner.
+            // scandir() on a missing dir is a plain unguarded warning-turned-fatal
+            // under FreePBX's strict handler, same pattern as everywhere else in
+            // this codebase; not having any packs installed is a normal, common
+            // state, not an error condition, so just report zero "have" entries.
+            if (is_dir($searchDir)) {
+                foreach (array_diff(scandir($searchDir),array('.', '..')) as $subDir) {
+                    if (is_dir($searchDir . DIRECTORY_SEPARATOR . $subDir)) {
+                        $filename = $searchDir . DIRECTORY_SEPARATOR . $subDir . DIRECTORY_SEPARATOR . $fileToFind;
+                        if (file_exists($filename)) {
+                            $result[$pack]['have'][] = $subDir;
+                        }
                     }
                 }
             }
