@@ -433,9 +433,18 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                 }
                 switch ($btn_t) {
                     case 'feature':
-                        $btn_f = $get_settings["button{$it}_feature"];
+                        // button{$it}_feature is unguarded on purpose here (a feature
+                        // button submitted with no feature chosen is a real form-input
+                        // error, not a sparse-settings case) but $def_feature only has
+                        // entries for parkinglot/devstate/monitor - chan-sccp supports
+                        // many more feature types (cfwdall, dnd, conf, voicemail, ...),
+                        // so $def_feature[$btn_f] is legitimately undefined for most of
+                        // them. Guard the fallback-label lookup so an unlisted feature
+                        // type falls back to the feature keyword itself instead of
+                        // fataling.
+                        $btn_f = $get_settings["button{$it}_feature"] ?? '';
                         // $btn_opt = (empty($get_settings['button' . $it . '_fvalue'])) ? '' : $get_settings['button' . $it . '_fvalue'];
-                        $btn_n = (empty($get_settings["button{$it}_flabel"])) ? $def_feature[$btn_f]['name'] : $get_settings["button{$it}_flabel"];
+                        $btn_n = (empty($get_settings["button{$it}_flabel"])) ? ($def_feature[$btn_f]['name'] ?? $btn_f) : $get_settings["button{$it}_flabel"];
                         $btn_opt = $btn_f;
                         if (!empty($def_feature[$btn_f]['value'])) {
                             if (empty($get_settings['button' . $it . '_fvalue'])) {
@@ -453,9 +462,13 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                         break;
                     case 'monitor':
                         $btn_t = 'speeddial';
-                        $btn_opt = (string) $get_settings["button{$it}_line"];
+                        $btn_opt = (string) ($get_settings["button{$it}_line"] ?? '');
                         $db_res = $this->dbinterface->getSccpDeviceTableData('SccpExtension', array('name' => $btn_opt));
-                        $btn_n = $db_res[0]['label'];
+                        // $db_res can come back empty if $btn_opt no longer matches any
+                        // SccpExtension row (e.g. the extension was deleted after this
+                        // button was originally configured) - don't fatal, just fall
+                        // back to an empty label.
+                        $btn_n = $db_res[0]['label'] ?? '';
                         $btn_opt .= ',' . $btn_opt . $this->hint_context['default'];
                         break;
                     case 'speeddial':
@@ -484,9 +497,9 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                         break;
                     case 'adv.line':
                         $btn_t = 'line';
-                        $btn_n = (string) $get_settings["button{$it}_line"];
-                        $btn_n .= '@' . (string) $get_settings["button{$it}_advline"];
-                        $btn_opt = (string) $get_settings["button{$it}_advopt"];
+                        $btn_n = (string) ($get_settings["button{$it}_line"] ?? '');
+                        $btn_n .= '@' . (string) ($get_settings["button{$it}_advline"] ?? '');
+                        $btn_opt = (string) ($get_settings["button{$it}_advopt"] ?? '');
 
                         break;
                     case 'line':
@@ -525,7 +538,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $name_dev = '';
         $db_field = $this->dbinterface->getSccpDeviceTableData("get_columns_sccpuser");
         $hw_prefix = 'SEP';
-        $name_dev = $get_settings[$hdr_prefix . 'id'];
+        $name_dev = $get_settings[$hdr_prefix . 'id'] ?? '';
         $save_buttons = $this->getPhoneButtons($get_settings, $name_dev, 'sccpline');
 
         foreach ($db_field as $data) {
@@ -539,7 +552,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                     if (!empty($get_settings[$hdr_prefix . $key])) {
                         $value = $get_settings[$hdr_prefix . $key];
                     }
-                    if (!empty($get_settings[$hdr_arprefix . $key])) {
+                    if (!empty($get_settings[$hdr_arprefix . $key]) && is_array($get_settings[$hdr_arprefix . $key])) {
                         $arr_data = '';
                         $arr_clear = false;
                         foreach ($get_settings[$hdr_arprefix . $key] as $vkey => $vval) {
@@ -780,6 +793,11 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
     }
 
     function getDialPlan($get_file) {
+        // $res must exist even when $get_file doesn't resolve to a real file
+        // (deleted between listing and read, or a stale/bad name from the
+        // AJAX caller) - otherwise this returns an undefined variable, which
+        // is a warning-turned-fatal under FreePBX's strict handler.
+        $res = array();
         $file = $this->sccppath["tftp_dialplan_path"] . '/' . $get_file . '.xml';
         if (file_exists($file)) {
 
@@ -793,6 +811,10 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
     }
 
     function deleteDialPlan($get_file) {
+        // Same "must exist even on the not-found path" reasoning as
+        // getDialPlan() above - false is the correct "nothing to delete"
+        // result here, not an undefined variable.
+        $res = false;
         $file = $this->sccppath["tftp_dialplan_path"] . '/' . $get_file . '.xml';
         if (file_exists($file)) {
             $res = unlink($file);
@@ -869,7 +891,11 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
     function createDefaultSccpXml() {
         $data_value = array();
         foreach ($this->sccpvalues as $key => $value) {
-            $data_value[$key] = $value['data'];
+            // 'data' can be legitimately absent on a sparsely-populated settings
+            // row (same pattern documented in "Known bug pattern: unguarded reads
+            // on sparse settings data" above) - this loop runs on every default-XML
+            // regen, a mainline provisioning path served to every phone.
+            $data_value[$key] = $value['data'] ?? '';
         }
         $data_value['server_if_list'] = $this->getIpInformation('ip4');
         $model_information = $this->getSccpModelInformation($get = "enabled", $validate = false); // Get Active
@@ -895,6 +921,14 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $dev_line_data = null;
 
         $dev_config = $this->dbinterface->getSccpDeviceTableData("get_sccpdevice_byid", array('id' => $dev_id));
+        if (empty($dev_config)) {
+            // Device no longer exists (deleted between listing and XML
+            // generation, or a stale/bad $dev_id) - array_merge($dev_config, ...)
+            // below would otherwise throw a TypeError on a non-array, not just
+            // a warning. Same "return false, caller handles it" contract as the
+            // existing SIP-device-with-no-line case below.
+            return false;
+        }
         // Support Cisco Sip Device
         if (!empty($dev_config['type'])) {
             if (strpos($dev_config['type'], 'sip') !== false) {
@@ -938,7 +972,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
             }
         }
         foreach ($this->sccpvalues as $key => $value) {
-            $data_value[$key] = $value['data'];
+            $data_value[$key] = $value['data'] ?? '';
         }
         //Get Cisco Code only Old Device
         $data_value['ntp_timezone_id'] = $this->extconfigs->getExtConfig('sccp_timezone', $data_value['ntp_timezone']); // Old Cisco Device
@@ -952,7 +986,12 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
             $hw_addon = explode(',', $dev_config['addon']);
             foreach ($hw_addon as $key) {
                 $hw_data = $this->getSccpModelInformation('byid', false, "all", array('model' => $key));
-                $dev_config['addon_info'][$key] = $hw_data[0]['loadimage'];
+                // Empty if this addon model was removed from sccpdevmodel while a
+                // device still references it in its own 'addon' field (a stale
+                // reference, not something this function can validate) - fall back
+                // to no firmware rather than fataling XML generation for the whole
+                // device.
+                $dev_config['addon_info'][$key] = $hw_data[0]['loadimage'] ?? '';
             }
         }
 
@@ -1135,6 +1174,14 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
             return $res;
         }
 
+        // $data_sort/$res_sort must exist even when $res is empty (0 hints and
+        // 0 SccpExtension rows - a normal state right after a fresh install,
+        // before any device/extension has been configured yet) - otherwise
+        // ksort() below is called on an undefined variable, which PHP 8's
+        // strict by-ref array typing turns into a TypeError, not just a
+        // warning (empirically confirmed 2026-08-15).
+        $data_sort = array();
+        $res_sort = array();
         foreach ($res as $key => $value) {
             $data_sort[$value['exten']] = $key;
         }
