@@ -3,12 +3,12 @@
 # install-sccp-stack.sh
 #
 # Bootstraps chan-sccp (the C Asterisk driver) + sccp_manager (the FreePBX
-# module) on top of an EXISTING FreePBX/Asterisk install. Detects your
-# Asterisk major version and package manager (apt or dnf/yum - Sangoma's
-# own repos use the same devel-package naming on both: asterisk<N>-devel),
-# builds/installs chan-sccp, then hands off to FreePBX's own module
-# installer (fwconsole ma install, which runs sccp_manager's install.php)
-# for the module half.
+# module) on top of an EXISTING FreePBX/Asterisk install. Driver install
+# (precompiled-binary-first, fall back to compiling) lives in
+# install-chan-sccp-driver.sh, called from here - that split lets
+# sccp_manager's own install.php invoke the driver half by itself (via a
+# narrow sudoers rule) without recursing into `fwconsole ma install
+# sccp_manager`, which THIS script also calls, further down.
 #
 # Scope, deliberately: this does NOT install Asterisk or FreePBX themselves
 # from a bare OS - that's a distinct, already-solved problem owned by
@@ -40,12 +40,10 @@
 
 set -euo pipefail
 
-CHAN_SCCP_REPO="https://github.com/nortien/chan-sccp.git"
-CHAN_SCCP_BRANCH="work"
 SCCP_MANAGER_REPO="https://github.com/nortien/sccp_manager.git"
 SCCP_MANAGER_BRANCH="stable"
-SRC_DIR="/usr/src"
 FREEPBX_MODULES_DIR="/var/www/html/admin/modules"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 DEV_MODE=0
 for arg in "$@"; do
@@ -62,31 +60,13 @@ die()  { echo -e "\033[1;31m[FATAL] $1\033[0m"; exit 1; }
 [ "$(id -u)" -eq 0 ] || die "Run this script as root."
 
 # ---------------------------------------------------------------------------
-log "Checking this is a FreePBX/Asterisk server"
-command -v asterisk  >/dev/null 2>&1 || die "asterisk binary not found. This script installs chan-sccp + sccp_manager on top of an existing FreePBX/Asterisk install - it does not install Asterisk or FreePBX themselves (that's your distro's job, e.g. Sangoma's own installer)."
-command -v fwconsole >/dev/null 2>&1 || die "fwconsole not found - is this actually a FreePBX server?"
-
-ASTERISK_VERSION=$(asterisk -V | grep -oP 'Asterisk \K[0-9]+\.[0-9]+\.[0-9]+' || true)
-ASTERISK_MAJOR=$(echo "$ASTERISK_VERSION" | cut -d. -f1)
-[ -n "$ASTERISK_MAJOR" ] || die "Could not parse Asterisk version from 'asterisk -V'."
-log "Detected Asterisk ${ASTERISK_VERSION} (major version: ${ASTERISK_MAJOR})"
-
-# chan-sccp's configure.ac currently supports MIN_ASTERISK_VERSION=106,
-# MAX_ASTERISK_VERSION=123 for its *auto-detect* path - but we always pass
-# --with-asterisk-version explicitly below, which takes chan-sccp's manual
-# override path and bypasses that ceiling entirely (see chan-sccp's own
-# CLAUDE.md, "Build" section, 2026-08-14 correction note). So this is just
-# an informational heads-up, not a hard gate.
-case "$ASTERISK_MAJOR" in
-    20|22|23) : ;;  # the two combos this fork actually documents supporting (16/20, 17/23), plus 22 added alongside 123 support
-    *)
-        warn "This fork has mainly been exercised against Asterisk 20.x/22.x/23.x."
-        warn "Detected major version ${ASTERISK_MAJOR} - continuing anyway (--with-asterisk-version bypasses chan-sccp's own version ceiling), but the build may need configure.ac's MAX_ASTERISK_VERSION bumped first if this is newer than chan-sccp has ever seen - see chan-sccp/CLAUDE.md 'Known gotchas'."
-        ;;
-esac
+log "Installing/updating the chan-sccp driver"
+DRIVER_ARGS=()
+[ "$DEV_MODE" -eq 1 ] && DRIVER_ARGS+=(--dev)
+bash "${SCRIPT_DIR}/install-chan-sccp-driver.sh" ${DRIVER_ARGS[@]+"${DRIVER_ARGS[@]}"}
 
 # ---------------------------------------------------------------------------
-log "Detecting package manager"
+log "Detecting package manager (for TFTP setup below)"
 if command -v apt-get >/dev/null 2>&1; then
     PKG=apt
 elif command -v dnf >/dev/null 2>&1; then
@@ -96,107 +76,7 @@ elif command -v yum >/dev/null 2>&1; then
 else
     die "No supported package manager found (need apt, dnf, or yum)."
 fi
-log "Using: $PKG"
 
-pkg_installed() {
-    case "$PKG" in
-        apt) dpkg -s "$1" >/dev/null 2>&1 ;;
-        dnf|yum) rpm -q "$1" >/dev/null 2>&1 ;;
-    esac
-}
-
-pkg_install() {
-    case "$PKG" in
-        apt) DEBIAN_FRONTEND=noninteractive apt-get install -y "$@" ;;
-        dnf) dnf install -y "$@" ;;
-        yum) yum install -y "$@" ;;
-    esac
-}
-
-# ---------------------------------------------------------------------------
-log "Installing build dependencies"
-# Sangoma's own package repos (both the dnf/yum ones for sng7/CentOS and the
-# apt ones for sng12/Debian - verified directly against this project's own
-# sng12 dev box) use the SAME devel-package naming convention on both sides:
-# asterisk<major>-devel. Only the package-manager invocation differs.
-DEVEL_PKG="asterisk${ASTERISK_MAJOR}-devel"
-
-if [ "$PKG" = apt ]; then
-    log "Refreshing apt package lists"
-    apt-get update -qq
-fi
-
-if ! pkg_installed "$DEVEL_PKG"; then
-    log "Installing ${DEVEL_PKG} (must match installed Asterisk exactly)"
-    pkg_install "$DEVEL_PKG" gcc make git \
-        || die "Failed installing build deps - does ${DEVEL_PKG} exist in your repos? For Sangoma boxes this comes from the same repo Asterisk itself did; check your Asterisk/FreePBX repo config if it's missing."
-else
-    log "${DEVEL_PKG} already installed, skipping"
-    pkg_install gcc make git >/dev/null
-fi
-
-if [ "$DEV_MODE" -eq 1 ]; then
-    log "--dev requested: also installing autoconf/automake/gettext for tools/bootstrap.sh"
-    case "$PKG" in
-        apt) pkg_install autoconf automake gettext ;;
-        dnf|yum) pkg_install autoconf automake gettext-devel ;;
-    esac
-fi
-
-# ---------------------------------------------------------------------------
-log "Fetching chan-sccp source"
-if [ -d "${SRC_DIR}/chan-sccp/.git" ]; then
-    log "Existing checkout found, updating"
-    cd "${SRC_DIR}/chan-sccp"
-    git fetch origin
-    git checkout "$CHAN_SCCP_BRANCH"
-    git pull origin "$CHAN_SCCP_BRANCH"
-else
-    git clone "$CHAN_SCCP_REPO" "${SRC_DIR}/chan-sccp"
-    cd "${SRC_DIR}/chan-sccp"
-    git checkout "$CHAN_SCCP_BRANCH"
-fi
-
-# ---------------------------------------------------------------------------
-if [ "$DEV_MODE" -eq 1 ]; then
-    log "--dev: regenerating configure via tools/bootstrap.sh"
-    ./tools/bootstrap.sh || die "bootstrap.sh failed (check for missing gettext/autopoint)"
-else
-    log "Using chan-sccp's committed, pre-generated ./configure (no autoreconf needed for a stock install)"
-    [ -x ./configure ] || die "./configure not found/executable - either re-run with --dev, or this checkout is unexpectedly missing its committed configure script."
-fi
-
-log "Building chan-sccp for Asterisk ${ASTERISK_MAJOR}.0"
-# Flags match the exact command verified and documented in chan-sccp's own
-# CLAUDE.md "Build" section - keep this in sync if that ever changes.
-./configure --with-asterisk-version="${ASTERISK_MAJOR}.0" \
-    --enable-conference --enable-advanced-functions \
-    --enable-distributed-devicestate --enable-video \
-    || die "./configure failed"
-make -j"$(nproc)" || die "make failed"
-make install || die "make install failed"
-
-# ---------------------------------------------------------------------------
-log "Excluding chan_skinny.so (required for chan-sccp to fully initialize)"
-if grep -qE '^\s*noload\s*=\s*chan_skinny\.so' /etc/asterisk/modules.conf 2>/dev/null; then
-    log "Already excluded, skipping"
-else
-    echo "noload = chan_skinny.so" >> /etc/asterisk/modules.conf
-    log "Added noload entry"
-fi
-
-log "Restarting Asterisk (full restart - never hot-swap a freshly built .so)"
-fwconsole restart
-
-log "Verifying chan-sccp initialized correctly"
-sleep 3
-if asterisk -rx "sccp show version" 2>/dev/null | grep -q "Skinny Client Control Protocol"; then
-    log "chan-sccp is running and fully initialized"
-else
-    die "chan-sccp did not initialize. Check: asterisk -rx \"module show like sccp\" and grep chan_skinny /var/log/asterisk/full"
-fi
-
-# ---------------------------------------------------------------------------
 log "Setting up TFTP"
 if systemctl list-unit-files 2>/dev/null | grep -q '^tftp\.socket'; then
     systemctl enable --now tftp.socket
@@ -223,6 +103,19 @@ if [ -d "${FREEPBX_MODULES_DIR}/sccp_manager/.git" ]; then
     git fetch origin
     git checkout "$SCCP_MANAGER_BRANCH"
     git pull origin "$SCCP_MANAGER_BRANCH"
+elif [ -d "${FREEPBX_MODULES_DIR}/sccp_manager" ]; then
+    # Directory exists but isn't a git checkout - the common case is the
+    # module having been installed via FreePBX's own Upload Module (GUI
+    # tarball upload), which this project's own README documents as the
+    # main install path. Turn it into a git checkout in place rather than
+    # deleting whatever's already there.
+    log "Non-git module directory found (likely a GUI tarball install), converting to a git checkout"
+    cd "${FREEPBX_MODULES_DIR}/sccp_manager"
+    git init -q
+    git remote add origin "$SCCP_MANAGER_REPO"
+    git fetch origin
+    git checkout -f "$SCCP_MANAGER_BRANCH"
+    git reset --hard "origin/$SCCP_MANAGER_BRANCH"
 else
     git clone "$SCCP_MANAGER_REPO" "${FREEPBX_MODULES_DIR}/sccp_manager"
     cd "${FREEPBX_MODULES_DIR}/sccp_manager"

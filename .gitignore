@@ -1,2 +1,8 @@
 *~
 CLAUDE.md
+
+# Precompiled chan_sccp.so binaries, injected into the release tarball by CI
+# (.github/workflows/build-release.yml). Deliberately NOT committed: ~40MB per
+# release would live in git history forever, and they're reproducible from
+# chan-sccp's own release assets.
+drivers/

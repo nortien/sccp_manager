@@ -279,7 +279,8 @@ trait helperfunctions {
     }
 
     public function initialiseConfInit(){
-        $read_config = \FreePBX::LoadConfig()->getConfig('sccp.conf');
+        $configFile = $this->FreePBX->Config->get('ASTETCDIR') . '/sccp.conf';
+        $read_config = file_exists($configFile) ? \FreePBX::LoadConfig()->getConfig('sccp.conf') : array();
         $sccp_conf_init = array();
         $sccp_conf_init['general'] = $read_config['general'] ?? array();
         foreach (is_array($read_config) ? $read_config : array() as $key => $value) {

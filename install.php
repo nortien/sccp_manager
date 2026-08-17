@@ -27,7 +27,9 @@ $cnf_int = \FreePBX::Config();
 // Do not create Sccp_Manager object as not required.
 // Only include required classes and create anonymous class for thisInstaller
 
-$thisInstaller = new #[\AllowDynamicProperties] class{
+$thisInstaller = new
+    #[\AllowDynamicProperties]
+    class {
     use \FreePBX\modules\Sccp_Manager\sccpManTraits\helperFunctions;
 };
 
@@ -47,9 +49,33 @@ $sccp_compatible = $aminterface->getSCCPVersion()['vCode'];
 
 outn("<li>" . _("Sccp model Compatible code : ") . $sccp_compatible . "</li>");
 if ($sccp_compatible == 0) {
+    // No driver loaded. Try to install it ourselves - install.php runs as
+    // the web server user (asterisk), which owns none of Asterisk's system
+    // paths, so this only works via a narrow sudoers NOPASSWD rule scoped
+    // to exactly this one script (see /etc/sudoers.d/sccp_manager). If that
+    // rule isn't present, `sudo -n` fails fast instead of hanging on a
+    // password prompt, and we fall through to the manual-command notice.
+    $driverScript = $amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/scripts/install-chan-sccp-driver.sh';
     outn("<br>");
-    outn("<font color='red'>chan-sccp not found. Install it before continuing !</font>");
-    die();
+    outn("<font color='orange'>" . _("chan-sccp driver not found or not loaded - attempting automatic install...") . "</font>");
+    outn("<pre style=\"background:#111;color:#0f0;padding:8px;max-height:400px;overflow:auto;\">");
+    set_time_limit(0);
+    passthru('sudo -n /usr/bin/bash ' . escapeshellarg($driverScript) . ' 2>&1', $driverExitCode);
+    outn("</pre>");
+
+    // The driver script does a full `fwconsole restart`, which drops any
+    // AMI connection opened before it ran - reopen before re-checking.
+    $aminterface->open();
+    $sccp_compatible = $aminterface->getSCCPVersion()['vCode'];
+
+    if ($sccp_compatible == 0) {
+        $stackScript = $amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/scripts/install-sccp-stack.sh';
+        outn("<br>");
+        outn("<font color='red'>" . _("Automatic driver install failed. Run this on the server (as root), then re-run this module install:") . "</font>");
+        outn("<pre style=\"background:#f5f5f5;border:1px solid #ccc;padding:8px;\">sudo bash " . $stackScript . "</pre>");
+        die();
+    }
+    outn("<li>" . _("chan-sccp driver installed automatically.") . "</li>");
 }
 // BackUp Old config
 createBackUpConfig();
