@@ -1,3 +1,14 @@
+// Escape a value before putting it into grid-formatter HTML. Bootstrap Table's
+// data-escape does not reach formatter output, so device-supplied fields
+// (addon, name, type) rendered by the formatters below have to be escaped here.
+// Escapes quotes as well, so it is safe inside HTML attributes too.
+function sccpEscapeHtml(s) {
+    if (s === null || s === undefined) { return ''; }
+    return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+}
+
 $(document).ready(function () {
 
     $('.sortable').sortable({
@@ -450,30 +461,25 @@ $(document).ready(function () {
 
 
     $('.button-checkbox').on('click', '', function (e) {
-        settings = {
-            true: {
-                icon: 'glyphicon glyphicon-unchecked'
-            },
-            false: {
-                icon: 'glyphicon glyphicon-check'
-            }
-        };
         var button_1 = $('button', this);
         var isChecked = $('input', this).is(':checked');
-
-        if (button_1.find('.state-icon').length == 0) {
-            button_1.prepend('<i class="state-icon ' + settings[isChecked].icon + '"></i> ');
-        } else {
-            button_1.find('.state-icon')
-                    .removeClass()
-                    .addClass('state-icon ' + settings[isChecked].icon);
+        var icon = button_1.find('.state-icon');
+        if (icon.length == 0) {
+            button_1.prepend('<i class="state-icon"></i> ');
+            icon = button_1.find('.state-icon');
         }
+
         if (isChecked) {
-            $('input', this).removeAttr('checked');
+            // currently active - deactivating: icon disappears entirely
+            icon.removeClass('fa fa-check-square-o');
+            // must clear the property, not the attribute - the checked state
+            // is set via prop() below, and removeAttr() does not undo that
+            $('input', this).prop('checked', false);
             button_1.removeClass('active');
         } else {
-            $('input', this).attr('checked');
-            $('input', this).prop('checked', 'true');
+            // currently inactive - activating: show the checkmark icon
+            icon.addClass('fa fa-check-square-o');
+            $('input', this).prop('checked', true);
             button_1.addClass('active');
         }
     });
@@ -916,11 +922,61 @@ function load_oncliсk(e, data)
     }
 }
 
+// Restore-default button for IE fields with a chan-sccp system default
+// (see formcreate.class.php::addElementIE). Clearing the input back to empty
+// means the field submits '' - createDefaultSccpConfig() then omits the
+// directive entirely, so chan-sccp's own built-in default applies again.
+$(document).on('click', ".sccp-reset-default", function () {
+    var id = $(this).data('for');
+    // Multiple inputs can share the same id (nameseparator fields), so use an
+    // attribute selector rather than the jQuery id selector, which only matches
+    // the first element with a given id.
+    $('input[id="' + id + '"]').val('').first().focus();
+});
+
+// Same idea for addElementIS radio groups, but radios (unlike text inputs)
+// have no placeholder to show what the default actually is - so rather than
+// just unchecking everything, select the radio matching chan-sccp's default
+// value (see data-default, set from $sccp_defaults[...]['systemdefault'] in
+// formcreate.class.php::addElementIS) to make it visible. If the default
+// value doesn't match any rendered button (legacy on/off vs yes/no data, for
+// example), fall back to unchecking all so the field still submits nothing.
+$(document).on('click', ".sccp-reset-radio-default", function () {
+    var name = $(this).data('for');
+    var defaultVal = $(this).data('default');
+    var $radios = $('input[name="' + name + '"]');
+    var $match = $radios.filter('[value="' + defaultVal + '"]');
+    $radios.prop('checked', false);
+    if ($match.length) {
+        // .prop() alone doesn't fire the .sccp_button_hide click handler that
+        // shows/hides dependent options based on the selected radio, so
+        // trigger it explicitly.
+        $match.prop('checked', true).trigger('click');
+    }
+});
+
 // call from here not document.ready as have dynamic content
 $(document).on('click', ".input-js-remove" , function () {
-    // delete the current row
     var pname = $(this).data('id');
-    $('#' + pname).remove();
+    var row = $('#' + pname);
+    var pcls = row.attr('class').split(' ')[0];
+    // Never remove the last remaining row - clear it instead, so the field
+    // keeps an empty input to type into (same behaviour as del_dynamic_table).
+    if ($('.' + pcls).length <= 1) {
+        row.find('input:text').val('');
+        return;
+    }
+    // The add button only lives on the last row, so if we are removing that
+    // row we have to carry the button over to the row that becomes last -
+    // otherwise there is no way left to add rows again.
+    var addBtn = row.find('.input-js-add').detach();
+    row.remove();
+    var lastRow = $('.' + pcls).last();
+    if (addBtn.length && lastRow.find('.input-js-add').length === 0) {
+        var nid = lastRow.data('nextid');
+        addBtn.attr('id', pcls + nid + '-btn-add').attr('data-row', nid);
+        lastRow.append(addBtn);
+    }
 });
 
 $(document).on('click', ".input-js-add" , function () {
@@ -940,21 +996,19 @@ $(document).on('click', ".input-js-add" , function () {
     var last = $("." + pcls).last(),
         ourid = last.data('nextid'),
         nextid = ourid + 1,
-        html = "<div class = '" + pcls + "' id ='" + pname + nextid + "' form-group form-inline' data-nextid=" + nextid + ">";
+        html = "<div class='" + pcls + " sccp-ied-row form-group form-inline' id='" + pname + nextid + "' data-nextid='" + nextid + "'>";
+    // matching formcreate.class.php's addElementIED markup: inputs and
+    // +/- buttons all on the same line
     for (var key in jdata) {
         html_opt = '';
         for (var skey in jdata[key]['options']) {
             html_opt += ' ' + skey + '="' + jdata[key]['options'][skey] + '"';
         }
-        html += "<input type='text' name='" + pname + "[" + nextid + "][" + key + "]' class " + html_opt + "> " + jdata[key]['nameseparator'] + " ";
+        html += "<input type='text' name='" + pname + "[" + nextid + "][" + key + "]' class=''" + html_opt + "> " + jdata[key]['nameseparator'] + " ";
     }
-    // add remove button
-    html += "<button type='button' class='btn btn-danger btn-lg input-js-remove' id='" + pname + nextid + "-btn-remove' data-id='" + pname + nextid + "' data-for='" + pname + "'>";
-    html += "<i class='fa fa-minus pull-right'></i></button>";
-    // add plus button
-    html += "<button type='button' class='btn btn-primary btn-lg input-js-add' id='" + pname + nextid + "-btn-add' data-id='" + pname + "'";
-    html += " data-row='" + nextid + "' data-for='" + pname + "' data-max='" + pmax + "' data-json='" + $(this).data('json') + "' >";
-    html += "<i class='fa fa-plus pull-right'></i></button>";
+    html += " <button type='button' class='btn btn-danger sccp-row-btn input-js-remove' id='" + pname + nextid + "-btn-remove' data-id='" + pname + nextid + "' data-for='" + pname + "'><i class='fa fa-minus'></i></button>";
+    html += " <button type='button' class='btn btn-primary sccp-row-btn input-js-add' id='" + pname + nextid + "-btn-add' data-id='" + pname + "'";
+    html += " data-row='" + nextid + "' data-for='" + pname + "' data-max='" + pmax + "' data-json='" + $(this).data('json') + "'><i class='fa fa-plus'></i></button>";
     html += "</div>\n";
 
     last.after(html);

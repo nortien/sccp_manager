@@ -8,7 +8,7 @@
         <?php echo _("Add Device")?>
     </a>
 </div>
-<table id="sccpnavgrid"
+<table data-escape="true" id="sccpnavgrid"
     data-search="true"
     data-toolbar="#toolbar-sccp-rnav"
     data-url="ajax.php?module=sccp_manager&command=getPhoneGrid&type=sccp"
@@ -25,9 +25,9 @@
 <script type="text/javascript">
     $("#sccpnavgrid").on('click-row.bs.table',function(e,row,elem){
         if (row['new_hw'] == 'Y' ) {
-            window.location = '?display=sccp_phone&tech_hardware=cisco&new_id=' +row['name'] +'&' +row['type'];
+            window.location = '?display=sccp_phone&tech_hardware=cisco&new_id=' + encodeURIComponent(row['name']) + '&' + encodeURIComponent(row['type']);
         } else {
-            window.location = '?display=sccp_phone&tech_hardware=cisco&id='+row['name'];
+            window.location = '?display=sccp_phone&tech_hardware=cisco&id=' + encodeURIComponent(row['name']);
         };
     })
 </script>
