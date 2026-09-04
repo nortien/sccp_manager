@@ -10,6 +10,7 @@ namespace FreePBX\modules\Sccp_manager\aminterface;
 
 // ************************************************************************** Response *********************************************
 
+#[\AllowDynamicProperties]
 abstract class Response extends IncomingMessage
 {
 
@@ -39,19 +40,19 @@ abstract class Response extends IncomingMessage
         return $this->_events;
     }
     public function getClosingEvent() {
-        return $this->_events['ClosingEvent'];
+        return $this->_events['ClosingEvent'] ?? null;
     }
     public function removeClosingEvent() {
         unset($this->_events['ClosingEvent']);
     }
     public function getCountOfEvents() {
-        return count($this->_events);
+        return is_array($this->_events) ? count($this->_events) : 0;
     }
 
     public function isSuccess()
     {
         // returns true if response message does not contain error
-        return stristr($this->getKey('Response'), 'Error') === false;
+        return stristr((string) ($this->getKey('Response') ?? ''), 'Error') === false;
     }
 
     public function isList()
@@ -63,7 +64,7 @@ abstract class Response extends IncomingMessage
 
     public function getMessage()
     {
-        return $this->getKey('Message');
+        return $this->getKey('Message') ?? '';
     }
 
     public function setActionId($actionId)
@@ -84,6 +85,7 @@ abstract class Response extends IncomingMessage
         }
     }
 }
+#[\AllowDynamicProperties]
 class GenericResponse extends Response
 {
 }
@@ -96,6 +98,7 @@ class GenericResponse extends Response
 // Following are the self contained Response classes.
 //****************************************************************************
 
+#[\AllowDynamicProperties]
 class Generic_Response extends Response
 {
     public function __construct($rawContent)
@@ -110,10 +113,12 @@ class Generic_Response extends Response
     }
 }
 
+#[\AllowDynamicProperties]
 class Login_Response extends Generic_Response
 {
 }
 
+#[\AllowDynamicProperties]
 class Command_Response extends Generic_Response
 {
     private $_temptable;
@@ -124,20 +129,20 @@ class Command_Response extends Generic_Response
         $lines = explode(Message::EOL, $rawContent);
         foreach ($lines as $line) {
             $content = explode(':', $line);
-            if (is_array($content)) {
+            if (count($content) >= 2) {
                 switch (strtolower($content[0])) {
                     case 'actionid':
-                        $this->_temptable['ActionID'] = trim($content[1]);
+                        $this->_temptable['ActionID'] = trim($content[1] ?? '');
                         break;
                     case 'response':
-                        $this->_temptable['Response'] = trim($content[1]);
+                        $this->_temptable['Response'] = trim($content[1] ?? '');
                         break;
                     case 'privilege':
-                        $this->_temptable['Privilege'] = trim($content[1]);
+                        $this->_temptable['Privilege'] = trim($content[1] ?? '');
                         break;
                     case 'output':
                         // included for backward compatibility with earlier versions of chan_sccp_b. AMI api does not precede command output with Output
-                        $this->_temptable['Output'] = explode(PHP_EOL,str_replace(PHP_EOL.'--END COMMAND--', '',trim($content[1])));
+                        $this->_temptable['Output'] = explode(PHP_EOL,str_replace(PHP_EOL.'--END COMMAND--', '',trim($content[1] ?? '')));
                         break;
                     default:
                         $this->_temptable['Output'] = explode(PHP_EOL,str_replace(PHP_EOL.'--END COMMAND--', '', trim($line)));
@@ -152,6 +157,7 @@ class Command_Response extends Generic_Response
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPJSON_Response extends Generic_Response
 {
     public function __construct($rawContent)
@@ -164,7 +170,7 @@ class SCCPJSON_Response extends Generic_Response
     }
     public function getResult()
     {
-        if (($json = json_decode($this->getKey('JSON'), true)) != false) {
+        if (($json = json_decode((string) ($this->getKey('JSONRAW') ?? ''), true)) != false) {
             return $json;
         }
     }
@@ -174,6 +180,7 @@ class SCCPJSON_Response extends Generic_Response
 // Following are the Response classes where the data is contained in a series.
 // of event messages.
 
+#[\AllowDynamicProperties]
 class SCCPGeneric_Response extends Response
 {
     protected $_tables;
@@ -315,6 +322,9 @@ class SCCPGeneric_Response extends Response
         if (empty($tablename) || !is_array($this->_tables)) {
             return $result;
         }
+        if (!isset($this->_tables[$tablename]['Entries']) || !is_array($this->_tables[$tablename]['Entries'])) {
+            return $result;
+        }
         foreach ($this->_tables[$tablename]['Entries'] as $trow) {
             $result[]= $trow->getKeys();
         }
@@ -329,6 +339,7 @@ class SCCPGeneric_Response extends Response
 
 
 
+#[\AllowDynamicProperties]
 class SCCPShowSoftkeySets_Response extends SCCPGeneric_Response
 {
     public function __construct($rawContent)
@@ -346,6 +357,7 @@ class SCCPShowSoftkeySets_Response extends SCCPGeneric_Response
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPShowDevices_Response extends SCCPGeneric_Response
 {
     public function __construct($rawContent)
@@ -364,6 +376,7 @@ class SCCPShowDevices_Response extends SCCPGeneric_Response
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPShowDevice_Response extends SCCPGeneric_Response
 {
     public function __construct($rawContent)
@@ -400,8 +413,8 @@ class SCCPShowDevice_Response extends SCCPGeneric_Response
                   'maxqual'=>'maxqual', 'rconceal'=>'rconceal', 'sconceal'=>'sconceal'
                   )
         );
-        $result['SCCP_Vendor'] = array('vendor' => strtok($result['skinnyphonetype'], ' '), 'model' => strtok('('),
-                                       'model_id' => strtok(')'), 'vendor_addon' => strtok($result['configphonetype'], ' '),
+        $result['SCCP_Vendor'] = array('vendor' => strtok((string) ($result['skinnyphonetype'] ?? ''), ' '), 'model' => strtok('('),
+                                       'model_id' => strtok(')'), 'vendor_addon' => strtok((string) ($result['configphonetype'] ?? ''), ' '),
                                        'model_addon' => strtok(' '));
         if (empty($result['SCCP_Vendor']['vendor']) || $result['SCCP_Vendor']['vendor'] == 'Undefined') {
             $result['SCCP_Vendor'] = array('vendor' => 'Undefined', 'model' => $result['configphonetype'],
@@ -414,6 +427,7 @@ class SCCPShowDevice_Response extends SCCPGeneric_Response
     }
 }
 
+#[\AllowDynamicProperties]
 class ExtensionStateList_Response extends SCCPGeneric_Response
 {
     public function __construct($rawContent)

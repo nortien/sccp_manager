@@ -9,6 +9,7 @@
 
 namespace FreePBX\modules\Sccp_manager;
 
+#[\AllowDynamicProperties]
 class aminterface
 {
 
@@ -93,6 +94,11 @@ class aminterface
         }
     }
 
+    private function _errorException($message)
+    {
+        $this->_error[] = $message;
+        error_log('[sccp_manager aminterface] ' . $message);
+    }
     public function info()
     {
         $Ver = '13.0.4';
@@ -175,20 +181,24 @@ class aminterface
         // The loop calls readBuffer, which calls GetMessages, which calls Process
         // This loop then continues until we have _thisComplete as an object variable
         $this->eventListIsCompleted[$this->_lastActionId] = false;
+        $deadline = microtime(true) + $this->_config['timeout'];
         while (true) {
-            stream_set_timeout($this->_socket, 1);
-            $this->readBuffer();
-            $info = stream_get_meta_data($this->_socket);
-            if ($info['timed_out'] == true) {
-                $this->_errorException("Read waittime: " . ($this->socket_param['timeout']) . " exceeded (timeout).\n");
-                return false;
-            }
+            $this->readBuffer(1);
+            // Completion is checked before the deadline so a list that finished right as
+            // the clock ran out is still returned. The deadline then fires independently
+            // of whether the last read carried data - unrelated AMI traffic on the shared
+            // connection must not keep the loop alive forever waiting for our own list.
             if ($this->eventListIsCompleted[$this->_lastActionId]) {
                 $response = $this->_incomingMsgObjectList[$this->_lastActionId];
-                // need to test that the list was successfully completed here
-                $allReceived = $response->getClosingEvent()
-                                ->listCorrectlyReceived($this->_incomingRawMessage[$this->_lastActionId],
-                                $response->getCountOfEvents());
+                // need to test that the list was successfully completed here.
+                // getClosingEvent() is null when the driver is unloaded and the
+                // response never carried one - guard it so callers get a graceful
+                // "incomplete" instead of a fatal on null.
+                $closing = $response->getClosingEvent();
+                $allReceived = $closing
+                                ? $closing->listCorrectlyReceived($this->_incomingRawMessage[$this->_lastActionId],
+                                    $response->getCountOfEvents())
+                                : false;
                 // now tidy up removing any temp variables or objects
                 $response->removeClosingEvent();
                 unset($_incomingRawMessage[$this->_lastActionId]);
@@ -209,23 +219,43 @@ class aminterface
                 }
                 return $response;
             }
+            if (microtime(true) >= $deadline) {
+                $this->_errorException("Read waittime: " . $this->_config['timeout'] . " exceeded (timeout).\n");
+                return false;
+            }
         }
     }
 
-    protected function readBuffer ()
+    protected function readBuffer($waitSeconds = 1)
     {
         $read = @fread($this->_socket, 65535);
-        // AMI never returns EOF
-        if ($read === false ) {
-            $this->_errorException('Error reading');
+        if ($read === false || @feof($this->_socket)) {
+            // A closed connection reads as EOF, which select() reports as readable, so
+            // without this the caller would spin fread()/select() until the deadline
+            // instead of failing straight away.
+            $this->_errorException('Error reading (connection closed)');
+            return false;
         }
-        // Do not return empty Messages
-        while ($read == "" ) {
+        if ($read === "") {
+            // Nothing buffered yet - wait for the socket to become readable instead
+            // of busy-spinning fread() in a tight loop (which pegs a CPU core and
+            // starves the timeout logic in send() from ever running).
+            $readStreams = array($this->_socket);
+            $write = null;
+            $except = null;
+            $ready = @stream_select($readStreams, $write, $except, $waitSeconds);
+            if (!$ready) {
+                return false;
+            }
             $read = @fread($this->_socket, 65535);
+            if ($read === false || $read === "") {
+                return false;
+            }
         }
         // Add read to the rest of buffer from previous read
         $this->_ProcessingMessage .= $read;
         $this->getMessages();
+        return true;
     }
 
     protected function getMessages()
@@ -335,7 +365,7 @@ class aminterface
             if ($listener instanceof \Closure) {
                 $listener($message);
             } elseif (is_array($listener)) {
-                $listener[0]->$listener[1]($message);
+                $listener[0]->{$listener[1]}($message);
             } else {
                 $listener->handle($message);
             }
@@ -350,10 +380,12 @@ class aminterface
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\ExtensionStateListAction();
             $_response = $this->send($_action);
-            $_res = $_response->getResult();
-            foreach ($_res as $key => $value) {
-                foreach ($value as $key2 => $value2) {
-                    $result[$key2] = '@' . $key2;
+            if ($_response !== false) {
+                $_res = $_response->getResult();
+                foreach ($_res as $key => $value) {
+                    foreach ($value as $key2 => $value2) {
+                        $result[$key2] = '@' . $key2;
+                    }
                 }
             }
         }
@@ -365,10 +397,13 @@ class aminterface
         $result = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\ExtensionStateListAction();
-            $_res = $this->send($_action)->getResult();
-            foreach ($_res as $key => $value) {
-                foreach ($value as $key2 => $value2) {
-                    $result[$key.'@'.$key2] = $key.'@'.$key2;
+            $_response = $this->send($_action);
+            if ($_response !== false) {
+                $_res = $_response->getResult();
+                foreach ($_res as $key => $value) {
+                    foreach ($value as $key2 => $value2) {
+                        $result[$key.'@'.$key2] = $key.'@'.$key2;
+                    }
                 }
             }
         }
@@ -380,9 +415,12 @@ class aminterface
         $result = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\SCCPShowSoftkeySetsAction();
-            $_res = $this->send($_action)->getResult();
-            foreach ($_res as $key => $value) {
-                $result[$key] = $key;
+            $_response = $this->send($_action);
+            if ($_response !== false) {
+                $_res = $_response->getResult();
+                foreach ($_res as $key => $value) {
+                    $result[$key] = $key;
+                }
             }
         }
         return $result;
@@ -392,7 +430,10 @@ class aminterface
         $result = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\SCCPShowDevicesAction();
-            $result = (array)$this->send($_action)->getResult();
+            $_response = $this->send($_action);
+            if ($_response !== false) {
+                $result = (array)$_response->getResult();
+            }
         }
         return $result;
     }
@@ -401,13 +442,17 @@ class aminterface
         $result = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\SCCPShowDeviceAction($devicename);
-            $result = $this->send($_action)->getResult();
-            $result['MAC_Address'] = $result['macaddress'];
+            $_response = $this->send($_action);
+            if ($_response !== false) {
+                $result = $_response->getResult();
+                $result['MAC_Address'] = $result['macaddress'];
+            }
         }
         return $result;
     }
     function sccpDeviceReset($devicename, $action = '')
     {
+        $result = array();
         if ($this->_connect_state) {
             if ($action == 'tokenack') {
                 $_action = new \FreePBX\modules\Sccp_manager\aminterface\SCCPTokenAckAction($devicename);
@@ -415,8 +460,10 @@ class aminterface
                 $_action = new \FreePBX\modules\Sccp_manager\aminterface\SCCPDeviceRestartAction($devicename, $action);
             }
             $_response = $this->send($_action);
-            $result['data'] = 'Device: '.$devicename.' Result: '.$_response->getMessage();
-            $result['Response']=$_response->getKey('Response');
+            if ($_response !== false) {
+                $result['data'] = 'Device: '.$devicename.' Result: '.$_response->getMessage();
+                $result['Response']=$_response->getKey('Response');
+            }
         }
         return $result;
     }
@@ -427,14 +474,21 @@ class aminterface
         $result = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\ReloadAction('chan_sccp');
-            $result = ['Response' => $this->send($_action)->getMessage(), 'data' => ''];
+            $_response = $this->send($_action);
+            if ($_response !== false) {
+                $result = ['Response' => $_response->getMessage(), 'data' => ''];
+            }
         }
         return $result;
     }
     function getSCCPConfigMetaData($segment = '') {
+        $metadata = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\SCCPConfigMetaDataAction($segment);
-            $metadata = $this->send($_action)->getResult();
+            $_response = $this->send($_action);
+            if ($_response !== false) {
+                $metadata = $_response->getResult();
+            }
         }
         return $metadata;
     }
@@ -490,9 +544,12 @@ class aminterface
         $cmd_res = ['sccp' => ['message' => 'legacy value', 'realm' => '', 'status' => 'ERROR']];
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\CommandAction('realtime mysql status');
-            $result = $this->send($_action)->getResult();
+            $_response = $this->send($_action);
+            if ($_response !== false) {
+                $result = $_response->getResult();
+            }
          }
-         if (is_array($result['Output'])) {
+         if (isset($result['Output']) && is_array($result['Output'])) {
              foreach ($result['Output'] as $aline) {
                  if (strlen($aline) > 3) {
                      $temp_strings = explode(' ', $aline);

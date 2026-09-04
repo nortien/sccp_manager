@@ -10,11 +10,13 @@
 
 namespace FreePBX\modules\Sccp_manager\aminterface;
 
+#[\AllowDynamicProperties]
 class AMIException extends \Exception
 {
 
 }
 
+#[\AllowDynamicProperties]
 abstract class Message
 {
 
@@ -156,8 +158,6 @@ abstract class Message
                     }
                     if (filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) {
                         return (boolean) $value;
-                    } elseif (filter_var($value, FILTER_SANITIZE_STRING, FILTER_NULL_ON_FAILURE)) {
-                        return (string) $value;
                     } elseif (filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_NULL_ON_FAILURE)) {
                         return (string) htmlspecialchars($value, ENT_QUOTES);
                     } else {
@@ -227,6 +227,7 @@ abstract class Message
     }
 }
 
+#[\AllowDynamicProperties]
 abstract class IncomingMessage extends Message
 {
 
@@ -274,6 +275,7 @@ abstract class IncomingMessage extends Message
 }
 
 // namespace FreePBX\modules\Sccp_manager\aminterface\Message;
+#[\AllowDynamicProperties]
 class LoginAction extends ActionMessage
 {
 
@@ -295,6 +297,7 @@ class LoginAction extends ActionMessage
     }
 }
 
+#[\AllowDynamicProperties]
 abstract class ActionMessage extends Message
 {
 
@@ -306,6 +309,7 @@ abstract class ActionMessage extends Message
     }
 }
 
+#[\AllowDynamicProperties]
 class CommandAction extends ActionMessage
 {
     public function __construct($command)
@@ -316,6 +320,7 @@ class CommandAction extends ActionMessage
     }
 }
 
+#[\AllowDynamicProperties]
 class ReloadAction extends ActionMessage
 {
 
@@ -329,6 +334,7 @@ class ReloadAction extends ActionMessage
     }
 }
 
+#[\AllowDynamicProperties]
 class ExtensionStateListAction extends ActionMessage
 {
 
@@ -340,6 +346,7 @@ class ExtensionStateListAction extends ActionMessage
         $this->setResponseHandler("ExtensionStateList");
     }
 }
+#[\AllowDynamicProperties]
 class SCCPShowGlobalsAction extends ActionMessage
 {
     public function __construct()
@@ -348,6 +355,7 @@ class SCCPShowGlobalsAction extends ActionMessage
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPShowSoftkeySetsAction extends ActionMessage
 {
 
@@ -360,6 +368,7 @@ class SCCPShowSoftkeySetsAction extends ActionMessage
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPShowDeviceAction extends ActionMessage
 {
 
@@ -373,6 +382,7 @@ class SCCPShowDeviceAction extends ActionMessage
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPShowDevicesAction extends ActionMessage
 {
 
@@ -385,6 +395,7 @@ class SCCPShowDevicesAction extends ActionMessage
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPTokenAckAction extends ActionMessage
 {
 
@@ -396,6 +407,7 @@ class SCCPTokenAckAction extends ActionMessage
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPDeviceRestartAction extends ActionMessage
 {
 
@@ -415,6 +427,7 @@ class SCCPDeviceRestartAction extends ActionMessage
     }
 }
 
+#[\AllowDynamicProperties]
 class SCCPConfigMetaDataAction extends ActionMessage
 {
     public function __construct($segment = false)
