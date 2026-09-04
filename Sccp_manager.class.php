@@ -207,12 +207,18 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
 
     public function updateTimeZone() {
         // Get latest FreePBX time $timeZoneOffsetList
+        // These two rows are rebuilt on every page load and then compared against what
+        // was read from the database. They have to carry the same keys as a stored row -
+        // systemdefault included - or the comparison sees a shape difference every time
+        // and rewrites them although nothing changed.
         $freepbxTZ = \date_default_timezone_get();
-        $this->sccpvalues['ntp_timezone'] = array('keyword' => 'ntp_timezone', 'seq'=>95, 'type' => 2, 'data' => $freepbxTZ);
+        $this->sccpvalues['ntp_timezone'] = array('keyword' => 'ntp_timezone', 'seq'=>95, 'type' => 2, 'data' => $freepbxTZ,
+            'systemdefault' => $this->sccpvalues['ntp_timezone']['systemdefault'] ?? '');
         $TZdata = $this->extconfigs->getExtConfig('sccp_timezone', $freepbxTZ);
         if (!empty($TZdata)) {
             $value = $TZdata['offset']/60;   // TODO: Is this correct (storing in hours not minutes)
-            $this->sccpvalues['tzoffset'] = array('keyword' => 'tzoffset', 'seq'=>98, 'type' => 2, 'data' => $value);
+            $this->sccpvalues['tzoffset'] = array('keyword' => 'tzoffset', 'seq'=>98, 'type' => 2, 'data' => $value,
+                'systemdefault' => $this->sccpvalues['tzoffset']['systemdefault'] ?? '');
         }
     }
 
