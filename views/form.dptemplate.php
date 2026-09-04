@@ -11,6 +11,7 @@
 //$dialFelds = array('match','timeout','line','rewrite','tone');
 //$dialFelds = array('match','timeout','User','rewrite','tone');
 $dialFelds = array('match','timeout','rewrite','tone');
+$def_val = array();
 $dev_id = '*new*';
 if (!empty($_REQUEST['extdisplay'])) {
     $dev_id = $_REQUEST['extdisplay'];

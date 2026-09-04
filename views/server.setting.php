@@ -14,14 +14,9 @@
     <!-- div id="toolbar-all">
         <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" onclick="load_oncliсk(this,'*new*')" data-target=".new_network"><i class="fa fa-bolt"></i> <?php echo _("Add Keyset"); ?></button>
     </div -->
-    <div class="fpbx-container container-fluid">
-        <div class="row">
-            <div class="container">
-                <h2 style="border:2px solid Tomato;color:Tomato;" ><?php echo _("Warning : Any changes to the server configuration can cause all phones to restart"); ?></h2>
-            </div>
-        </div>
-    </div>
     <?php
+        // Warning banner for this tab is rendered by page.html.php, above the
+        // tab strip (see the "banner" key set in Sccp_manager::settingsShowPage()).
         $def_val_device = $this->getTableDefaults('sccpdevice');
 
         echo $this->showGroup('sccp_general', 1);
