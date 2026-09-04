@@ -1,12 +1,23 @@
-// Escape a value before putting it into grid-formatter HTML. Bootstrap Table's
-// data-escape does not reach formatter output, so device-supplied fields
-// (addon, name, type) rendered by the formatters below have to be escaped here.
-// Escapes quotes as well, so it is safe inside HTML attributes too.
+// Escape a value before putting it into grid-formatter HTML. data-escape covers the
+// `value` argument a formatter receives, but not the `row` object it is handed, so any
+// device- or admin-supplied field read straight off row[...] and concatenated into
+// markup has to be escaped here. Escapes quotes as well, so it is safe inside HTML
+// attributes too.
 function sccpEscapeHtml(s) {
     if (s === null || s === undefined) { return ''; }
     return String(s).replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
+}
+
+// For a value that ends up inside a JS string literal which itself sits in an HTML
+// attribute (onclick="f(&quot;VALUE&quot;)"). HTML-escaping alone is not enough there:
+// the parser decodes the entities before the JS is parsed, so a quote would still
+// close the string. Escape for JS first, then let sccpEscapeHtml handle the attribute.
+function sccpEscapeJs(s) {
+    if (s === null || s === undefined) { return ''; }
+    var j = JSON.stringify(String(s));
+    return j.slice(1, j.length - 1);
 }
 
 $(document).ready(function () {

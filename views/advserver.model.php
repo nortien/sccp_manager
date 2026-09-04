@@ -285,8 +285,8 @@ include($amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/views/getFileModa
     function DispayActionsModelFormatter(value, row, index) {
         var exp_model = '';
 //        exp_model += '<a href="#edit_model"   class="btn btn-info"   onclick="load_model(this, &quot;'+row['model']+'&quot;)" data-toggle="modal"><i class="fa fa-pencil"></i></a>';
-        exp_model += '<a href="#edit_model"   onclick="load_model(this, &quot;'+row['model']+'&quot;)" data-toggle="modal"><i class="fa fa-pencil"></i></a>&nbsp;&nbsp;';
-        exp_model += '</a> &nbsp;<a class="btn-item-delete" data-for="model" data-id="' + row['model'] + '"><i class="fa fa-trash"></i></a>';
+        exp_model += '<a href="#edit_model"   onclick="load_model(this, &quot;'+sccpEscapeHtml(sccpEscapeJs(row['model']))+'&quot;)" data-toggle="modal"><i class="fa fa-pencil"></i></a>&nbsp;&nbsp;';
+        exp_model += '</a> &nbsp;<a class="btn-item-delete" data-for="model" data-id="' + sccpEscapeHtml(row['model']) + '"><i class="fa fa-trash"></i></a>';
         return  exp_model;
     }
 

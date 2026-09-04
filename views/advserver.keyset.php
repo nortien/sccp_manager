@@ -168,8 +168,8 @@ foreach ($keysetarray as $key => $value) {
     function DispayActionsKeyFormatter(value, row, index) {
         var exp_model = '';
         if (row['softkeys'] !== 'default') {
-            exp_model += '<a href="#edit_softkeys"   onclick="load_oncliсk(this, &quot;'+row['softkeys']+'&quot;)" data-toggle="modal" data-target=".edit_new_keyset"><i class="fa fa-pencil"></i></a>&nbsp;';
-            exp_model += '</a> &nbsp;<a class="btn-item-delete" data-for="softkeys" data-id="' + row['softkeys'] + '"><i class="fa fa-trash"></i></a>';
+            exp_model += '<a href="#edit_softkeys"   onclick="load_oncliсk(this, &quot;'+sccpEscapeHtml(sccpEscapeJs(row['softkeys']))+'&quot;)" data-toggle="modal" data-target=".edit_new_keyset"><i class="fa fa-pencil"></i></a>&nbsp;';
+            exp_model += '</a> &nbsp;<a class="btn-item-delete" data-for="softkeys" data-id="' + sccpEscapeHtml(row['softkeys']) + '"><i class="fa fa-trash"></i></a>';
         }
         return  exp_model;
     }
