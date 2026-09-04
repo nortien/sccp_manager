@@ -88,6 +88,9 @@ trait helperfunctions {
         }
         foreach ($result as $line) {
             $vals = preg_split("/\s+/", $line);
+            if (!isset($vals[1], $vals[2], $vals[3])) {
+                continue;
+            }
             if ($vals[3] == "mtu") {
                 continue;
             }
@@ -276,9 +279,13 @@ trait helperfunctions {
     }
 
     public function initialiseConfInit(){
-        $read_config = \FreePBX::LoadConfig()->getConfig('sccp.conf');
-        $sccp_conf_init['general'] = $read_config['general'];
-        foreach ($read_config as $key => $value) {
+        // Static accessor, not $this->FreePBX: this trait is also mixed into the
+        // anonymous installer class in install.php, which has no FreePBX property.
+        $configFile = \FreePBX::Config()->get('ASTETCDIR') . '/sccp.conf';
+        $read_config = file_exists($configFile) ? \FreePBX::LoadConfig()->getConfig('sccp.conf') : array();
+        $sccp_conf_init = array();
+        $sccp_conf_init['general'] = $read_config['general'] ?? array();
+        foreach (is_array($read_config) ? $read_config : array() as $key => $value) {
             if (isset($read_config[$key]['type'])) { // copy soft key
                 if ($read_config[$key]['type'] == 'softkeyset') {
                     $sccp_conf_init[$key] = $read_config[$key];
@@ -288,6 +295,47 @@ trait helperfunctions {
         return $sccp_conf_init;
     }
 
+    /**
+     * Comparator for array_udiff_assoc() in saveSccpSettings(): treats two
+     * per-key settings rows (each an associative array with keyword/data/
+     * seq/type/systemdefault) as equal (0) when they don't differ, so
+     * array_udiff_assoc only returns the rows that actually changed since
+     * load - the non-zero return doesn't need to mean greater/less, just
+     * "not equal", which is all array_udiff_assoc requires.
+     */
+    public function compareArrays(array $a, array $b){
+        // Both directions: array_diff_assoc only reports keys present in the first
+        // operand, so a key that disappeared from $a would otherwise read as equal.
+        if (array_diff_assoc($a, $b) === [] && array_diff_assoc($b, $a) === []) {
+          return 0;
+          }
+          return ($a>$b)?1:-1;
+    }
+
+    /**
+     * chan-sccp reports MAC addresses / device names to AMI in whatever case
+     * it was configured with, which does not always match the case stored
+     * in our DB (or entered by the user). array_key_exists()/isset() are
+     * exact-case, so a plain lookup into $activeDevices silently misses a
+     * device that is actually online. These two helpers do the same lookup
+     * case-insensitively.
+     */
+    public function sccpActiveDeviceKeyUsed($key, array $activeDevices) {
+        if (array_key_exists($key, $activeDevices)) {
+            return $key;
+        }
+        foreach (array_keys($activeDevices) as $activeKey) {
+            if (strcasecmp($key, $activeKey) === 0) {
+                return $activeKey;
+            }
+        }
+        return null;
+    }
+
+    public function sccpFindActiveDeviceByName($name, array $activeDevices) {
+        $key = $this->sccpActiveDeviceKeyUsed($name, $activeDevices);
+        return ($key === null) ? null : $activeDevices[$key];
+    }
 
     public function checkTftpMapping(){
         exec('in.tftpd -V', $tftpInfo);
@@ -303,12 +351,13 @@ trait helperfunctions {
 
                 $remoteFileName = ".sccp_manager_remap_probe_sentinel_temp".mt_rand(0, 9999999).".tlzz";
                 $remoteFileContent = "# This is a test file created by Sccp_Manager. It can be deleted without impact";
-                $testFtpDir = "{$this->sccpvalues['tftp_path']['data']}/settings";
+                $tftpPathForTest = $this->sccpvalues['tftp_path']['data'] ?? '';
+                $testFtpDir = "{$tftpPathForTest}/settings";
 
                 // write a sentinel to a tftp subdirectory to see if mapping is working
 
                 if (is_dir($testFtpDir) && is_writable($testFtpDir)) {
-                    $tempFile = "${testFtpDir}/{$remoteFileName}";
+                    $tempFile = "{$testFtpDir}/{$remoteFileName}";
                     file_put_contents($tempFile, $remoteFileContent);
                     // try to pull the written file through tftp.
                     // this way we can determine if mapping is active and using sccp_manager maps
@@ -332,19 +381,35 @@ trait helperfunctions {
        $dom->preserveWhiteSpace = false;
        $dom->formatOutput = true;
        $dom->loadXML($xml->asXML());
-       $dom->save($filename);
+       $dir = dirname($filename);
+       if (!is_dir($dir)) {
+           @mkdir($dir, 0755, true);
+       }
+       if (@$dom->save($filename) === false) {
+           throw new \RuntimeException(sprintf(
+               _('Failed to save XML to "%s". Check permissions (e.g. sudo fwconsole chown).'),
+               $filename
+           ));
+       }
     }
 
     public function getFileListFromProvisioner(string $tftpRootPath) {
 
-        $provisionerUrl = "https://github.com/dkgroot/provision_sccp/raw/master/";
+        // Use our own fork via raw.githubusercontent.com directly (not github.com/.../raw/,
+        // which redirects through github.com - blocked in /etc/hosts to stop the module
+        // update-check hang; see PHP8-MIGRATION-NOTES.md). Keeps us independent of upstream.
+        $provisionerUrl = "https://raw.githubusercontent.com/nortien/provision_sccp/master/";
         // Get master tftpboot directory structure
         try {
-            file_put_contents("{$tftpRootPath}/masterFilesStructure.xml",file_get_contents("{$provisionerUrl}tools/tftpbootFiles.xml"));
+            $content = file_get_contents("{$provisionerUrl}tools/tftpbootFiles.xml");
         } catch (\Exception $e) {
             return false;
         }
-        return true;
+        if (empty($content) || @simplexml_load_string($content) === false) {
+            // Fetched content isn't valid XML - leave the existing file (if any) alone.
+            return false;
+        }
+        return file_put_contents("{$tftpRootPath}/masterFilesStructure.xml", $content) !== false;
     }
 
     public function getChanSccpSettings() {
