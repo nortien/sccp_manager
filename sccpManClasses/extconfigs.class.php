@@ -2,6 +2,7 @@
 
 namespace FreePBX\modules\Sccp_manager;
 
+#[\AllowDynamicProperties]
 class extconfigs
 {
     public function __construct($parent_class = null)
@@ -44,13 +45,13 @@ class extconfigs
                 $haveDstNow = date('I');
                 $futureDateArray = array(2,4,6,8);
                 foreach ($futureDateArray as $numMonths) {
-                    $futureDate = (new \DateTime(null,new \DateTimeZone($index)))->modify("+{$numMonths} months");
+                    $futureDate = (new \DateTime('now',new \DateTimeZone($index)))->modify("+{$numMonths} months");
                     if ($futureDate->format('I') != $haveDstNow) {
                         $usesDaylight = true;
                         break;
                     };
                 }
-                $thisTzOffset = (new \DateTime(null, new \DateTimeZone($index)))->getOffset();
+                $thisTzOffset = (new \DateTime('now', new \DateTimeZone($index)))->getOffset();
 
                 // Now look for a match in cisco_tz_array based on offset and DST
                 // First correct offset if we have DST now as cisco offsets are
@@ -238,7 +239,7 @@ class extconfigs
 
     public function updateTftpStructure($settingsFromDb) {
         global $amp_conf;
-        $adv_config = array('tftproot' => $settingsFromDb['tftp_path']['data'],
+        $adv_config = array('tftproot' => $settingsFromDb['tftp_path']['data'] ?? '/tftpboot',
                           'firmware' => 'firmware',
                           'settings' => 'settings',
                           'locales' => 'locales',
@@ -286,19 +287,19 @@ class extconfigs
                         );
         $baseConfig = array();
 
-        if (empty($settingsFromDb['tftp_rewrite_path']['data'])) {
-            $settingsFromDb['tftp_rewrite_path']['data'] = $settingsFromDb['tftp_path']['data'];
+        if (empty($settingsFromDb['tftp_rewrite_path']['data'] ?? '')) {
+            $settingsFromDb['tftp_rewrite_path']['data'] = $settingsFromDb['tftp_path']['data'] ?? '/tftpboot';
         } else {
             // Have a setting in sccpsettings. It should start with $tftp_path
             // If not we will replace it with $tftp_path. Avoids issues with legacy values
-            if (!strpos($settingsFromDb['tftp_rewrite_path']["data"],$settingsFromDb['tftp_path']['data'])) {
-                $settingsFromDb['tftp_rewrite_path']['data'] = $settingsFromDb['tftp_path']['data'];
+            if (!strpos($settingsFromDb['tftp_rewrite_path']["data"] ?? '', $settingsFromDb['tftp_path']['data'] ?? '')) {
+                $settingsFromDb['tftp_rewrite_path']['data'] = $settingsFromDb['tftp_path']['data'] ?? '/tftpboot';
             }
         }
         $adv_ini = "{$settingsFromDb['tftp_rewrite_path']["data"]}/index.cnf";
         $adv_tree_mode = 'def';
 
-        switch ($settingsFromDb['tftp_rewrite']['data']) {
+        switch ($settingsFromDb['tftp_rewrite']['data'] ?? 'off') {
             case 'pro':
                 $adv_tree_mode = 'pro';
                 if (!empty($adv_ini) && file_exists($adv_ini)) {

@@ -27,7 +27,9 @@ $cnf_int = \FreePBX::Config();
 // Do not create Sccp_Manager object as not required.
 // Only include required classes and create anonymous class for thisInstaller
 
-$thisInstaller = new class{
+$thisInstaller = new
+    #[\AllowDynamicProperties]
+    class {
     use \FreePBX\modules\Sccp_Manager\sccpManTraits\helperFunctions;
 };
 
@@ -47,11 +49,42 @@ $sccp_compatible = $aminterface->getSCCPVersion()['vCode'];
 
 outn("<li>" . _("Sccp model Compatible code : ") . $sccp_compatible . "</li>");
 if ($sccp_compatible == 0) {
+    // No driver loaded. Try to install it ourselves - install.php runs as
+    // the web server user (asterisk), which owns none of Asterisk's system
+    // paths, so this only works via a narrow sudoers NOPASSWD rule scoped
+    // to exactly this one script (see /etc/sudoers.d/sccp_manager). If that
+    // rule isn't present, `sudo -n` fails fast instead of hanging on a
+    // password prompt, and we fall through to the manual-command notice.
+    $driverScript = $amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/scripts/install-chan-sccp-driver.sh';
     outn("<br>");
-    outn("<font color='red'>chan-sccp not found. Install it before continuing !</font>");
-    die();
+    outn("<font color='orange'>" . _("chan-sccp driver not found or not loaded - attempting automatic install...") . "</font>");
+    outn("<pre style=\"background:#111;color:#0f0;padding:8px;max-height:400px;overflow:auto;\">");
+    set_time_limit(0);
+    passthru('sudo -n /usr/bin/bash ' . escapeshellarg($driverScript) . ' 2>&1', $driverExitCode);
+    outn("</pre>");
+
+    // The driver script does a full `fwconsole restart`, which drops any
+    // AMI connection opened before it ran - reopen before re-checking.
+    $aminterface->open();
+    $sccp_compatible = $aminterface->getSCCPVersion()['vCode'];
+
+    if ($sccp_compatible == 0) {
+        $stackScript = $amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/scripts/install-sccp-stack.sh';
+        outn("<br>");
+        outn("<font color='red'>" . _("Automatic driver install failed. Run this on the server (as root), then re-run this module install:") . "</font>");
+        outn("<pre style=\"background:#f5f5f5;border:1px solid #ccc;padding:8px;\">sudo bash " . $stackScript . "</pre>");
+        die();
+    }
+    outn("<li>" . _("chan-sccp driver installed automatically.") . "</li>");
 }
 // BackUp Old config
+// TFTP is a hard precondition: the install dies without it. Probe it before
+// anything destructive runs, otherwise a TFTP that is down aborts only after the
+// live sccp.conf and the schema have already been rewritten, leaving a
+// half-migrated driver. The probe records the discovered root for the later
+// settings write, which still has to happen after the schema exists.
+$GLOBALS['tftpRootPath'] = probeTftpServer();
+
 createBackUpConfig();
 RenameConfig();
 
@@ -68,6 +101,7 @@ InstallDB_updateDBVer($sccp_compatible);
 Setup_RealTime();
 addDriver($sccp_compatible);
 checkTftpServer();
+chownTftpTree();
 
 outn("<br>");
 outn("Install Complete !");
@@ -117,10 +151,10 @@ function Get_DB_config($sccp_compatible)
             'dndFeature' => array('create' => "enum('off','on') NOT NULL default 'off'", 'modify' => "enum('off','on')"),
             'earlyrtp' => array('create' => "ENUM('yes','no') NOT NULL default 'yes'", 'modify' => "ENUM('yes','no')"),
             'monitor' => array('create' => "enum('on','off') NOT NULL default 'off'", 'modify' => "enum('on','off')"),
-            'audio_tos' => array('create' => "VARCHAR(11) NOT NULL default '0xB8'",'modify' => "0xB8"),
-            'audio_cos' => array('create' => "VARCHAR(11) NOT NULL default '0x6'",'modify' => "0x6"),
-            'video_tos' => array('create' => "VARCHAR(11) NOT NULL default '0x88'",'modify' => "0x88"),
-            'video_cos' => array('create' => "VARCHAR(11) NOT NULL default '0x5'",'modify' => "0x5"),
+            'audio_tos' => array('create' => "VARCHAR(11) NOT NULL default '0xB8'",'modify' => "VARCHAR(11) NOT NULL default '0xB8'"),
+            'audio_cos' => array('create' => "VARCHAR(11) NOT NULL default '0x6'",'modify' => "VARCHAR(11) NOT NULL default '0x6'"),
+            'video_tos' => array('create' => "VARCHAR(11) NOT NULL default '0x88'",'modify' => "VARCHAR(11) NOT NULL default '0x88'"),
+            'video_cos' => array('create' => "VARCHAR(11) NOT NULL default '0x5'",'modify' => "VARCHAR(11) NOT NULL default '0x5'"),
             'trustphoneip' => array('drop' => "yes"),
             'transfer_on_hangup' => array('create' => "enum('yes','no') NOT NULL DEFAULT 'no'", 'modify' => "enum('yes','no')"),
             'phonecodepage' => array('create' => 'VARCHAR(50) NULL DEFAULT NULL', 'modify' => "VARCHAR(50)"),
@@ -403,36 +437,36 @@ function InstallDB_updateSchema($db_config)
     foreach ($priorSchemaFields as $table => $fieldsArr) {
         // First get any data in columns to be deleted ( _Column)
         $sqlMatch = array_reduce($fieldsArr, function($carry, $column) {
-                return "${carry}  ${column} IS NOT NULL OR";
+                return "{$carry}  {$column} IS NOT NULL OR";
         });
         unset($column);
         $sqlFields = array_reduce($fieldsArr, function($carry, $column) {
-                return "${carry}  ${column} AS " . ltrim($column,"_") .",";
+                return "{$carry}  {$column} AS " . ltrim($column,"_") .",";
         });
 
         $sqlMatch = rtrim($sqlMatch, "OR");
         $sqlFields = rtrim($sqlFields, ",");
-        $stmt = $db->prepare("SELECT name, ${sqlFields} FROM ${table} WHERE ${sqlMatch}");
+        $stmt = $db->prepare("SELECT name, {$sqlFields} FROM {$table} WHERE {$sqlMatch}");
         $stmt->execute();
         $dbResult = $stmt->fetchAll(\PDO::FETCH_ASSOC|\PDO::FETCH_UNIQUE);
         // Now move any data found from _Column to Column. This is safe as the two should not exist.
         if (!empty($dbResult)) {
             foreach ($dbResult as $name => $columnArr) {
                 $sqlVar = array_reduce(array_keys($columnArr), function($carry, $key) use ($columnArr){
-                        $carry .= (isset($columnArr[$key])) ? "${key} = '${columnArr[$key]}'," : "";
+                        $carry .= (isset($columnArr[$key])) ? "{$key} = '{$columnArr[$key]}'," : "";
                         return $carry;
                 });
                 $sqlVar = rtrim($sqlVar, ",");
-                $stmt = $db->prepare("UPDATE ${table} SET ${sqlVar} WHERE name = '${name}'");
+                $stmt = $db->prepare("UPDATE {$table} SET {$sqlVar} WHERE name = '{$name}'");
                 $stmt->execute();
             }
         }
         // Processed all _Column names; now safe to delete them
         $sqlDrop = array_reduce($fieldsArr, function($carry, $column) {
-                return "${carry} DROP COLUMN ${column},";
+                return "{$carry} DROP COLUMN {$column},";
         });
         $sqlDrop = rtrim($sqlDrop, ", ");
-        $stmt = $db->prepare("ALTER TABLE ${table} ${sqlDrop}");
+        $stmt = $db->prepare("ALTER TABLE {$table} {$sqlDrop}");
         $stmt->execute();
     }
 
@@ -466,7 +500,7 @@ function InstallDB_updateSchema($db_config)
 
                 if (!empty($tab_modif[$fld_id]['modify'])) {
                     // Check if modify type is same as current type
-                    if (strtoupper($tab_modif[$fld_id]['modify']) == strtoupper($tabl_data['Type'])) {
+                    if (strtoupper((string)$tab_modif[$fld_id]['modify']) == strtoupper((string)$tabl_data['Type'])) {
                         // Type has not changed so unset
                         unset($tab_modif[$fld_id]['modify']);
                     } else {
@@ -488,7 +522,7 @@ function InstallDB_updateSchema($db_config)
 
                 if (!empty($tab_modif[$fld_id]['def_modify'])) {
                     // Check if def_modify value is same as current value
-                    if (strtoupper($tab_modif[$fld_id]['def_modify']) == strtoupper($tabl_data['Default'])) {
+                    if (strtoupper((string)$tab_modif[$fld_id]['def_modify']) == strtoupper((string)$tabl_data['Default'])) {
                         // Defaults have not changed so unset
                         unset($tab_modif[$fld_id]['def_modify']);
                     } else {
@@ -515,7 +549,7 @@ function InstallDB_updateSchema($db_config)
                             unset($tab_modif[$fld_id_newName]['create']);
                         } else {
                             // add current attributes to the new name.
-                            $existingAttrs = strtoupper($tabl_data['Type']).(($tabl_data['Null'] == 'NO') ?' NOT NULL': ' NULL') .
+                            $existingAttrs = strtoupper((string)$tabl_data['Type']).(($tabl_data['Null'] == 'NO') ?' NOT NULL': ' NULL') .
                                             ((empty($tabl_data['Default']))?'': ' DEFAULT ' . "'" . $tabl_data['Default']."'");
                             $sql_rename .= "CHANGE COLUMN {$fld_id} {$fld_id_newName} {$existingAttrs}, ";
                         }
@@ -769,6 +803,7 @@ function InstallDbCreateViews($sccp_compatible)
     global $db;
     outn("<li>" . _("(Re)Create sccpdeviceconfig view") . "</li>");
     $sql = "DROP VIEW IF EXISTS sccpdeviceconfig;
+            DROP TABLE IF EXISTS sccpdeviceconfig;
             DROP VIEW IF EXISTS sccpuserconfig;
             ";
     ///    global $hw_mobil;
@@ -822,6 +857,7 @@ function InstallDbCreateViews($sccp_compatible)
     outn("<li>" . _("(Re)Create sccplineconfig view") . "</li>");
 
     $sql = "DROP VIEW IF EXISTS sccplineconfig;
+            DROP TABLE IF EXISTS sccplineconfig;
             ";
     $sql .= "CREATE OR REPLACE
             VIEW sccplineconfig AS
@@ -854,7 +890,15 @@ function installDbPopulateSccpline() {
     $stmt = $db->prepare($sql);
     $stmt->execute();
     $sccpExts = $stmt->fetchAll(\PDO::FETCH_ASSOC|\PDO::FETCH_UNIQUE);
-    $linesToCreate = array_diff_assoc($freePbxExts, $sccpExts);
+    // array_diff_assoc() compares values too, and each value here is itself
+    // an associative array (accountcode/label) - PHP can't compare arrays as
+    // strings, so under FreePBX's global E_ALL error handler that "Array to
+    // string conversion" notice becomes a fatal error (only triggers once
+    // both tables actually have rows, which is why this wasn't caught by an
+    // install against empty tables). The actual intent is just "which
+    // FreePBX extensions don't have a matching sccpline row yet" - a
+    // key-only comparison, which is what's needed to create them.
+    $linesToCreate = array_diff_key($freePbxExts, $sccpExts);
 
     foreach ($linesToCreate as $key => $valArr) {
         $stmt = $db->prepare("INSERT into sccpline (name, accountcode, description, label) VALUES (:name, :accountcode, :description, :label)");
@@ -880,7 +924,28 @@ function createBackUpConfig()
     $dir = $cnf_int->get('ASTETCDIR');
 
     $fsql = $dir.'/sccp_backup_'.date("Ymd").'.sql';
-    $result = exec('mysqldump '.$amp_conf['AMPDBNAME'].' --password='.$amp_conf['AMPDBPASS'].' --user='.$amp_conf['AMPDBUSER'].' --single-transaction >'.$fsql);
+
+    // Credentials go in a defaults-extra-file (0600, removed right after) instead of on the
+    // command line, where they'd be readable via `ps` and end up in the shell error output.
+    $credFile = tempnam(sys_get_temp_dir(), 'sccpdump_');
+    file_put_contents($credFile, "[client]\nuser={$amp_conf['AMPDBUSER']}\npassword={$amp_conf['AMPDBPASS']}\n");
+    chmod($credFile, 0600);
+
+    $cmd = "mysqldump --defaults-extra-file=" . escapeshellarg($credFile)
+         . " --single-transaction " . escapeshellarg($amp_conf['AMPDBNAME'])
+         . " > " . escapeshellarg($fsql) . " 2>" . escapeshellarg($fsql . '.err');
+    exec($cmd, $output, $return_var);
+    unlink($credFile);
+
+    $dumpOk = ($return_var === 0) && file_exists($fsql) && filesize($fsql) > 0;
+    if (!$dumpOk) {
+        outn("<li><font color='red'>" . _("Error creating database backup - mysqldump failed:") . "</font></li>");
+        outn("<pre>" . htmlspecialchars(@file_get_contents($fsql . '.err')) . "</pre>");
+        @unlink($fsql);
+        @unlink($fsql . '.err');
+        die_freepbx();
+    }
+    @unlink($fsql . '.err');
 
     try {
         $zip = new \ZipArchive();
@@ -1025,8 +1090,64 @@ function addDriver($sccp_compatible) {
     $contents = "<?php include '/var/www/html/admin/modules/sccp_manager/sccpManClasses/Sccp.class.php.v{$sccp_compatible}'; ?>";
     file_put_contents($file, $contents);
 }
-function checkTftpServer() {
+// The install runs as root, so every tftp dir and file it created is owned by
+// root and the FreePBX web user - which serves device XML on save - cannot write
+// there. Hand the whole tftp tree to the web user, the ownership `fwconsole chown`
+// would set. Runs after all tftp content is in place.
+function chownTftpTree() {
+    global $settingsFromDb;
+    global $amp_conf;
+    $tftpRoot = $settingsFromDb['tftp_path']['data'] ?? '';
+    if (empty($tftpRoot) || !is_dir($tftpRoot)) {
+        return;
+    }
+    $webUser = $amp_conf['AMPASTERISKWEBUSER'] ?? 'asterisk';
+    $webGroup = $amp_conf['AMPASTERISKWEBGROUP'] ?? $webUser;
+    outn("<li>" . _("Setting ownership of TFTP tree to {$webUser} ...") . "</li>");
+    @chown($tftpRoot, $webUser); @chgrp($tftpRoot, $webGroup);
+    $iter = new \RecursiveIteratorIterator(
+        new \RecursiveDirectoryIterator($tftpRoot, \FilesystemIterator::SKIP_DOTS),
+        \RecursiveIteratorIterator::SELF_FIRST);
+    foreach ($iter as $item) {
+        @chown($item->getPathname(), $webUser);
+        @chgrp($item->getPathname(), $webGroup);
+    }
+}
+// Reachability probe only: find a writable tftp root that actually serves over
+// tftp, or die. Deliberately touches nothing but its own sentinel file, so it is
+// safe to run before the destructive install steps. Returns the discovered root
+// and records it in $settingsFromDb for the later settings write.
+function probeTftpServer() {
+    global $settingsFromDb;
+    global $thisInstaller;
+    $tftpRootPath = "";
+    $remoteFileName = ".sccp_manager_installer_probe_sentinel_temp".mt_rand(0, 9999999);
+    $remoteFileContent = "# This is a test file created by Sccp_Manager. It can be deleted without impact";
+    $possibleFtpDirs = array('/srv', '/srv/tftp','/var/lib/tftp', '/tftpboot');
+
     outn("<li>" . _("Checking TFTP server path and availability ...") . "</li>");
+    foreach ($possibleFtpDirs as $dirToTest) {
+        if (is_dir($dirToTest) && is_writable($dirToTest)) {
+            $tempFile = "{$dirToTest}/{$remoteFileName}";
+            file_put_contents($tempFile, $remoteFileContent);
+            if ($remoteFileContent == $thisInstaller->tftpReadTestFile($remoteFileName)) {
+                $tftpRootPath = $dirToTest;
+                outn("<li>" . _("Found ftp root dir at {$tftpRootPath}") . "</li>");
+                if (($settingsFromDb['tftp_path']['data'] ?? '') != $tftpRootPath) {
+                    $settingsFromDb["tftp_path"] = array( 'keyword' => 'tftp_path', 'seq' => 2, 'type' => 0, 'data' => $tftpRootPath, 'systemdefault' => '');
+                }
+                if (file_exists($tempFile)) { unlink($tempFile); }
+                break;
+            }
+            if (file_exists($tempFile)) { unlink($tempFile); }
+        }
+    }
+    if (empty($tftpRootPath)) {
+        die_freepbx(_("Either TFTP server is down or TFTP root is non standard. Please fix, refresh, and try again"));
+    }
+    return $tftpRootPath;
+}
+function checkTftpServer() {
     global $db;
     global $cnf_int;
     global $settingsFromDb;
@@ -1034,7 +1155,17 @@ function checkTftpServer() {
     global $thisInstaller;
     global $amp_conf;
     $confDir = $cnf_int->get('ASTETCDIR');
-    $tftpRootPath = "";
+    // Reachability was already established by probeTftpServer() before the
+    // destructive steps; reuse the discovered root rather than probing again.
+    $tftpRootPath = $GLOBALS['tftpRootPath'] ?? '';
+    if (empty($tftpRootPath)) {
+        $tftpRootPath = probeTftpServer();
+    }
+    // The DB steps between the early probe and here reload $settingsFromDb from the
+    // database, where tftp_path is not stored yet, so re-set it from the discovered
+    // root - updateTftpStructure below builds every path from it and would otherwise
+    // create the tree at filesystem root.
+    $settingsFromDb["tftp_path"] = array('keyword' => 'tftp_path', 'seq' => 2, 'type' => 0, 'data' => $tftpRootPath, 'systemdefault' => '');
     // put the rewrite rules into the required location
     if (file_exists("{$confDir}/sccpManagerRewrite.rules")) {
         rename("{$confDir}/sccpManagerRewrite.rules", "{$confDir}/sccpManagerRewrite.rules.bu");
@@ -1042,42 +1173,6 @@ function checkTftpServer() {
     copy($amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/conf/mappingRulesHeader',"{$confDir}/sccpManagerRewrite.rules");
     file_put_contents("{$confDir}/sccpManagerRewrite.rules", file_get_contents($amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/contrib/rewrite.rules'), FILE_APPEND);
     file_put_contents("{$confDir}/sccpManagerRewrite.rules", "\n# Do not disable this rule - this is required by sccp_manager\nri ^(.+\.tlzz)?$ settings/\\1", FILE_APPEND);
-    // TODO: add option to use external server
-    $remoteFileName = ".sccp_manager_installer_probe_sentinel_temp".mt_rand(0, 9999999);
-    $remoteFileContent = "# This is a test file created by Sccp_Manager. It can be deleted without impact";
-    $possibleFtpDirs = array('/srv', '/srv/tftp','/var/lib/tftp', '/tftpboot');
-
-    // write a couple of sentinels to different distro tftp locations in the filesystem
-    // TODO: Depending on distro, do we have write permissions
-    foreach ($possibleFtpDirs as $dirToTest) {
-        if (is_dir($dirToTest) && is_writable($dirToTest)) {
-            $tempFile = "${dirToTest}/{$remoteFileName}";
-            file_put_contents($tempFile, $remoteFileContent);
-
-            // try to pull the written file through tftp.
-            // this way we can determine if tftp server is active, and what it's
-            // source directory is.
-            if ($remoteFileContent == $thisInstaller->tftpReadTestFile($remoteFileName)) {
-                $tftpRootPath = $dirToTest;
-                outn("<li>" . _("Found ftp root dir at {$tftpRootPath}") . "</li>");
-                if ($settingsFromDb['tftp_path']['data'] != $tftpRootPath) {
-                    $settingsFromDb["tftp_path"] = array( 'keyword' => 'tftp_path', 'seq' => 2, 'type' => 0, 'data' => $tftpRootPath, 'systemdefault' => '');
-                }
-                // Found sentinel file. Remove it and exit loop
-                if (file_exists($tempFile)) {
-                    unlink($tempFile);
-                }
-                break;
-            }
-            // Did not find sentinel so remove and continue
-            if (file_exists($tempFile)) {
-                unlink($tempFile);
-            }
-        }
-    }
-    if (empty($tftpRootPath)) {
-        die_freepbx(_("Either TFTP server is down or TFTP root is non standard. Please fix, refresh, and try again"));
-    }
 
     $settingsFromDb['asterisk_etc_path'] =  array( 'keyword' => 'asterisk_etc_path', 'seq' => 20, 'type' => 0, 'data' => $confDir, 'systemdefault' => '');
 
@@ -1211,6 +1306,19 @@ function cleanUpSccpSettings() {
         $settingsFromDb['directed_pickup']['systemdefault'] = 'no';
         // Override this chan-sccp default as it is a potential security risk. See Issue 29
         $settingsFromDb['hotline_enabled']['systemdefault'] = 'no';
+        // chan-sccp's AMI metadata reports *_cos defaults in decimal (e.g. '6')
+        // while *_tos defaults already come back correctly in hex (e.g. '0xB8') -
+        // our own XML schema/DB defaults for all of these are hex, so normalize
+        // here rather than showing a decimal placeholder next to a hex-formatted
+        // saved value. Plain int-to-hex conversion, not a lookup table - always
+        // correct, no ambiguity (unlike the similar tone-name-vs-hex mismatch on
+        // callwaiting_tone/transfer_tone etc., left unfixed since that needs a
+        // real name->hex map this box doesn't have).
+        foreach (array('sccp_cos', 'audio_cos', 'video_cos') as $cosKey) {
+            if (isset($settingsFromDb[$cosKey]['systemdefault']) && is_numeric($settingsFromDb[$cosKey]['systemdefault']) && stripos((string) $settingsFromDb[$cosKey]['systemdefault'], '0x') !== 0) {
+                $settingsFromDb[$cosKey]['systemdefault'] = sprintf('0x%X', (int) $settingsFromDb[$cosKey]['systemdefault']);
+            }
+        }
 
         unset($sysConfiguration[$key]);
     }
