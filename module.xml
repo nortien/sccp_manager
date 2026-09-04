@@ -1,12 +1,12 @@
 <module>
 	<rawname>sccp_manager</rawname>
 	<name>SCCP Manager</name>
-	<version>14.5.0.4</version>
+	<version>17.0.1</version>
 	<type>setup</type>
 	<category>SCCP Connectivity</category>
-	<publisher>Steve Lad, Alex GP</publisher>
+	<publisher>nortien</publisher>
 	<repo>extended</repo>
-	<description>SCCP Phone and Extension Manager</description>
+	<description>The Sccp Manager module lets you manage the chan-sccp driver.</description>
 	<menuitems>
 		<sccpsettings	sort="1">Server Config</sccpsettings>
 		<sccp_adv	sort="2">System Parameters</sccp_adv>
@@ -43,19 +43,22 @@
 		 * Version 14.4.0.5 * - Fix issue #59.
 		 * Version 14.5.0.2 * - Fix issue #32.
 		 * Version 14.5.0.4 * - Fix issue where values with spaces are truncated. Preserve softkeys accross installs
+		 * Version 15.0.1 * - Own fork, Asterisk 20 / FreePBX 16 support
+		 * Version 17.0.1 * - Adapted for Asterisk 23 / FreePBX 17
 	</changelog>
-	<location>https://github.com/chan-sccp/sccp_manager</location>
+	<location>https://github.com/nortien/sccp_manager</location>
 	<depends>
-		<version>15</version>
-		<phpversion>7.0</phpversion>
+		<version>16.0</version>
+		<phpversion>7.4</phpversion>
 		<phpcomponent>zip</phpcomponent>
 	</depends>
 	<supported>
-		<version>13.0.0.2M</version>
+		<version>17.0</version>
 	</supported>
-	<info>https://github.com/chan-sccp/sccp_manager</info>
-	<updateurl>https://raw.githubusercontent.com/chan-sccp/sccp_manager/develop/sccpManagerUpdater.json</updateurl>
+	<info>https://github.com/nortien/sccp_manager</info>
+	<updateurl>https://raw.githubusercontent.com/nortien/sccp_manager/stable/sccpManagerUpdater.json</updateurl>
 	<license>GPL</license>
+	<licenselink>http://www.gnu.org/licenses/gpl.txt</licenselink>
 	<md5sum></md5sum>
 	<database>
 		<table name="sccpdevice">
@@ -81,9 +84,9 @@
 			<field name="directrtp" type="string" notnull="false"/>
 			<field name="softkeyset" type="string" length="100" default="softkeyset" notnull="false"/>
 			<field name="audio_tos" type="string" length="11" default="0xB8" notnull="false"/>
-			<field name="audio_cos" type="string" length="1" default="6" notnull="false"/>
+			<field name="audio_cos" type="string" length="11" default="0x6" notnull="false"/>
 			<field name="video_tos" type="string" length="11" default="0x88" notnull="false"/>
-			<field name="video_cos" type="string" length="1" default="5" notnull="false"/>
+			<field name="video_cos" type="string" length="11" default="0x5" notnull="false"/>
 			<field name="conf_allow" type="string" default="on"/>
 			<field name="conf_play_general_announce" type="string" length="3" default="on" notnull="false"/>
 			<field name="conf_play_part_announce" type="string" default="on"/>

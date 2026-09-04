@@ -1,0 +1,76 @@
+name: Build release tarball
+
+on:
+  release:
+    types: [published]
+  # Manual re-run, so an existing release can be (re)bundled without
+  # deleting and recreating it just to fire the `published` event.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to attach the tarball to (e.g. v17.0.1)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    name: sccp_manager tarball (with bundled chan_sccp.so binaries)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: sccp_manager
+          # Bundle the source the release tag actually points at, not
+          # whatever the default branch happens to be at dispatch time.
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+      - name: Fetch precompiled driver binaries from chan-sccp's latest release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p sccp_manager/drivers
+          # Pull every chan_sccp-ast<major>-<distro>.so asset. install.php /
+          # install-chan-sccp-driver.sh picks the one matching the target box
+          # at install time; shipping them all is what lets an air-gapped PBX
+          # install the driver with no route to github.com.
+          gh release download --repo nortien/chan-sccp \
+            --pattern 'chan_sccp-ast*-*.so' \
+            --dir sccp_manager/drivers
+          echo "Bundled binaries:"
+          ls -la sccp_manager/drivers
+
+      - name: Sanity-check the bundle before publishing it
+        run: |
+          # A tarball that ships a truncated or HTML-error-page "binary" is
+          # worse than one that ships none - it would be installed as
+          # chan_sccp.so and fail at Asterisk load time, far from the cause.
+          count=$(find sccp_manager/drivers -name 'chan_sccp-ast*.so' | wc -l)
+          [ "$count" -gt 0 ] || { echo "No driver binaries downloaded"; exit 1; }
+          for so in sccp_manager/drivers/*.so; do
+            file "$so" | grep -qi 'ELF 64-bit' || { echo "Not an ELF binary: $so"; exit 1; }
+          done
+          echo "$count driver binaries verified"
+          test -f sccp_manager/module.xml || { echo "module.xml missing - wrong tarball layout"; exit 1; }
+
+      - name: Build the tarball
+        run: |
+          # FreePBX's Module Admin expects the module's own directory name at
+          # the archive root, so pack ./sccp_manager, not its contents.
+          rm -rf sccp_manager/.git sccp_manager/.github
+          tar -czf sccp_manager.tar.gz sccp_manager
+          ls -lh sccp_manager.tar.gz
+
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          # --repo is required, not optional: gh normally infers it from the
+          # git remote of the working directory, but the checkout lives in a
+          # subdirectory here and its .git is stripped when building the
+          # tarball, so there's nothing for gh to infer from.
+          gh release upload "$TAG" sccp_manager.tar.gz \
+            --repo "${{ github.repository }}" --clobber
