@@ -1,121 +1,47 @@
-## Welcome to Develop Chan_SCCP GUI Manager for FreePBX
-| [English :gb:/:us:](README.md) | [Russian :ru:](README.ru.md) | [Previous Stable Releases](https://github.com/PhantomVl/sccp_manager/tree/master)
+# SCCP Manager
 
-![Gif](https://github.com/chan-sccp/sccp_manager/raw/develop/.dok/image/Demo_1s5.gif)
+FreePBX module for managing Cisco SCCP/Skinny IP phones via [chan-sccp](https://github.com/nortien/chan-sccp), without a licensed CallManager. Line assignments, speed dials, BLF buttons, phone models, softkeys — all from the FreePBX GUI.
 
-  * [Installation](https://github.com/chan-sccp/sccp_manager#installation)
-  * [Prerequisites](https://github.com/chan-sccp/sccp_manager#prerequisites)
-  * [Links](https://github.com/chan-sccp/sccp_manager#link)
-  * [Wiki](https://github.com/chan-sccp/sccp_manager/wiki)
+**Repo:** [nortien/sccp_manager](https://github.com/nortien/sccp_manager)
 
-## Link
+## Requirements
 
-[![Download Sccp-Mamager](https://img.shields.io/badge/SccpGUI-build-ff69b4.svg)](https://github.com/chan-sccp/sccp_manager/archive/tarball/develop)
-[![Download Chan-SCCP channel driver for Asterisk](https://img.shields.io/sourceforge/dt/chan-sccp-b.svg)](https://github.com/chan-sccp/chan-sccp/releases/latest)
-[![Chan-SCCP Documentation](https://img.shields.io/badge/docs-wiki-blue.svg)](https://github.com/chan-sccp/chan-sccp/wiki)
+| | FreePBX 16 | FreePBX 17 |
+|---|---|---|
+| Asterisk | 18 / 20 | 18 / 20 / 21 / 22 / 23 |
+| PHP | 7.4.x | 8.2.x |
+| Distro tested | CentOS/Sangoma sng7 | Debian 12 / Sangoma sng12 |
 
-This FreePBX module has been developed to help IT Staff with their Asterisk-Cisco infrastructure deployment,
-providing easy provisioning and management of Cisco IP phones and extensions in a similar way to Cisco CallManager.
-The idea of creating a module is borrowed from (https://github.com/Cynjut/SCCP_Manager), and was further developed and managed
-by PhantomVl (https://github.com/PhantomVl/sccp_manager) who has been unavailable for some time. sccp_manager relies heavily
-on chan-sccp, so having the same repository will help improve integration.
-
-SCCP Manager is free software. Please see the file COPYING for details.
-
-This module will suit you if you are planing the to migrate from CallManager to Asterisk (or have already done it). SCCP-Manager allows you to administer
-SCCP extensions and a wide range of Cisco phone types (including IP Communicator).
-You can control phone buttons (depending on the phone model) assigning multiple lines, speeddials and BLF’s.
-And you can use the driver functions "sccp_chain" from the GUI module.
-
-### Wiki
-You can find more information and documentation on our [![SCCP Manager Wiki](https://img.shields.io/badge/Wiki-new-blue.svg)](https://github.com/chan-sccp/wiki)
-
-## Prerequisites
-Make sure you have the following installed on your system:
-- gui:
-  - freepbx >= 13.0.192
-- a working version of [chan-sccp](https://github.com/chan-sccp/chan-sccp)
-- PHPx.x-zip has to be installed (where x.x is the installed version of PHP).
-  For example, on Debian, using PHP7.3
-```
-apt-get install PHP7.3-zip
-```
-
-### Requirements
-- chan-sccp module 4.3.4 (or later) channel driver for Asterisk: [See our WIKI](https://github.com/chan-sccp/chan-sccp/wiki/Building-and-Installation-Guide)
-  - sccp_manager expects these configure flags to be set during compilation:
-    ```./configure  --enable-conference --enable-advanced-functions --enable-distributed-devicestate --enable-video```
-
-- TFTP Server running under (recommended) /tftpboot/ [See our WIKI] (https://github.com/chan-sccp/chan-sccp/wiki/setup-tftp-service)
-  - You will need the phone settings templates. You can use the templates taken from the distribution "chan-sccp"
-    ```cp /usr/src/chan-sccp/conf/tftp/\*.xml\* /tftpboot/templates/```
-
-- configure DHCP server [See our WIKI](https://github.com/chan-sccp/chan-sccp/wiki/setup-dhcp-service)
- Important!
-
-
-### Setup
-- [Setting up a FreePBX system](http://wiki.freepbx.org/display/FOP/Install+FreePBX)
-- [Setting up Chan-Sccp](https://github.com/chan-sccp/chan-sccp/wiki/How-to-setup-the-chan_sccp-Module)
-- The sccp_manager module will automatically setup and configure asterisk realtime database for chan-sccp.
-  For more information about realtime [See chan-sccp wiki](https://github.com/chan-sccp/chan-sccp/wiki/Realtime-Configuration).
+Also needs a reachable TFTP server for phone provisioning. The `chan-sccp` driver does **not** need to be installed first — the module installs it for you (see below).
 
 ## Installation
 
-How to install sccp_manager
------
+1. FreePBX → **Admin** → **Module Admin** → **Upload Modules**.
+2. Paste this URL and upload:
+   ```
+   https://github.com/nortien/sccp_manager/releases/latest/download/sccp_manager.tar.gz
+   ```
+3. **Manage Local Modules** → **Sccp Manager** → **Install** → **Process**.
 
-1. Log in to FreePBX
-2. Go to Admin -> Module Admin
-3. Click Upload Modules.
-4. Enter one of the following urls:
+The release tarball ships precompiled `chan_sccp.so` binaries for every supported Asterisk version, so installing the module also installs the driver — no compiler and no internet access needed on the PBX itself.
 
-Stable - Version 14.3.
+If your Asterisk version isn't one we ship a binary for, the installer compiles the driver from source instead. If it can't get root to do that, it stops and prints the exact command to run by hand.
 
-This is the latest version of sccp_manager and has many bug fixes. It is targetted for FreePbx 16 and as such requires PHP > 7.3. It works fine with FreePbx 15 as long as you can upgrade PHP (this cannot be done if you use commercial modules). There are changes to the database structure, and so this cannot be easily reverted to prior versions without using a backup, which the installer will create. If you are using a VM,  it is recommended to take a snapshot before upgrading.
-Upgrades via FreePbx module admin are enabled in this release, but do not work because of a FreePbx issue (a patch has been posted). To workaround this, if you see that an upgrade is available, you can download it via the command line console which is unaffected by this issue
-```
-fwconsole ma upgrade sccp_manager
-```
-```
-https://github.com/chan-sccp/sccp_manager/archive/refs/tags/14.3.0.13.zip
-```
+## Update
 
-Stable (For PHP < 7 only)
-```
-https://github.com/chan-sccp/sccp_manager/archive/refs/tags/v14.2.0.11.zip
-```
-Develop.
-
-This version can be updated through module admin as modifications are made (pending fix by FreePbx)
-_This is development software and so may have issues_
-```
-https://github.com/chan-sccp/sccp_manager/archive/refs/heads/develop.zip
-```
-
-
-5. Click Download From Web.
-6. Click Manage Local Modules.
-7. Find and click SCCP Manager. Check Install. Click Process button.
-8. Confirm installation.
-9. Close Status window.
-10. Apply Config to FreePBX.
-11. Continue to [Using-SCCP_Manager-to-Manage-chan-sccp](https://github.com/chan-sccp/chan-sccp/wiki/Using-SCCP_Manager-to-Manage-chan-sccp)
-
-### Module update to latest state
-
-If you installed any version >14.3.0.13, the module can be updated to the latest version via FreePBX. The GUI version FreePBX -> Admin -> Module Admin currently has a reported bug, but the upgrade can be made via the command line using
-```
+```bash
 fwconsole ma upgrade sccp_manager
 ```
 
+## Links
 
-### IMPORTANT NOTES:
-- If something stops working, use the Stable branch as described in [Installation](https://github.com/chan-sccp/sccp_manager#installation)
-- This system assumes/requires that you are using the Asterisk realtime database. If you are not yet using the realtime database,
-you will have to set it up for this module to work ([See](https://github.com/chan-sccp/chan-sccp/wiki/Realtime-Configuration)).
-- For the cisco phones to work correctly, they should be provisioned with the latest firmware (v8.1 or higher)
-- You can use cisco language profiles (localization) to switch the phones to your locale.
+- [chan-sccp driver](https://github.com/nortien/chan-sccp)
+- [Wiki](https://github.com/nortien/sccp_manager/wiki)
 
-### Chat
-[![Gitter](https://badges.gitter.im/chan-sccp/chan-sccp.svg)](https://gitter.im/sccp_manager/community)
+## Credits
+
+Fork of [chan-sccp/sccp_manager](https://github.com/chan-sccp/sccp_manager), tracing back to [Cynjut/SCCP_Manager](https://github.com/Cynjut/SCCP_Manager) and [PhantomVl/sccp_manager](https://github.com/PhantomVl/sccp_manager).
+
+## License
+
+GPL — see `COPYING`.

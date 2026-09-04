@@ -23,12 +23,31 @@ function createBackUpConfig()
 
 
     $sqlTables = array('sccpbuttonconfig','sccpdevice','sccpline','sccpuser','sccpsettings','sccpdevmodel');
-    $sqlTablesString = implode(' ',$sqlTables);
     $sqlBuFile = $dir.'/sccp_backup_'.date("Ymd").'.sql';
-    $result = exec("mysqldump {$amp_conf['AMPDBNAME']} {$sqlTablesString}
-                  --password={$amp_conf['AMPDBPASS']}
-                  --user={$amp_conf['AMPDBUSER']}
-                  --single-transaction >{$sqlBuFile}");
+
+    // Credentials go in a defaults-extra-file (0600, removed right after) instead of on the
+    // command line, where they'd be readable via `ps` and end up in the shell error output.
+    $credFile = tempnam(sys_get_temp_dir(), 'sccpdump_');
+    file_put_contents($credFile, "[client]\nuser={$amp_conf['AMPDBUSER']}\npassword={$amp_conf['AMPDBPASS']}\n");
+    chmod($credFile, 0600);
+
+    $tablesEsc = implode(' ', array_map('escapeshellarg', $sqlTables));
+    $cmd = "mysqldump --defaults-extra-file=" . escapeshellarg($credFile)
+         . " --single-transaction " . escapeshellarg($amp_conf['AMPDBNAME']) . " {$tablesEsc}"
+         . " > " . escapeshellarg($sqlBuFile) . " 2>" . escapeshellarg($sqlBuFile . '.err');
+    exec($cmd, $output, $return_var);
+    unlink($credFile);
+
+    $dumpOk = ($return_var === 0) && file_exists($sqlBuFile) && filesize($sqlBuFile) > 0;
+    if (!$dumpOk) {
+        outn("<li><font color='red'>" . _("Error creating database backup - mysqldump failed:") . "</font></li>");
+        outn("<pre>" . htmlspecialchars(@file_get_contents($sqlBuFile . '.err')) . "</pre>");
+        @unlink($sqlBuFile);
+        @unlink($sqlBuFile . '.err');
+        die_freepbx();
+    }
+    @unlink($sqlBuFile . '.err');
+
     try {
         $zip = new \ZipArchive();
     } catch (\Exception $e) {
@@ -75,7 +94,10 @@ if (!empty($version)) {
   //}
   // Still need to handle views as FreePBX does not know about these.
   outn("<li>" . _('Removing all Sccp_manager views') . "</li>");
+  // Both views the installer creates (see install.php) must be dropped;
+  // sccplineconfig was previously left behind.
   $db->query("DROP VIEW IF EXISTS sccpdeviceconfig");
+  $db->query("DROP VIEW IF EXISTS sccplineconfig");
 
   outn("<li>" . _("Uninstall Complete") . "</li>");
 ?>
