@@ -123,7 +123,7 @@ trait ajaxHelper {
                     }
                 };
 
-                if ($this->sccpvalues['siptftp']['data'] == 'on') { // Check SIP Support Enabled
+                if (($this->sccpvalues['siptftp']['data'] ?? '') == 'on') { // Check SIP Support Enabled
                     $this->createSccpXmlSoftkey(); // Create Softkey Sets for SIP
                 }
                 // !TODO!: -TODO-: Do these returned message strings work with i18n ?
@@ -164,7 +164,12 @@ trait ajaxHelper {
                         }
                     }
                 }
-                return array('status' => (($res['Response'] == 'Error')? false : true ), 'message' => $msgr, 'reload' => false, 'table_reload' => true);
+                // $res is only assigned when a device actually matched above. No match
+                // means nothing was reset, which is a failure to report - not a success.
+                if (!isset($res)) {
+                    return array('status' => false, 'message' => array(_('No matching device found to reset')), 'reload' => false, 'table_reload' => true);
+                }
+                return array('status' => (($res['Response'] == 'Error') ? false : true), 'message' => $msgr, 'reload' => false, 'table_reload' => true);
                 break;
             case 'update_button_label':
                 $msg = '';
@@ -293,8 +298,9 @@ trait ajaxHelper {
                 $activeDevices = $this->aminterface->sccp_get_active_device();
                 $uniqueLineList = array();
                 foreach ($lineList as $key => &$lineArr) {
-                    if (array_key_exists($lineArr['mac'], $activeDevices)) {
-                        $lineArr['line_status'] = "{$activeDevices[$lineArr['mac']]['status']} | {$activeDevices[$lineArr['mac']]['act']}";
+                    $activeDev = $this->sccpFindActiveDeviceByName($lineArr['mac'], $activeDevices);
+                    if ($activeDev !== null) {
+                        $lineArr['line_status'] = "{$activeDev['status']} | {$activeDev['act']}";
                     }
                     if (array_key_exists($lineArr['name'], $uniqueLineList)) {
                         $lineList[$uniqueLineList[$lineArr['name']]]['mac'] .= '<br>' . $lineArr['mac'];
@@ -320,14 +326,15 @@ trait ajaxHelper {
                 $activeDevices = $this->aminterface->sccp_get_active_device();
 
                 foreach ($dbDevices as &$dev_id) {
-                    if (!empty($activeDevices[$dev_id['name']])) {
+                    $activeKey = $this->sccpActiveDeviceKeyUsed($dev_id['name'], $activeDevices);
+                    if ($activeKey !== null) {
                         // Device is in db and is connected
-                        $dev_id['description'] = $activeDevices[$dev_id['name']]['descr'];
-                        $dev_id['status'] = $activeDevices[$dev_id['name']]['status'];
-                        $dev_id['address'] = $activeDevices[$dev_id['name']]['address'];
+                        $dev_id['description'] = $activeDevices[$activeKey]['descr'];
+                        $dev_id['status'] = $activeDevices[$activeKey]['status'];
+                        $dev_id['address'] = $activeDevices[$activeKey]['address'];
                         $dev_id['new_hw'] = 'N';
                         // No further action required on this active device
-                        unset($activeDevices[$dev_id['name']]);
+                        unset($activeDevices[$activeKey]);
                     }
                 }
                 unset($dev_id); // unset reference.
@@ -412,13 +419,13 @@ trait ajaxHelper {
         // all codecs are currently treated as audiocodecs. To treat videocodecs separately name in video codec section of
         // server.codec needs to be changed from audiocodecs to videocodecs.
         if (!isset($request['audiocodecs'])) {
-            $save_settings['allow'] = $this->sccpvalues['allow'];
-            $save_settings['allow']['data'] = $this->sccpvalues['allow']['systemdefault'];
+            $save_settings['allow'] = $this->sccpvalues['allow'] ?? array();
+            $save_settings['allow']['data'] = $this->sccpvalues['allow']['systemdefault'] ?? '';
         } else {
             foreach ($request['audiocodecs'] as $keycodeс => $dumVal) {
                 $save_codec[] = $keycodeс;
             }
-            $save_settings['allow'] = $this->sccpvalues['allow'];
+            $save_settings['allow'] = $this->sccpvalues['allow'] ?? array();
             $save_settings['allow']['data'] = implode(";", $save_codec);
         }
         unset($request['audiocodecs']);
@@ -445,7 +452,7 @@ trait ajaxHelper {
 
         foreach (['deny','permit'] as $keyVal) {
             if (!isset($request[$hdr_arprefix.$keyVal])) {
-                $tmpArr = $this->convertCsvToArray($this->sccpvalues[$keyVal]['systemdefault']);
+                $tmpArr = $this->convertCsvToArray($this->sccpvalues[$keyVal]['systemdefault'] ?? '');
                 if (isset($tmpArr[0]['internal'])) {
                     $request[$hdr_arprefix.$keyVal][0] = $tmpArr[0];
                 } else {
@@ -462,10 +469,10 @@ trait ajaxHelper {
             if ($count_mods) {
                 // Only arrays : network lists or ip lists.
                 $save_settings[$key]['keyword'] = $key;
-                $save_settings[$key]['type'] = $this->sccpvalues[$key]['type'];
-                $save_settings[$key]['seq'] = $this->sccpvalues[$key]['seq'];
+                $save_settings[$key]['type'] = $this->sccpvalues[$key]['type'] ?? '';
+                $save_settings[$key]['seq'] = $this->sccpvalues[$key]['seq'] ?? '';
                 $save_settings[$key]['data'] = $this->convertArrayToCsv($value);
-                $save_settings[$key]['systemdefault'] = $this->sccpvalues[$key]['systemdefault'];
+                $save_settings[$key]['systemdefault'] = $this->sccpvalues[$key]['systemdefault'] ?? '';
                 continue;
             }
             // Now handle any normal data - arrays will not match as already handled.
@@ -507,7 +514,7 @@ trait ajaxHelper {
         // now add the site defaults from sccpsettings to sccpdevice for permit and deny, so that these will override
         foreach (['deny', 'permit'] as $fieldId) {
             $output = array();
-            foreach ($this->convertCsvToArray($this->sccpvalues[$fieldId]['data']) as $netValue) {
+            foreach ($this->convertCsvToArray($this->sccpvalues[$fieldId]['data'] ?? '') as $netValue) {
                 if (isset($netValue['internal'])) {
                     $output[] = 'internal';
                     continue;
@@ -554,7 +561,10 @@ trait ajaxHelper {
     public function getFilesFromProvisioner($request) {
         $filesToGet = array();
         $totalFiles = 0;
-        $provisionerUrl = "https://github.com/dkgroot/provision_sccp/raw/master/";
+        // Use our own fork via raw.githubusercontent.com directly (not github.com/.../raw/,
+        // which redirects through github.com - blocked in /etc/hosts to stop the module
+        // update-check hang; see PHP8-MIGRATION-NOTES.md). Keeps us independent of upstream.
+        $provisionerUrl = "https://raw.githubusercontent.com/nortien/provision_sccp/master/";
         // TODO: Maybe should always fetch to ensure have latest, backing up old version
         if (!file_exists("{$this->sccppath['tftp_path']}/masterFilesStructure.xml")) {
             if (!$this->getFileListFromProvisioner($this->sccppath['tftp_path'])) {
@@ -565,6 +575,9 @@ trait ajaxHelper {
         }
         $tftpBootXml = simplexml_load_file("{$this->sccppath['tftp_path']}/masterFilesStructure.xml");
 
+        if (empty($request['type'])) {
+            return array('status' => false, 'message' => _('No file type selected'), 'reload' => false);
+        }
         switch ($request['type']) {
             case 'firmware':
                 $device = $request['device'];
@@ -573,7 +586,23 @@ trait ajaxHelper {
                 $filesToGet['firmware'] = (array)$result[0]->FileName;
                 $totalFiles += count($filesToGet['firmware']);
                 $srcDir['firmware'] = $provisionerUrl . (string)$result[0]->DirectoryPath;
-                $dstDir['firmware'] = "{$this->sccppath['tftp_firmware_path']}/{$device}";
+                // Must match getSccpModelInformation()'s validate() lookup: in the default
+                // "off" mode, firmware is expected flat in tftp_firmware_path (per the
+                // tftp_rewrite help text - "All data is in the directory TFTP Server Path").
+                // Downloading into a per-device subfolder there would never be found, so the
+                // model table keeps showing "File not found" even after a successful download.
+                $search_mode = ($this->sccpvalues['tftp_rewrite']['data'] ?? '');
+                switch ($search_mode) {
+                    case 'pro':
+                    case 'on':
+                    case 'internal':
+                        $dstDir['firmware'] = "{$this->sccppath['tftp_firmware_path']}/{$device}";
+                        break;
+                    case 'off':
+                    default:
+                        $dstDir['firmware'] = $this->sccppath['tftp_firmware_path'];
+                        break;
+                }
 
                 $msg = "Firmware for {$device} has been successfully downloaded";
                 break;
@@ -621,18 +650,18 @@ trait ajaxHelper {
                 // No request for this section
                 continue;
             }
-            $srcDir = $srcDir[$section];
-            $dstDir = $dstDir[$section];
-            if (!is_dir($dstDir)) {
-                mkdir($dstDir, 0755);
+            $srcDirSection = $srcDir[$section];
+            $dstDirSection = $dstDir[$section];
+            if (!is_dir($dstDirSection)) {
+                mkdir($dstDirSection, 0755);
             }
             foreach ($filesToGet[$section] as $srcFile) {
                 try {
-                  file_put_contents("{$dstDir}/{$srcFile}",
-                      file_get_contents($srcDir. $srcFile));
+                  file_put_contents("{$dstDirSection}/{$srcFile}",
+                      file_get_contents($srcDirSection. $srcFile));
                 } catch (\Exception $e) {
                     return array('status' => false,
-                        'message' => "{$countriesSrcDir}{$srcFile} cannot be found. Check your internet connection, and that this path exists",
+                        'message' => "{$srcDirSection}{$srcFile} cannot be found. Check your internet connection, and that this path exists",
                         'reload' => false);
                 }
                 $filesRetrieved ++;
@@ -706,16 +735,16 @@ trait ajaxHelper {
                     break;
                 default:
                     // handle vendor prefix
-                    if (!empty($get_settings["${hdr_vendPrefix}${key}"])) {
-                        $value = $get_settings["${hdr_vendPrefix}${key}"];
+                    if (!empty($get_settings["{$hdr_vendPrefix}{$key}"])) {
+                        $value = $get_settings["{$hdr_vendPrefix}{$key}"];
                     }
                     // handle array prefix
-                    if (!empty($get_settings["${hdr_arprefix}${key}"])) {
+                    if (!empty($get_settings["{$hdr_arprefix}{$key}"])) {
                         // Only 3 types of array returned permit,deny, setvar
                         $arr_data = '';
                         $arr_clear = false;
                         $output = array();
-                        foreach ($get_settings["${hdr_arprefix}${key}"] as $netValue) {
+                        foreach ($get_settings["{$hdr_arprefix}{$key}"] as $netValue) {
                             switch ($key) {
                                 case 'permit':
                                 case 'deny';

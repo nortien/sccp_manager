@@ -79,6 +79,10 @@
     <sshAccess>1</sshAccess>
     <lldpAssetId/>
     <voiceQualityControl>0</voiceQualityControl>
+    <daysDisplayNotActive>1,7</daysDisplayNotActive>
+    <displayOnTime>08:30</displayOnTime>
+    <displayOnDuration>11:30</displayOnDuration>
+    <displayIdleTimeout>01:00</displayIdleTimeout>
   </vendorConfig>
   <versionStamp>1396020461-83a09e65-e62e-4db3-9e03-e3d0cdfd7093</versionStamp>
   <userLocale>
