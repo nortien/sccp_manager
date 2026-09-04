@@ -99,5 +99,28 @@ if (!empty($version)) {
   $db->query("DROP VIEW IF EXISTS sccpdeviceconfig");
   $db->query("DROP VIEW IF EXISTS sccplineconfig");
 
+  // The realtime mappings the installer adds point at the views just dropped, so they
+  // have to go with them - otherwise asterisk keeps a mapping to something that no
+  // longer exists until the module happens to be installed again.
+  outn("<li>" . _('Removing realtime mappings') . "</li>");
+  $cnf_read = \FreePBX::LoadConfig();
+  $cnf_wr = \FreePBX::WriteConfig();
+  foreach (array('extconfig_custom.conf', 'extconfig.conf') as $extFile) {
+      if (!file_exists(\FreePBX::Config()->get('ASTETCDIR') . '/' . $extFile)) {
+          continue;
+      }
+      $ext_conf = $cnf_read->getConfig($extFile);
+      $changed = false;
+      foreach (array('sccpdevice', 'sccpline') as $key) {
+          if (isset($ext_conf['settings'][$key])) {
+              unset($ext_conf['settings'][$key]);
+              $changed = true;
+          }
+      }
+      if ($changed) {
+          $cnf_wr->writeConfig($extFile, $ext_conf, false);
+      }
+  }
+
   outn("<li>" . _("Uninstall Complete") . "</li>");
 ?>
