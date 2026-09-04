@@ -10,9 +10,9 @@ $device_warning= null;
 // Default value from Server setings
 //Get default values. Will use these for a new device, and modify for an existing.
 $def_val = $this->getTableDefaults('sccpdevice');
-$def_val['netlang'] =  array("keyword" => 'netlang', "data" => $this->sccpvalues['netlang']['data'], "seq" => "99");
-$def_val['devlang'] =  array("keyword" => 'devlang', "data" => $this->sccpvalues['devlang']['data'], "seq" => "99");
-$def_val['directed_pickup_context'] =  array("keyword" => 'directed_pickup_context', "data" => $this->sccpvalues['directed_pickup_context']['data'], "seq" => "99");
+$def_val['netlang'] =  array("keyword" => 'netlang', "data" => $this->sccpvalues['netlang']['data'] ?? '', "seq" => "99");
+$def_val['devlang'] =  array("keyword" => 'devlang', "data" => $this->sccpvalues['devlang']['data'] ?? '', "seq" => "99");
+$def_val['directed_pickup_context'] =  array("keyword" => 'directed_pickup_context', "data" => $this->sccpvalues['directed_pickup_context']['data'] ?? '', "seq" => "99");
 
 if (!empty($_REQUEST['new_id'])) {
     // Adding device that is connected but not in database
@@ -20,7 +20,7 @@ if (!empty($_REQUEST['new_id'])) {
     // Overwrite some specific defaults based on $_REQUEST
     $def_val['type'] = array("keyword" => 'type', "data" => $_REQUEST['type'], "seq" => "99");
     if (!empty($_REQUEST['addon'])) {
-        $def_val['addon'] = array("keyword" => 'type', "data" => $_REQUEST['addon'], "seq" => "99");
+        $def_val['addon'] = array("keyword" => 'addon', "data" => $_REQUEST['addon'], "seq" => "99");
     }
 }
 
@@ -58,44 +58,24 @@ if (!empty($_REQUEST['id'])) {
     }
 }
 
-if (!empty($def_val['type'])) {
-    $tmp_raw = $this->getSccpModelInformation('byid', true, 'all', array('model'=>$def_val['type']));
+if (!empty($def_val['type']['data'])) {
+    $tmp_raw = $this->getSccpModelInformation('byid', true, 'all', array('model'=>$def_val['type']['data']));
     if (!empty($tmp_raw[0])) {
         $tmp_raw = $tmp_raw[0];
     }
     if (!empty($tmp_raw['validate'])) {
+        // validate is "yes"/"no;"" per field, or "-" when the field isn't defined for
+        // this model at all (e.g. no loadimage registered) - only "no" is a real problem.
         $tmpar =  explode(";", $tmp_raw['validate']);
-        if ($tmpar[0] != 'yes') {
+        if ($tmpar[0] === 'no') {
             $device_warning['Image'] = array('Device firmware not found : '.$tmp_raw['loadimage']);
         }
-        if ($tmpar[1] != 'yes') {
+        if ($tmpar[1] === 'no') {
             $device_warning['Template'] = array('Missing device configuration template : '. $tmp_raw['nametemplate']);
         }
-        if (!empty($device_warning)) {
-            ?>
-            <div class="fpbx-container container-fluid">
-                <div class="row">
-                    <div class="container">
-                        <h2 style="border:2px solid Tomato;color:Tomato;" >Warning in the SCCP Device</h2>
-                        <div class="table-responsive">
-                            <pre>
-                                <?php
-                                foreach ($device_warning as $key => $value) {
-                                    echo '<h3>'.$key.'</h3>';
-                                    if (is_array($value)) {
-                                        echo '<li>'._(implode('</li><li>', $value)).'</li>';
-                                    } else {
-                                        echo '<li>'. _($value).'</li>';
-                                    }
-                                }
-                                ?>
-                            </pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        <br>
-<?php   }
+        // $device_warning (if set) is picked up by Sccp_manager::processPageData() and
+        // rendered in the shared page-level banner slot (page.html.php, above the tab
+        // strip), matching the warning banners on the other tabs - not rendered here.
     }
 } ?>
 
@@ -111,7 +91,7 @@ if (!empty($def_val['type'])) {
         $val = str_replace(array('SEP','ATA','VG'), '', $dev_id);
         $val = implode(':', sscanf($val, '%2s%2s%2s%2s%2s%2s')); // Convert to Cisco display Format
         $def_val['mac'] = array("keyword" => 'mac', "data" => $val, "seq" => "99");
-        echo '<input type="hidden" name="sccp_device_id" value="'.$dev_id.'">';
+        echo '<input type="hidden" name="sccp_device_id" value="'.$this->escapeHtml($dev_id).'">';
     }
 
     if ($_REQUEST['tech_hardware'] == 'cisco') {

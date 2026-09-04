@@ -14,7 +14,7 @@ $forminfo =array(
 $buttons_type=  array("empty","line","silent","monitor","speeddial","feature","adv.line");
 $feature_list=  array('parkinglot'=>'Park Slots','monitor'=> "Record Calls",'devstate'=> "Change Status");
 
-if ($_REQUEST['tech_hardware'] === 'cisco') {
+if (($_REQUEST['tech_hardware'] ?? '') === 'cisco') {
     $lines_list = $this->dbinterface->getSccpDeviceTableData('SccpExtension');
 } else {
     $lines_list = $this->dbinterface->getSipTableData('extensionList');
@@ -25,26 +25,38 @@ $hint_list  = $this->getHintInformation(true, array('context'=>'park-hints')) ;
 $line_id =0;
 $max_buttons =56;     //Don't know hardware type so set a maximum. On save, this is set to actual max buttons
 $show_buttons =1;
+$db_buttons = array();
+$db_device = array();
 
 if (!empty($_REQUEST['id'])) {
     $dev_id = $_REQUEST['id'];
     $db_buttons = $this->dbinterface->getSccpDeviceTableData('get_sccpdevice_buttons', array("id" => $dev_id));
     $db_device = $this->dbinterface->getSccpDeviceTableData('get_sccpdevice_byid', array("id" => $dev_id));
-    $show_buttons = $db_device['buttons'];
-    if (!empty($db_device['addon_buttons'])) {
-        $show_buttons += $db_device['addon_buttons'];
+    if (!empty($db_device)) {
+        $show_buttons = $db_device['buttons'];
+        if (!empty($db_device['addon_buttons'])) {
+            $show_buttons += $db_device['addon_buttons'];
+        }
+    } else {
+        // No matching device row (stale/deleted id) - keep the pre-set default instead
+        // of reading offsets off a false PDO fetch() result.
+        $db_device = array();
     }
     //$show_buttons = $max_buttons;
 }
 if (!empty($_REQUEST['new_id'])) {
-    $val = $_REQUEST['type'];
+    $val = $_REQUEST['type'] ?? '';
     $dev_schema =  $this-> getSccpModelInformation('byid', false, "all", array('model' =>$val));
 //   $db_device = $this->dbinterface->getSccpDeviceTableData('get_sccpdevice_byid', array("id" => $val));
-    $show_buttons = $dev_schema[0]['buttons'];
+    if (!empty($dev_schema[0]['buttons'])) {
+        $show_buttons = $dev_schema[0]['buttons'];
+    }
     if (!empty($_REQUEST['addon'])) {
         $val = $_REQUEST['addon'];
         $dev_schema =  $this-> getSccpModelInformation('byid', false, "all", array('model' =>$val));
-        $show_buttons += $dev_schema[0]['buttons'];
+        if (!empty($dev_schema[0]['buttons'])) {
+            $show_buttons += $dev_schema[0]['buttons'];
+        }
     }
     //$show_buttons = $max_buttons;
 }
@@ -103,6 +115,7 @@ if (!empty($_REQUEST['ru_id'])) {
         $def_silent = '';
         $defaul_advline = '';
         $defaul_ftr = '';
+        $defaul_fcod = '';
         if (strpos($defaul_btn, '@') >0) {
             $defaul_tv = 'adv.line';
             $show_form_mode = 'adv.line';
@@ -189,7 +202,7 @@ if (!empty($_REQUEST['ru_id'])) {
 <!--  if Line Type = Othe Show  Input -->
                         <div data-type='speeddial' class="lineid_<?php echo $line_id.(($show_form_mode=='speeddial')? '':' hidden');?>" >
                             <?php
-                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_input"  name="'.$forminfo[1]['name'].$line_id.'_input" placeholder="Name" value="'.$db_buttons[$line_id]['name'].'" >';
+                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_input"  name="'.$forminfo[1]['name'].$line_id.'_input" placeholder="Name" value="'.($db_buttons[$line_id]['name'] ?? '').'" >';
                             ?>
                         </div>
                         </div>
@@ -220,7 +233,7 @@ if (!empty($_REQUEST['ru_id'])) {
                         <div data-type='feature' class="lineid_<?php echo $line_id.(($show_form_mode=='feature')? '':' hidden');?>" name="<?php echo $forminfo[1]['name'].$line_id.'_hint';?>">
                             <div class="col-xs-4">
                             <?php
-                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_flabel"  name="'.$forminfo[1]['name'].$line_id.'_flabel" placeholder="Display Label" value="'.$db_buttons[$line_id]['name'].'" >';
+                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_flabel"  name="'.$forminfo[1]['name'].$line_id.'_flabel" placeholder="Display Label" value="'.($db_buttons[$line_id]['name'] ?? '').'" >';
                             ?>
                             </div>
                             <div class="col-xs-4">
@@ -239,7 +252,7 @@ if (!empty($_REQUEST['ru_id'])) {
                             </div>
                             <div class="col-xs-5">
                             <?php
-                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_advopt"  name="'.$forminfo[1]['name'].$line_id.'_advopt" placeholder="ButtonLabel,Options" value="'.$db_buttons[$line_id]['options'].'" >';
+                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_advopt"  name="'.$forminfo[1]['name'].$line_id.'_advopt" placeholder="ButtonLabel,Options" value="'.($db_buttons[$line_id]['options'] ?? '').'" >';
                             ?>
                             </div>
                         </div>

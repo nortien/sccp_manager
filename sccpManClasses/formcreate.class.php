@@ -2,6 +2,7 @@
 
 namespace FreePBX\modules\Sccp_manager;
 
+#[\AllowDynamicProperties]
 class formcreate
 {
     use \FreePBX\modules\Sccp_Manager\sccpManTraits\helperFunctions;
@@ -11,6 +12,57 @@ class formcreate
         $this->buttonHelpLabel = 'site';
     }
 
+    // Shared field wrapper, matching FreePBX core's own convention
+    // (see admin/modules/core/views/extensions.php): a label+help-icon
+    // column, a value column, and a full-width help-text row below.
+    // Used by all addElement* methods except addElementHLP (a collapsible
+    // help panel, not a labeled field).
+    private function elementOpen($res_id, $label, $secClass = '') {
+        ?>
+        <div class="element-container">
+            <div class="row">
+                <div class="form-group <?php echo $secClass; ?>">
+                    <div class="col-md-3 sccp-field-label">
+                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo $label; ?></label>
+                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
+                    </div>
+                    <div class="col-md-9">
+        <?php
+    }
+
+    private function elementCloseRow() {
+        ?>
+                    </div>
+                </div>
+            </div>
+        <?php
+    }
+
+    // The hidden "customise" row used by the sccp-edit/sccp-restore toggle
+    // (addElementIE/addElementIS). id/name contract must match
+    // assets/js/sccp_manager.js exactly - it is not event-delegated.
+    private function elementEditRowOpen($res_id, $promptText, $secClass = '') {
+        ?>
+            <div class="row" id="edit_<?php echo $res_id; ?>" style="display: none">
+                <div class="form-group <?php echo $secClass; ?>">
+                    <div class="col-md-3">
+                        <i><?php echo $promptText; ?></i>
+                    </div>
+                    <div class="col-md-9">
+        <?php
+    }
+
+    private function elementHelpAndClose($res_id, $helpText) {
+        ?>
+            <div class="row">
+                <div class="col-md-12">
+                    <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo $helpText;?></span>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
     function addElementIE ($child, $fvalues, $sccp_defaults, $npref) {
         $res_input = '';
         $res_name = '';
@@ -18,7 +70,6 @@ class formcreate
             $this->buttonDefLabel = 'site';
             $this->buttonHelpLabel = 'device';
         }
-        $usingSysDefaults = true;
         // if there are multiple inputs, take the first for res_id and shortId
         $shortId = (string)$child->input[0]->name;
         $res_id = $npref.$shortId;
@@ -37,33 +88,30 @@ class formcreate
             $child->nameseparator = ' / ';
         }
 
-        ?>
-        <div class="element-container">
-            <div class="row">
-                <div class="form-group <?php echo $res_sec_class; ?>">
-                    <div class="col-md-3">
-                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label);?></label>
-                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                    </div>
-        <?php
-                    if (!empty($sccp_defaults[$shortId]['systemdefault'])) {
-                        // There is a system default, so add button to customise or reset
-                        //-- Start include of defaults button --
-                        echo "<div class=col-md-3>";
-                    }
+        // Not !empty() - "0" is a real, meaningful systemdefault (e.g.
+        // transfer_tone's "no tone" value) but PHP's empty("0") is true,
+        // which silently hid the reset button for any field whose real
+        // default happens to be the string "0".
+        $sysDefaultVal = $sccp_defaults[$shortId]['systemdefault'] ?? '';
+        $hasSysDefault = ($sysDefaultVal !== '' && $sysDefaultVal !== null);
 
-        // Can have multiple inputs for a field which are displayed with a separator
+        $this->elementOpen($res_id, _($child->label), $res_sec_class);
+
+        // Always a plain, directly-editable input - no separate "Customise"
+        // click-to-reveal step. When chan-sccp has a system default for this
+        // field, it is shown as a placeholder (not a real value): leaving the
+        // input untouched submits '' so chan-sccp's own default keeps applying
+        // (createDefaultSccpConfig() only writes the directive when data is
+        // non-empty); typing a value - even one matching the default - explicitly
+        // overrides it. Can have multiple inputs for a field, shown with a separator.
+        if ($hasSysDefault) {
+            echo '<div class="sccp-value-flex">';
+        }
         $i = 0;
         foreach ($child->xpath('input') as $value) {
             $res_n =  (string)$value->name;
             $res_name = $npref . $res_n;
-            //if (!empty($fvalues[$res_n])) {
-            $value->value = $fvalues[$res_n]['data'];
-            if (!empty($fvalues[$res_n]['data'])) {
-                if ($sccp_defaults[$res_n]['systemdefault'] != $fvalues[$res_n]['data']) {
-                    $usingSysDefaults = false;
-                }
-            }
+            $curData = $fvalues[$res_n]['data'] ?? '';
             if (empty($value->type)) {
                 $value->type = 'text';
             }
@@ -73,106 +121,32 @@ class formcreate
             if ($i > 0) {
                 echo $child->nameseparator;
             }
-            // Output current value
-            if (empty($value->value)) {
-                echo "{$res_n} has not been set";
+            echo '<input type="' . $value->type . '" class="' . $value->class . '" id="' . $res_id . '" name="' . $res_name . '" value="' . htmlspecialchars($curData, ENT_QUOTES) . '"';
+            if ($hasSysDefault) {
+                $sysDefault = $sccp_defaults[$res_n]['systemdefault'] ?? '';
+                echo ' placeholder="' . htmlspecialchars($sysDefault, ENT_QUOTES) . '"';
             }
-            echo $value->value;
+            if (isset($value->options)) {
+                foreach ($value->options ->attributes() as $optkey => $optval) {
+                    echo  ' '.$optkey.'="'.$optval.'"';
+                }
+            }
+            if (!empty($value->min)) {
+                echo  ' min="'.$value->min.'"';
+            }
+            if (!empty($value->max)) {
+                echo  ' max="'.$value->max.'"';
+            }
+            echo  '>';
             $i ++;
         }
-        if (!empty($sccp_defaults[$shortId]['systemdefault'])) {
+        if ($hasSysDefault) {
+            echo '<button type="button" class="btn btn-default sccp-reset-default" data-for="'.$res_id.'">'.sprintf(_('Use %s defaults'), $this->buttonDefLabel).'</button>';
+            echo '</div>';
+        }
+        $this->elementCloseRow();
 
-        ?>
-                    </div>
-                    <div class="col-md-4">
-                      <span class="radioset">
-                        <input type="checkbox"
-                            <?php
-                            echo " data-for={$res_id} data-type=text id=usedefault_{$res_id} ";
-                            if ($usingSysDefaults) {
-                                // Setting a site specific value
-                                echo "class=sccp-edit :checked ";
-                            } else {
-                                // reverting to chan-sccp default values
-                                echo "class=sccp-restore data-default={$sccp_defaults[$res_n]['systemdefault']} ";
-                            }
-                            ?>
-                        >
-                        <label
-                            <?php
-                            echo "for=usedefault_{$res_id} >";
-                            echo ($usingSysDefaults) ? "Customise" : "Use {$this->buttonDefLabel} defaults";
-                            ?>
-                        </label>
-
-                      </span>
-                    </div>
-                </div>
-            </div>
-            <div class="row" id="edit_<?php echo $res_id; ?>" style="display: none">
-                <div class="form-group <?php echo $res_sec_class; ?>">
-                    <div class="col-md-3">
-                        <i><?php echo "Enter new {$this->buttonHelpLabel} value for {$shortId}"; ?></i>
-                    </div>
-
-                    <!-- Finish include of defaults button -->
-                    <?php
-                    // Close the conditional include of the defaults button opened at line ~47
-                  }
-                    ?>
-
-                    <div class="col-md-9">
-                        <?php
-                        $i=0;
-                        // Can have multiple inputs for a field displayed with a separator
-                        foreach ($child->xpath('input') as $value) {
-                                $res_n =  (string)$value->name;
-                                $res_name = $npref . $res_n;
-                            if (empty($res_id)) {
-                                $res_id = $res_name;
-                            }
-                            if (!empty($fvalues[$res_n]['data'])) {
-                                $value->value = $fvalues[$res_n]['data'];
-                            }
-                            // Default to chan-sccp defaults, not xml defaults if reverting to defaults or empty
-                            if ((empty($value->value)) || ($usingSysDefaults)) {
-                                $value->value = $sccp_defaults[$res_n]['systemdefault'];
-                            }
-                            if (empty($value->type)) {
-                                $value->type = 'text';
-                            }
-                            if (empty($value->class)) {
-                                $value->class = 'form-control';
-                            }
-                            if ($i > 0) {
-                                echo $child->nameseparator;
-                            }
-                            echo '<input type="' . $value->type . '" class="' . $value->class . '" id="' . $res_id . '" name="' . $res_name . '" value="' . $value->value.'"';
-                            if (isset($value->options)) {
-                                foreach ($value->options ->attributes() as $optkey => $optval) {
-                                    echo  ' '.$optkey.'="'.$optval.'"';
-                                }
-                            }
-                            if (!empty($value->min)) {
-                                echo  ' min="'.$value->min.'"';
-                            }
-                            if (!empty($value->max)) {
-                                echo  ' max="'.$value->max.'"';
-                            }
-                            echo  '>';
-                            $i ++;
-                        }
-                        ?>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-                </div>
-            </div>
-        </div>
-        <?php
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 
     function addElementIED($child, $fvalues, $sccp_defaults,$npref, $napref) {
@@ -206,24 +180,14 @@ class formcreate
         }
 
         if ($res_n == 'srst_ip') {
-            $res_value = $this->convertCsvToArray($sccp_defaults[$res_n]['data']);
+            $res_value = $this->convertCsvToArray($sccp_defaults[$res_n]['data'] ?? '');
         }
         if (empty($res_value)) {
             $res_value = array((string) $child->default);
         }
 
-        ?>
-    <div class="element-container">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="row">
-                        <div class="form-group">
-                            <div class="col-md-3">
-                                <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label);?></label>
-                                <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                            </div>
-
-                            <div class="col-md-9">
+        $this->elementOpen($res_id, _($child->label));
+                            ?>
                             <?php
                             if (!empty($child->cbutton)) {
                                 echo '<div class="form-group form-inline">';
@@ -268,12 +232,12 @@ class formcreate
                                     }
 
                                     echo '<span class="'.$opt_class.'"'.$opt_hide.'><button type="button" class="btn '.(($res_vf) ? 'active':"").'" data-color="primary">';
-                                    echo '<i class="state-icon '. (($res_vf)?'glyphicon glyphicon-check"':'glyphicon glyphicon-uncheck'). '"></i> ';
+                                    echo '<i class="state-icon'. (($res_vf)?' fa fa-check-square-o':''). '"></i> ';
                                     echo $value.'</button><input type="checkbox" name="'. $res_n.'" class="hidden" '. (($res_vf)?'checked="checked"':'') .'/></span>';
                                 }
                                 echo '</div>';
                             }
-                            $opt_class = "col-sm-7 ".$res_id."-gr";
+                            $opt_class = $res_id."-gr";
                             if (!empty($child->class)) {
                                 $opt_class .= " ".(string)$child->class;
                             }
@@ -281,11 +245,12 @@ class formcreate
                             $i=1;
                             foreach ($res_value as $addrArr) {
                                 ?>
-                                <div class = "<?php echo $res_id;?> form-group form-inline" data-nextid=<?php echo $i;?> id= <?php echo $res_id . $i;?>>
+                                <div class = "<?php echo $res_id;?> sccp-ied-row form-group form-inline" data-nextid=<?php echo $i;?> id= <?php echo $res_id . $i;?>>
                                 <?php
                                 foreach ($child->xpath('input') as $value) {
                                     $field_id = (string)$value['field'];
                                     $res_n = $res_id.'['.$i.']['.$field_id.']';
+                                    $opt_at[$field_id]['class'] = $opt_at[$field_id]['class'] ?? '';
                                     if (!empty($value->class)) {
                                         $opt_at[$field_id]['class']='form-control ' .(string)$value->class;
                                     }
@@ -306,11 +271,11 @@ class formcreate
 
                                 if (!empty($child->add_pluss)) {
                                     if ($i <= count($res_value)) {
-                                        echo '<button type="button" class="btn btn-danger btn-lg input-js-remove" id="'.$res_id.$i.'-btn-del" data-id="'.$res_id.$i.'"><i class="fa fa-minus pull-right"></i></button>';
+                                        echo ' <button type="button" class="btn btn-danger sccp-row-btn input-js-remove" id="'.$res_id.$i.'-btn-del" data-id="'.$res_id.$i.'"><i class="fa fa-minus"></i></button>';
                                     }
                                     // only add plus button to the last row
                                     if ($i == count($res_value)) {
-                                        echo '<button type="button" class="btn btn-primary btn-lg input-js-add" id="'.$res_id.$i.'-btn-add" data-id="'.$res_id.'" data-row="'.$i.'" data-for="'.$res_id.'" data-max="'.$max_row.'"data-json="'.bin2hex(json_encode($opt_at)).'"><i class="fa fa-plus pull-right"></i></button>';
+                                        echo ' <button type="button" class="btn btn-primary sccp-row-btn input-js-add" id="'.$res_id.$i.'-btn-add" data-id="'.$res_id.'" data-row="'.$i.'" data-for="'.$res_id.'" data-max="'.$max_row.'" data-json="'.bin2hex(json_encode($opt_at)).'"><i class="fa fa-plus"></i></button>';
                                     }
                                 }
                                 echo '</div>';
@@ -320,21 +285,14 @@ class formcreate
                                 </div>
                             <?php
                             if (!empty($child->addbutton)) {
-                                echo '<div class = "col-sm-5 '.$res_id.'-gr">';
+                                echo '<div class = "'.$res_id.'-gr">';
                                 echo '<input type="button" id="'.$res_id.'-btn" data-id="'.$res_id.'" data-for="'.$res_id.'" data-max="'.$max_row.'"data-json="'.bin2hex(json_encode($opt_at)).'" class="input-js-add" value="'._($child->addbutton).'" />';
                                 echo '</div>';
                             }
                             ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row"><div class="col-md-12">
-                <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-            </div></div>
-    </div>
         <?php
+        $this->elementCloseRow();
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 
     function addElementIS($child, $fvalues, $sccp_defaults,$npref, $disabledButtons) {
@@ -345,7 +303,6 @@ class formcreate
         $res_n =  (string)$child->name;
         $res_id = $npref.$res_n;
         $res_ext = str_replace($npref,'',$res_n);
-        $usingSysDefaults = true;
         if (!empty($metainfo[$res_n])) {
             if ($child->meta_help == '1' || $child->help == 'Help!') {
                 $child->help = $metaInfo[$res_n];
@@ -357,126 +314,83 @@ class formcreate
         if (!empty($child ->class)) {
             $res_sec_class = (string)$child ->class;
         }
+        // Not !empty() - see addElementIE's identical fix; "0" is a valid
+        // real systemdefault value, not an absent one.
+        $sysDefaultVal = $sccp_defaults[$res_n]['systemdefault'] ?? '';
+        $hasSysDefault = ($sysDefaultVal !== '' && $sysDefaultVal !== null);
+        $curData = $fvalues[$res_n]['data'] ?? '';
+
+        // set res_v according to precedence Default here, value here, supplied value
+        $res_v = '';
+        if (!empty($child->default)) {
+            $res_v = (string)$child->default;
+        }
+        if (!empty($child->value)) {
+             $res_v = (string)$child->value;
+        }
+        if ($curData !== '') {
+            $res_v = $curData;
+        } elseif ($hasSysDefault) {
+            // No site-specific value set and chan-sccp has its own default for
+            // this field - leave nothing pre-selected (see $renderButtons) rather
+            // than defaulting res_v to the XML default/value above, so an
+            // untouched radio group submits nothing and chan-sccp's own default
+            // keeps applying (matches addElementIE's placeholder-input approach).
+            $res_v = '';
+        }
+
+        // Renders the actual radio button set.
+        $renderButtons = function() use ($child, $disabledButtons, $res_id, &$res_v) {
+            $i = 0;
+            $opt_hide = '';
+            if (!empty($child->option_hide)) {
+                $opt_hide = ' class="sccp_button_hide" data-vhide="'.$child->option_hide.'" data-clhide="'.$child->option_hide['class'].'" ';
+            }
+            if (!empty($child->option_show)) {
+                if (empty($opt_hide)) {
+                    $opt_hide =' class="sccp_button_hide" ';
+                }
+                $opt_hide .= ' data-vshow="'.$child->option_show.'" data-clshow="'.$child->option_show['class'].'" ';
+            }
+            foreach ($child->xpath('button') as $value) {
+                $opt_disabled = '';
+                if (in_array($value, $disabledButtons )) {
+                    $opt_disabled = 'disabled';
+                }
+                $val_check = strtolower((string)$value['value']);
+                if ($val_check == strtolower($res_v)) {
+                    $val_check = "checked";
+                } else {
+                    if ($val_check == '' || $val_check == 'none' ) {
+                       if (strtolower($res_v) == 'none' || $res_v == '' )  {
+                          $val_check = "checked";
+                       } else {$val_check = "";}
+                    } else {$val_check = "";}
+                }
+                echo "<input type=radio name= {$res_id} id={$res_id}_{$i} value='{$value['value']}' {$val_check} {$opt_hide} {$opt_disabled}>";
+                echo "<label for= {$res_id}_{$i}>{$value}</label>";
+                $i++;
+            }
+        };
+
+        $this->elementOpen($res_id, _($child->label), $res_sec_class);
+        if ($hasSysDefault) {
+            echo '<div class="sccp-value-flex">';
+        }
         ?>
-        <div class="element-container">
-            <div class="row">
-                <div class="form-group <?php echo $res_sec_class;?>">
-                    <div class="col-md-3 radioset">
-                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label)?></label>
-                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                    </div>
-
-                    <?php
-                    $res_v = '';
-                    // set res_v according to precedence Default here, value here, supplied value
-
-                    if (!empty($child->default)) {
-                        $res_v = (string)$child->default;
-                    }
-                    if (!empty($child->value)) {
-                         $res_v = (string)$child->value;
-                    }
-                    if (!empty($fvalues[$res_n])) {
-                        if (($fvalues[$res_n]['data'] != '') ) {
-                            $res_v = (string)$fvalues[$res_n]['data'];
-                        }
-                    }
-                    if ($sccp_defaults[$res_n]['systemdefault'] != $res_v) {
-                        $usingSysDefaults = false;
-                    }
-                    if (!empty($sccp_defaults[$res_n]['systemdefault'])) {
-                    // There is a system default, so add button to customise or reset
-                    // the closing } is after the code to include the button at line ~438
-
-                    //-- Start include of defaults button --
-                    echo "<div class='col-md-3'>";
-                    // Output current value
-                    echo $res_v;
-                    ?>
-                    </div>
-                    <div class="col-md-4">
-                      <span class="radioset">
-                        <input type="checkbox"
-                            <?php
-                            echo " data-for={$res_id} data-type=radio id=usedefault_{$res_id} ";
-                            if ($usingSysDefaults) {
-                                // Setting a site specific value
-                                echo " class=sccp-edit :checked ";
-                            } else {
-                                // reverting to chan-sccp default values
-                                echo " data-default={$sccp_defaults[$res_n]['systemdefault']} class=sccp-restore ";
-                            }
-                            ?>
-                        >
-                        <label
-                            <?php
-                            echo "for=usedefault_{$res_id} >";
-                            echo ($usingSysDefaults) ? "Customise" : "Use {$this->buttonDefLabel} defaults";
-                            ?>
-                        </label>
-                      </span>
-                    </div>
-                </div>
-            </div>
-        <!--    <div class="row" id="edit_<?php echo $res_id; ?>" style="display: none"> -->
-            <div class="row" id="edit_<?php echo $res_id; ?>" style="display: none">
-                <div class="form-group <?php echo $res_id; ?>">
-                    <div class="col-md-3">
-                        <i><?php echo "Choose new {$this->buttonHelpLabel} value for {$res_n}"; ?></i>
-                    </div>
-                    <!-- Finish include of defaults button -->
-                    <?php
-                    // Close the conditional include of the defaults button opened at line ~385
-                    }
-                    ?>
-
-                    <div class="col-md-9 radioset " data-hide="on">
-
-                      <?php
-                        $i = 0;
-                        $opt_hide = '';
-
-                        if ($usingSysDefaults) {
-                            $res_v = $sccp_defaults[$res_n]['systemdefault'];
-                        }
-                        if (!empty($child->option_hide)) {
-                            $opt_hide = ' class="sccp_button_hide" data-vhide="'.$child->option_hide.'" data-clhide="'.$child->option_hide['class'].'" ';
-                        }
-                        if (!empty($child->option_show)) {
-                            if (empty($opt_hide)) {
-                                $opt_hide =' class="sccp_button_hide" ';
-                            }
-                            $opt_hide .= ' data-vshow="'.$child->option_show.'" data-clshow="'.$child->option_show['class'].'" ';
-                        }
-                        foreach ($child->xpath('button') as $value) {
-                            $opt_disabled = '';
-                            if (in_array($value, $disabledButtons )) {
-                                $opt_disabled = 'disabled';
-                            }
-                            $val_check = strtolower((string)$value[@value]);
-                            if ($val_check == strtolower($res_v)) {
-                                $val_check = "checked";
-                            } else {
-                                if ($val_check == '' || $val_check == 'none' ) {
-                                   if (strtolower($res_v) == 'none' || $res_v == '' )  {
-                                      $val_check = "checked";
-                                   } else {$val_check = "";}
-                                } else {$val_check = "";}
-                            }
-                            echo "<input type=radio name= {$res_id} id=${res_id}_{$i} value='{$value[@value]}' {$val_check} {$opt_hide} {$opt_disabled}>";
-                            echo "<label for= {$res_id}_{$i}>{$value}</label>";
-                            $i++;
-                        }
-                        ?>
-                        </div>
-                    </div>
-                </div>
-            <div class="row"><div class="col-md-12">
-                    <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-            </div></div>
-        </div>
-
+                    <div class="radioset"><?php $renderButtons(); ?></div>
         <?php
+        if ($hasSysDefault) {
+            $sysDefault = $sccp_defaults[$res_n]['systemdefault'] ?? '';
+            echo '<button type="button" class="btn btn-default sccp-reset-radio-default" data-for="'.$res_id.'" data-default="'.htmlspecialchars($sysDefault, ENT_QUOTES).'">'.sprintf(_('Use %s defaults'), $this->buttonDefLabel).'</button>';
+            if ($curData === '') {
+                echo ' <small class="text-muted">('.htmlspecialchars($sysDefault, ENT_QUOTES).')</small>';
+            }
+            echo '</div>';
+        }
+        $this->elementCloseRow();
+
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 
     function addElementSL($child, $fvalues, $sccp_defaults,$npref, $installedLangs) {
@@ -579,15 +493,8 @@ class formcreate
                 $child->value = $child->default;
             }
         }
+        $this->elementOpen($res_id, _($child->label));
         ?>
-        <div class="element-container">
-            <div class="row">
-                <div class="form-group">
-                    <div class="col-md-3">
-                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label);?></label>
-                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                    </div>
-                    <div class="col-md-9">
                         <div class = "lnet form-group form-inline" data-nextid=1>
                             <?php
                             echo  '<select name="'.$res_id.'" class="'. $child->class . '" id="' . $res_id . '">';
@@ -604,25 +511,18 @@ class formcreate
                                     $opt_key = $val;
                                     $opt_val = $val;
                                 }
-                                echo '<option value="' . $opt_key . '"';
+                                echo '<option value="' . htmlspecialchars($opt_key, ENT_QUOTES) . '"';
                                 if ($opt_key == $child->value) {
                                     echo ' selected="selected"';
                                 }
-                                echo "> {$opt_val} </option>";
+                                echo "> " . htmlspecialchars($opt_val, ENT_QUOTES) . " </option>";
                             }
                             ?>
                             </select>
                         </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-                </div>
-            </div>
-        </div>
         <?php
+        $this->elementCloseRow();
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 
     function addElementSLNA($child, $fvalues, $sccp_defaults,$npref, $installedLangs) {
@@ -645,7 +545,7 @@ class formcreate
                 if (!empty($installedLangs['languages']['have'])) {
                     $select_opt = $installedLangs['languages']['have'];
                 }
-                $selectArray = $installedLangs['languages']['available'];
+                $selectArray = $installedLangs['languages']['available'] ?? array();
                 $requestType = 'locale';
                 break;
 
@@ -654,7 +554,7 @@ class formcreate
                 if (!empty($installedLangs['countries']['have'])) {
                     $select_opt = $installedLangs['countries']['have'];
                 }
-                $selectArray = $installedLangs['countries']['available'];
+                $selectArray = $installedLangs['countries']['available'] ?? array();
                 $requestType = 'country';
               break;
         }
@@ -674,50 +574,36 @@ class formcreate
             }
         }
 
-        ?>
-        <div class="element-container">
-            <div class="row">
-                <div class="form-group">
-                    <?php
-                    include($amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/views/getFileModal.html');
-                    ?>
+        include($amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/views/getFileModal.html');
 
-                    <div class="col-md-3">
-                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label);?></label>
-                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                    </div>
-                    <div class="col-md-3">
+        $this->elementOpen($res_id, _($child->label));
+        ?>
+                    <div class="row">
+                    <div class="col-sm-3">
                         <div class = "lnet form-group form-inline" data-nextid=1>
                             <?php
                             echo  '<select name="'.$res_id.'" class="'. $child->class . '" id="' . $res_id . '">';
                             foreach ($select_opt as $key => $val) {
                                     $opt_key = $key;
                                     $opt_val = $val;
-                                echo '<option value="' . $opt_val . '"';
+                                echo '<option value="' . htmlspecialchars($opt_val, ENT_QUOTES) . '"';
                                 if ($opt_val == $child->value) {
                                     echo ' selected="selected"';
                                 }
-                                echo "> {$opt_val} </option>";
+                                echo "> " . htmlspecialchars($opt_val, ENT_QUOTES) . " </option>";
                             }
                             ?>
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-sm-4">
                       <button type="button" class="btn btn-primary btn-lg" id="<?php echo $requestType;?>" data-toggle="modal" data-target=".get_ext_file_<?php echo $requestType;?>"><i class="fa fa-bolt"></i> <?php echo _("Get $requestType from Provisioner");?>
                       </button>
                     </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-                </div>
-            </div>
-        </div>
-
+                    </div>
         <?php
-
+        $this->elementCloseRow();
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 
     function addElementSD($child, $fvalues, $sccp_defaults,$npref) {
@@ -754,12 +640,12 @@ class formcreate
                 foreach ($assignedExts as $name => $nameArr ) {
                       $select_opt[$name]['label'] .= " -  in use";
                 }
-                $child->default = $fvalues['defaultLine'];
+                $child->default = $fvalues['defaultLine'] ?? '';
                 break;
             case 'SDMF':
                 // Sip extensions
                 $select_opt = \FreePBX::Sccp_manager()->dbinterface->getSipTableData('extensionList');
-                $child->default = $fvalues['defaultLine'];
+                $child->default = $fvalues['defaultLine'] ?? '';
                 break;
             case 'SDE':
                 $extension_list = \FreePBX::Sccp_manager()->dbinterface->getDb_model_info('extension', 'model');
@@ -781,14 +667,9 @@ class formcreate
                 $select_opt = $device_list;
                 break;
         }
+        $this->elementOpen($res_id, _($child->label));
         ?>
-        <div class="element-container">
-           <div class="row"> <div class="form-group">
-                   <div class="col-md-3">
-                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label);?></label>
-                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                    </div>
-                    <div class="col-md-9"><div class = "lnet form-group form-inline" data-nextid=1> <?php
+                    <div class = "lnet form-group form-inline" data-nextid=1> <?php
                             echo  '<select name="'.$res_id.'" class="'. $child->class . '" id="' . $res_id . '"';
                     if (isset($child->options)) {
                         foreach ($child->options->attributes() as $optkey => $optval) {
@@ -810,19 +691,19 @@ class formcreate
                         }
                     }
                     foreach ($select_opt as $data) {
-                        echo '<option value="' . $data[$fld] . '"';
-                        if ($key == $data[$fld]) {
+                        echo '<option value="' . htmlspecialchars($data[$fld] ?? '', ENT_QUOTES) . '"';
+                        if ($key == ($data[$fld] ?? '')) {
                             echo ' selected="selected"';
                         }
                         if (!empty($flk)) {
-                            echo ' data-id="'.$data[$flk].'"';
+                            echo ' data-id="'.htmlspecialchars($data[$flk] ?? '', ENT_QUOTES).'"';
                         }
                         if (!empty($flkv)) {
-                            echo ' data-val="'.$data[$flkv].'"';
+                            echo ' data-val="'.htmlspecialchars($data[$flkv] ?? '', ENT_QUOTES).'"';
                         }
-                        echo '>' . $data[$flv];
+                        echo '>' . htmlspecialchars($data[$flv] ?? '', ENT_QUOTES);
                         if (!empty($flv2)) {
-                            echo ' / '.$data[$flv2];
+                            echo ' / '.htmlspecialchars($data[$flv2] ?? '', ENT_QUOTES);
                         }
                         echo '</option>';
                     }
@@ -830,14 +711,9 @@ class formcreate
                     ?>
                     </select>
                     </div>
-                  </div>
-                </div>
-            </div>
-            <div class="row"><div class="col-md-12">
-                <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-            </div></div>
-        </div>
         <?php
+        $this->elementCloseRow();
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 
     function addElementITED($child, $fvalues, $sccp_defaults, $npref, $napref) {
@@ -893,13 +769,13 @@ class formcreate
                 $res_opt['inp_end'] = '<span class="input-group-addon" id="bases_'.$res_n.'">'.$opt_at[$fields_id]['display_sufix'].'</span></div>';
                 switch ($value['type']) {
                     case 'date':
-                        echo $res_opt['inp_st'].'<input type="date" name="'. $res_n.'" value="'.$res_vf[$i2].'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
+                        echo $res_opt['inp_st'].'<input type="date" name="'. $res_n.'" value="'.($res_vf[$i2] ?? '').'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
                         break;
                     case 'number':
-                        echo $res_opt['inp_st'].'<input type="number" name="'. $res_n.'" value="'.$res_vf[$i2].'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
+                        echo $res_opt['inp_st'].'<input type="number" name="'. $res_n.'" value="'.($res_vf[$i2] ?? '').'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
                         break;
                     case 'input':
-                        echo $res_opt['inp_st'].'<input type="text" name="'. $res_n.'" value="'.$res_vf[$i2].'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
+                        echo $res_opt['inp_st'].'<input type="text" name="'. $res_n.'" value="'.($res_vf[$i2] ?? '').'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
                         break;
                     case 'title':
                         if ($i > 0) {
@@ -915,7 +791,7 @@ class formcreate
                         foreach ($value->xpath('data') as $optselect) {
                             $opt_at[$fields_id]['data'].= (string)$optselect.';';
                             echo '<option value="' . $optselect. '"';
-                            if (strtolower((string)$optselect) == strtolower((string)$res_vf[$i2])) {
+                            if (strtolower((string)$optselect) == strtolower((string)($res_vf[$i2] ?? ''))) {
                                 echo ' selected="selected"';
                             }
                             echo '>' . (string)$optselect. '</option>';
@@ -1003,25 +879,10 @@ class formcreate
         }
 
         $child->value = \date_default_timezone_get();
-        ?>
-        <div class="element-container">
-           <div class="row">
-              <div class="form-group">
-                  <div class="col-md-3">
-                        <label class="control-label" for="<?php echo $res_id; ?>"><?php echo _($child->label);?></label>
-                        <i class="fa fa-question-circle fpbx-help-icon" data-for="<?php echo $res_id; ?>"></i>
-                  </div>
-                  <div class="col-md-9"> <?php
-                      echo  $child->value;
-                  ?>
-                  </div>
-                </div>
-            </div>
-            <div class="row"><div class="col-md-12">
-                <span id="<?php echo $res_id;?>-help" class="help-block fpbx-help-block"><?php echo _($child->help);?></span>
-            </div></div>
-        </div>
-        <?php
+        $this->elementOpen($res_id, _($child->label));
+        echo $child->value;
+        $this->elementCloseRow();
+        $this->elementHelpAndClose($res_id, _($child->help));
     }
 }
 
