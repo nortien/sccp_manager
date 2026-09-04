@@ -1,11 +1,11 @@
 https://www.cisco.com/c/en/us/td/docs/voice_ip_comm/cata/186_188/2_15_ms/english/administration/guide/sccp/sccp/sccpaape.html
 
-Для работы Cisco ATA-186, 188
-обновление прошивки 
+Р”Р»СЏ СЂР°Р±РѕС‚С‹ Cisco ATA-186, 188
+РѕР±РЅРѕРІР»РµРЅРёРµ РїСЂРѕС€РёРІРєРё 
 --- linux 
 /sata186us.linux -any -d3 ATA030204SCCP090202A.zup
 
-Для работы Cisco ATA-186, 188  может потребоваться файл atadefault.cfg
+Р”Р»СЏ СЂР°Р±РѕС‚С‹ Cisco ATA-186, 188  РјРѕР¶РµС‚ РїРѕС‚СЂРµР±РѕРІР°С‚СЊСЃСЏ С„Р°Р№Р» atadefault.cfg
 ---------- Config 
 cfgfmt.linux atadefault.txt atadefault.cfg 
 
