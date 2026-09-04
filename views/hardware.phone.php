@@ -31,7 +31,7 @@
                         <i class="glyphicon glyphicon-ok"></i> <span><?php echo _('Reset Token Device') ?></span>
                     </button>
                 </div>
-                <table data-cookie="true" data-cookie-id-table="sccp-phone" data-url="ajax.php?module=sccp_manager&command=getPhoneGrid&type=sccp"
+                <table data-escape="true" data-cookie="true" data-cookie-id-table="sccp-phone" data-url="ajax.php?module=sccp_manager&command=getPhoneGrid&type=sccp"
                             data-cache="false" data-show-refresh="true" data-toolbar="#toolbar-sccp" data-maintain-selected="true"
                             data-show-columns="true" data-show-toggle="true" data-toggle="table" data-pagination="true"
                             data-search="true" class="table table-striped ext-list" id="table-sccp" data-id="name">
@@ -55,13 +55,13 @@
 
 <script>
     function DispayTypeFormatter(value, row, index) {
-        var exp_model = value;
+        var exp_model = sccpEscapeHtml(value);
         if (row['addon'] !== null ) {
             var posd = row['addon'].indexOf(';');
             if (posd >0) {
-                exp_model += ' + 2x ' + row['addon'].substring(0, posd);
+                exp_model += ' + 2x ' + sccpEscapeHtml(row['addon'].substring(0, posd));
             } else {
-                exp_model += ' + ' + row['addon'];
+                exp_model += ' + ' + sccpEscapeHtml(row['addon']);
             }
         }
         return  exp_model;
@@ -69,16 +69,18 @@
     }
     function DispayDeviceActionsKeyFormatter(value, row, index) {
         var exp_model = '';
+        var name = encodeURIComponent(row['name']);
+        var type = encodeURIComponent(row['type']);
         if (row['new_hw'] == "Y") {
-            exp_model += '<a href="?display=sccp_phone&tech_hardware=cisco&new_id=' + row['name'] + '&type='+ row['type'];
+            exp_model += '<a href="?display=sccp_phone&tech_hardware=cisco&new_id=' + name + '&type='+ type;
             if (row['addon'] !== null ) {
-                exp_model += '&addon='+ row['addon'];
+                exp_model += '&addon='+ encodeURIComponent(row['addon']);
             }
             exp_model += '"><i class="fa fa-pencil"></i></a> &nbsp; &nbsp;\n';
 
         } else {
-            exp_model += '<a href="?display=sccp_phone&tech_hardware=cisco&id=' + row['name'] + '"><i class="fa fa-pencil"></i></a> &nbsp; &nbsp;\n';
-            exp_model += '</a> &nbsp;<a class="btn-item-delete" data-for="hardware" data-id="' + row['name'] + '"><i class="fa fa-trash"></i></a>';
+            exp_model += '<a href="?display=sccp_phone&tech_hardware=cisco&id=' + name + '"><i class="fa fa-pencil"></i></a> &nbsp; &nbsp;\n';
+            exp_model += '</a> &nbsp;<a class="btn-item-delete" data-for="hardware" data-id="' + sccpEscapeHtml(row['name']) + '"><i class="fa fa-trash"></i></a>';
         }
         return  exp_model;
     }

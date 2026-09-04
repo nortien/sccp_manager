@@ -9,6 +9,7 @@
 
 namespace FreePBX\modules\Sccp_manager;
 
+#[\AllowDynamicProperties]
 class dbinterface
 {
 
@@ -101,11 +102,11 @@ class dbinterface
                 } elseif (!empty($data['type'])) {
                     switch ($data['type']) {
                         case "cisco-sip":
-                            $stmts = $this->db->prepare("SELECT {$fld} FROM sccpdeviceconfig WHERE TYPE LIKE '%-sip' ORDER BY name");
+                            $stmts = $this->db->prepare("SELECT {$fld} FROM sccpdeviceconfig WHERE type LIKE '%-sip' ORDER BY name");
                             break;
                         case "cisco":      // Fall through to default intentionally
                         default:
-                            $stmts = $this->db->prepare("SELECT {$fld} FROM sccpdeviceconfig WHERE TYPE not LIKE '%-sip' ORDER BY name");
+                            $stmts = $this->db->prepare("SELECT {$fld} FROM sccpdeviceconfig WHERE type not LIKE '%-sip' ORDER BY name");
                             break;
                     }
                 } else {      //no filter and no name provided - return all
@@ -137,7 +138,8 @@ class dbinterface
                 $stmtU = $this->db->prepare("SELECT DISTINCT name, name FROM sccpbuttonconfig WHERE buttontype = 'line' AND instance =1");
                 break;
             case 'getDefaultLine':
-                $stmt = $this->db->prepare("SELECT name FROM sccpbuttonconfig WHERE ref = '{$data['id']}' and instance =1 and buttontype = 'line'");
+                $stmt = $this->db->prepare("SELECT name FROM sccpbuttonconfig WHERE ref = :ref and instance =1 and buttontype = 'line'");
+                $stmt->bindParam(':ref', $data['id'],\PDO::PARAM_STR);
                 break;
             case 'get_sccpdevice_buttons':
                 $sql = '';
@@ -281,36 +283,49 @@ class dbinterface
             case 'sccpdevmodel':    // Fall through to next intentionally
             case 'sccpdevice':      // Fall through to next intentionally
             case 'sccpuser':
+                // Values are bound, never concatenated: they are user input (device
+                // description, permit/deny, etc.) and a quote in one of them would
+                // otherwise break out of the literal. Column names come from the
+                // module's own field mapping, so they stay as identifiers.
                 $sql_key = "";
                 $sql_var = "";
+                $valueParams = array();
+                $whereParam = array();
+                $i = 0;
                 foreach ($save_value as $key_v => $data) {
                     if (!empty($sql_var)) {
                         $sql_var .= ', ';
                     }
                     if ($data === $this->val_null) {
-                        $sql_var .= $key_v . '= NULL';
+                        $sql_var .= $key_v . ' = NULL';
                     } else {
-                        $sql_var .= $key_v . ' = \'' . $data . '\''; //quote data as normally is string
+                        $ph = ':v' . $i;
+                        $sql_var .= $key_v . ' = ' . $ph;
+                        $valueParams[$ph] = $data;
                     }
                     if ($key_v === $key_fld) {
-                        $sql_key = $key_v . ' = \'' . $data . '\'';  //quote data as normally is string
+                        $sql_key = $key_v . ' = :wkey';
+                        $whereParam[':wkey'] = $data;
                     }
+                    $i++;
                 }
                 if (!empty($sql_var)) {
                     switch ($mode) {
                         case 'delete':
                             $stmt = $this->db->prepare("DELETE FROM {$table_name} WHERE {$sql_key}");
+                            $result = $stmt->execute($whereParam);
                             break;
                         case 'update':
                             $stmt = $this->db->prepare("UPDATE {$table_name} SET {$sql_var} WHERE {$sql_key}");
+                            $result = $stmt->execute($valueParams + $whereParam);
                             break;
                         case 'replace':
                             $stmt = $this->db->prepare("REPLACE INTO {$table_name} SET {$sql_var}");
+                            $result = $stmt->execute($valueParams);
                             break;
                         // no default mode - must be explicit.
                     }
                 }
-                $result = $stmt->execute();
                 break;
             case 'sccpbuttons':
                 switch ($mode) {
@@ -361,8 +376,8 @@ class dbinterface
         $tech = array();
         switch ($dataid) {
             case "DeviceById":
-                // TODO: This needs to be rewritten
-                $stmt = $this->db->prepare("SELECT keyword,data FROM sip WHERE id = '${line}'");
+                $stmt = $this->db->prepare("SELECT keyword,data FROM sip WHERE id = :id");
+                $stmt->bindParam(':id', $line, \PDO::PARAM_STR);
                 $stmt->execute();
                 $tech = $stmt->fetchAll(\PDO::FETCH_COLUMN | \PDO::FETCH_GROUP);
                 foreach ($tech as &$value) {
@@ -393,7 +408,22 @@ class dbinterface
     public function dump_sccp_tables($data_path, $database, $user, $pass)
     {
         $filename = $data_path.'/sccp_backup_'.date('G_a_m_d_y').'.sql';
-        $result = exec('mysqldump '.$database.' --password='.$pass.' --user='.$user.' --single-transaction >'.$filename, $output);
+        // Credentials go in a 0600 defaults-extra-file, not on the command line where
+        // they are readable via `ps` while the dump runs. Same hardening as uninstall.php.
+        $credFile = tempnam(sys_get_temp_dir(), 'sccpdump_');
+        file_put_contents($credFile, "[client]\nuser=".$user."\npassword=".$pass."\n");
+        chmod($credFile, 0600);
+        $cmd = 'mysqldump --defaults-extra-file='.escapeshellarg($credFile)
+             .' --single-transaction '.escapeshellarg($database)
+             .' > '.escapeshellarg($filename).' 2>'.escapeshellarg($filename.'.err');
+        exec($cmd, $output, $return_var);
+        unlink($credFile);
+        if ($return_var !== 0 || !file_exists($filename) || filesize($filename) === 0) {
+            @unlink($filename);
+            @unlink($filename.'.err');
+            return false;
+        }
+        @unlink($filename.'.err');
         return $filename;
     }
 

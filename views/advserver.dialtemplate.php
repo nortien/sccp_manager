@@ -17,7 +17,7 @@
                         <i class="glyphicon glyphicon-remove"></i> <span><?php echo _('Delete') ?></span>
                     </button>
                 </div>
-                <table data-cookie="true" data-cookie-id-table="sccp-dialtemplate-table" data-url="ajax.php?module=sccp_manager&command=getDialTemplate" data-cache="false" data-show-refresh="true" data-toolbar="#toolbar-dialtemplate" data-maintain-selected="true" data-show-columns="true" data-show-toggle="true" data-toggle="table" data-pagination="true" data-search="true" class="table table-striped ext-list-sccp" id="table-sccp-dialtemplate" data-id="id">
+                <table data-escape="true" data-cookie="true" data-cookie-id-table="sccp-dialtemplate-table" data-url="ajax.php?module=sccp_manager&command=getDialTemplate" data-cache="false" data-show-refresh="true" data-toolbar="#toolbar-dialtemplate" data-maintain-selected="true" data-show-columns="true" data-show-toggle="true" data-toggle="table" data-pagination="true" data-search="true" class="table table-striped ext-list-sccp" id="table-sccp-dialtemplate" data-id="id">
                     <thead>
                         <tr>
 <!--                            <th data-checkbox="true"></th> -->
