@@ -76,7 +76,7 @@ and open the template in the editor. Base Version before all crash :-)
             <label>SCCP Server Name</label>
             <input>
                 <name>servername</name>
-                <default>Asterisk XML</default>
+                <default></default>
             </input>
             <help>Servername: This is the name of the server; normally it will be Asterisk.</help>
         </item>
@@ -347,7 +347,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="10">
             <name>private</name>
             <label>Private Calling</label>
-            <default>on</default>
+            <default>yes</default>
             <button value="yes">Yes</button>
             <button value="no">No</button>
             <help>Private Calling Enabled: Place a call with privacy Options (no Caller ID) turned on. Needs to be supported in Asterisk to work through SIP and DAHDI trunks.</help>
@@ -432,7 +432,7 @@ and open the template in the editor. Base Version before all crash :-)
             <item type="IS" id="2" seq="0">
             <name>cfwdall</name>
             <label>Call Forward</label>
-            <default>off</default>
+            <default>no</default>
             <button value="yes">Yes</button>
             <button value="no">No</button>
             <help>Activate the callforward softkeys. Default is On</help>
@@ -440,7 +440,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="3" seq="0">
             <name>cfwdbusy</name>
             <label>Call Forward busy</label>
-            <default>off</default>
+            <default>no</default>
             <button value="yes">Yes</button>Call Forward
             <button value="no">No</button>
             <help>Activate the callforward busy softkeys. Default is On</help>
@@ -448,7 +448,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="3" seq="0">
             <name>cfwdnoanswer</name>
             <label>Call Forward NOANSWER</label>
-            <default>off</default>
+            <default>no</default>
             <button value="yes">Yes</button>
             <button value="no">No</button>
             <help>Activate the callforward NOANSWER stuff and softkeys. Default is On</help>
@@ -980,7 +980,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="1">
             <name>hotline_enabled</name>
             <label>Hotline</label>
-            <default>"no"</default>
+            <default>no</default>
             <button value="no">No</button>
             <button value="yes">Yes</button>
             <help>Hotline Enabled: This allows unregistered extensions to connect to the system and dial the number listed below.</help>
@@ -1057,7 +1057,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="11">
             <name>pickup_modeanswer</name>
             <label>Directed Pickup Answer</label>
-            <default>off</default>
+            <default>no</default>
             <button value="yes">Yes</button>
             <button value="no">No</button>
             <help>Directed Pickup Mode (Answer): If a call is sent with the "directed pickup" flag, the phone will answer when set to "Yes".</help>
@@ -1065,7 +1065,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="11">
             <name>directed_pickup</name>
             <label>Directed Pickup</label>
-            <default>off</default>
+            <default>no</default>
             <button value="yes">Yes</button>
             <button value="no">No</button>
             <help>Enable/disable Pickup button to do directed pickup from a specific extension.</help>
@@ -1073,7 +1073,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="12">
             <name>transfer_on_hangup</name>
             <label>Transfer on hangup</label>
-            <default>off</default>
+            <default>no</default>
             <button value="yes">Yes</button>
             <button value="no">No</button>
             <help>Complete transfer on hangup, without pressing transfer a second time. Will complete transfer, when the transferer puts the receiver on hook, after the destination has been reached. To cancel the transfer, either press resume on the transferred channel, press the 'endcall' softkey, or have the receiving party hangup first.</help>
@@ -1123,7 +1123,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="11" seq="98">
             <name>backgroundImageAccess</name>
             <label>Allow change Background Image</label>
-            <default>true</default>
+            <default>on</default>
             <button value="on">Enabled</button>
             <button value="off">Disabled</button>
             <help>I'm guessing on this one, but on some devices, the background image on the display can be modified at the device. I think this is the thing that allows that to happen.</help>
@@ -1481,7 +1481,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="1" seq="99">
             <name>transfer</name>
             <label>Transfer</label>
-            <default>off</default>
+            <default>no</default>
             <button value="yes">Yes</button>
             <button value="no">No</button>
             <help>Transfer allowed</help>
@@ -1489,15 +1489,15 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="1" seq="99">
             <name>park</name>
             <label>Park</label>
-            <default>on</default>
-            <button value="on">On</button>
-            <button value="off">Off</button>
+            <default>yes</default>
+            <button value="yes">On</button>
+            <button value="no">Off</button>
             <help>Take a look to the compile how-to. Park stuff is not compiled by default.</help>
         </item>
         <item type="IS" id="2" seq="99">
             <name>cfwdall</name>
             <label>Call Forward</label>
-            <default>off</default>
+            <default>no</default>
             <button value="yes">Yes</button>
             <button value="No">No</button>
             <help>Activate the callforward softkeys. Default is On</help>
@@ -1505,7 +1505,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="3" seq="99">
             <name>cfwdbusy</name>
             <label>Call Forward busy</label>
-            <default>off</default>
+            <default>no</default>
             <button value="yes">Yes</button>
             <button value="no">No</button>
             <help>Activate the callforward busy softkeys. Default is On</help>
@@ -1513,7 +1513,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="3" seq="0">
             <name>cfwdnoanswer</name>
             <label>Call Forward NOANSWER</label>
-            <default>on</default>
+            <default>yes</default>
             <button value="yes">Yes</button>
             <button value="no">No</button>
             <help>Activate the callforward NOANSWER stuff and softkeys. Default is On</help>
@@ -1529,10 +1529,10 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="1" seq="99">
             <name>conf_allow</name>
             <label>Conference</label>
-            <default>on</default>
-            <option_hide class=".conf_hide">off</option_hide>
-            <button value="on">On</button>
-            <button value="off">Off</button>
+            <default>yes</default>
+            <option_hide class=".conf_hide">no</option_hide>
+            <button value="yes">On</button>
+            <button value="no">Off</button>
             <help>Allow the use of conference</help>
         </item>
     </page_group>
@@ -1542,7 +1542,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="4" seq="99">
             <name>useRedialMenu</name>
             <label>Redial using Phonebook</label>
-            <default>off</default>
+            <default>no</default>
             <button value="yes">On</button>
             <button value="no">Off</button>
             <help>You can specifying 'useRedialMenu = yes' in the sccp.conf device section and the redial softkey will cause the "placed calls" list instead of immediately calling the last dialed number.</help>
@@ -1559,9 +1559,9 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="14">
             <name>mwioncall</name>
             <label>Message Lamp On Call</label>
-            <default>on</default>
-            <button value="on">Yes</button>
-            <button value="off">No</button>
+            <default>no</default>
+            <button value="yes">Yes</button>
+            <button value="no">No</button>
             <help>Set the MWI on call.</help>
         </item>
 
@@ -1594,33 +1594,33 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="2" seq="99">
             <name>conf_play_general_announce</name>
             <label>Playback Conference Announcements</label>
-            <default>on</default>
-            <button value="on">Yes</button>
-            <button value="off">No</button>
+            <default>yes</default>
+            <button value="yes">Yes</button>
+            <button value="no">No</button>
             <help>Playback General Announcements (like: 'You are Entering/Leaving the conference')</help>
         </item>
         <item type="IS" id="3" seq="99">
             <name>conf_play_part_announce</name>
             <label>Playback Participant Announcements</label>
-            <default>on</default>
-            <button value="on">Yes</button>
-            <button value="off">No</button>
+            <default>yes</default>
+            <button value="yes">Yes</button>
+            <button value="no">No</button>
             <help>Playback Personal/Participant Announcements, (like: 'You have been muted / You have been kicked')</help>
         </item>
         <item type="IS" id="4" seq="99">
             <name>conf_mute_on_entry</name>
             <label>Start Muted</label>
-            <default>off</default>
-            <button value="on">Yes</button>
-            <button value="off">No</button>
+            <default>no</default>
+            <button value="yes">Yes</button>
+            <button value="no">No</button>
             <help>Mute new participants from the start</help>
         </item>
         <item type="IS" id="5" seq="99">
             <name>conf_show_conflist</name>
             <label>Show conference list</label>
-            <default>on</default>
-            <button value="on">Yes</button>
-            <button value="off">No</button>
+            <default>yes</default>
+            <button value="yes">Yes</button>
+            <button value="no">No</button>
             <help>Automatically show conference list to the moderator</help>
         </item>
         <item type="SLM" id="6" seq="99">
@@ -2110,7 +2110,7 @@ and open the template in the editor. Base Version before all crash :-)
         <item type="IS" id="11">
             <name>pickup_modeanswer</name>
             <label>Directed Pickup Answer</label>
-            <default>off</default>
+            <default>no</default>
             <button value="yes">Yes</button>
             <button value="no">No</button>
             <help>Directed Pickup Mode (Answer): If a call is sent with the "directed pickup" flag, the phone will answer when set to "Yes".</help>
