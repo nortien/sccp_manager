@@ -156,9 +156,7 @@ abstract class Message
                     if (!isset($value) || $value === null || strlen($value) == 0) {
                         return '';
                     }
-                    if (filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)) {
-                        return (boolean) $value;
-                    } elseif (filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_NULL_ON_FAILURE)) {
+                    if (filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_NULL_ON_FAILURE)) {
                         return (string) htmlspecialchars($value, ENT_QUOTES);
                     } else {
                         throw new AMIException("Incoming String is not sanitary. Skipping: '" . $value . "'\n");
@@ -168,8 +166,11 @@ abstract class Message
                     if (!isset($value) || $value === null || strlen($value) == 0) {
                         return 0;
                     }
-                    if (filter_var($value, FILTER_VALIDATE_INT, FILTER_FLAG_ALLOW_HEX | FILTER_FLAG_ALLOW_OCTAL)) {
-                        return intval($value, 0);
+                    $asInt = filter_var($value, FILTER_VALIDATE_INT);
+                    if ($asInt !== false) {
+                        // no ALLOW_OCTAL: a leading zero in AMI data is part of the value, not a
+                        // base marker - and comparing against false keeps a legitimate 0
+                        return $asInt;
                     } elseif (filter_var($value, FILTER_VALIDATE_FLOAT, FILTER_FLAG_ALLOW_FRACTION | FILTER_FLAG_ALLOW_THOUSAND | FILTER_FLAG_ALLOW_SCIENTIFIC)) {
                         return (float) $value;
                     } else {
@@ -187,19 +188,25 @@ abstract class Message
         return $message . self::EOL . self::EOL;
     }
 
+    /* Strip CR/LF so a field value cannot smuggle extra AMI headers/actions onto the wire */
+    private function stripCrlf($value)
+    {
+        return str_replace(array("\r", "\n"), '', (string) $value);
+    }
+
     public function serialize()
     {
         $result = array();
         foreach ($this->getKeys() as $k => $v) {
-            $result[] = $k . ': ' . $v;
+            $result[] = $this->stripCrlf($k) . ': ' . $this->stripCrlf($v);
         }
         foreach ($this->getVariables() as $k => $v) {
             if (is_array($v)) {
                 foreach ($v as $singleValue) {
-                    $result[] = $this->serializeVariable($k, $singleValue);
+                    $result[] = $this->serializeVariable($this->stripCrlf($k), $this->stripCrlf($singleValue));
                 }
             } else {
-                $result[] = $this->serializeVariable($k, $v);
+                $result[] = $this->serializeVariable($this->stripCrlf($k), $this->stripCrlf($v));
             }
         }
         $mStr = $this->finishMessage(implode(self::EOL, $result));

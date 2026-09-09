@@ -121,6 +121,20 @@ class Login_Response extends Generic_Response
 #[\AllowDynamicProperties]
 class Command_Response extends Generic_Response
 {
+    /**
+     * Collect one chunk of command output. Asterisk sends a separate 'Output:' header for every
+     * line, so these have to accumulate: assigning kept only the last line of the command.
+     */
+    private function appendOutput($text)
+    {
+        if (!isset($this->_temptable['Output']) || !is_array($this->_temptable['Output'])) {
+            $this->_temptable['Output'] = array();
+        }
+        foreach (explode(PHP_EOL, str_replace(PHP_EOL . '--END COMMAND--', '', $text)) as $outLine) {
+            $this->_temptable['Output'][] = $outLine;
+        }
+    }
+
     private $_temptable;
     public function __construct($rawContent)
     {
@@ -142,10 +156,10 @@ class Command_Response extends Generic_Response
                         break;
                     case 'output':
                         // included for backward compatibility with earlier versions of chan_sccp_b. AMI api does not precede command output with Output
-                        $this->_temptable['Output'] = explode(PHP_EOL,str_replace(PHP_EOL.'--END COMMAND--', '',trim($content[1] ?? '')));
+                        $this->appendOutput(trim($content[1] ?? ''));
                         break;
                     default:
-                        $this->_temptable['Output'] = explode(PHP_EOL,str_replace(PHP_EOL.'--END COMMAND--', '', trim($line)));
+                        $this->appendOutput(trim($line));
                         break;
                 }
             }
@@ -170,9 +184,17 @@ class SCCPJSON_Response extends Generic_Response
     }
     public function getResult()
     {
-        if (($json = json_decode((string) ($this->getKey('JSONRAW') ?? ''), true)) != false) {
-            return $json;
+        // chan-sccp builds this JSON by hand, so a malformed payload is a real possibility;
+        // returning null implicitly left callers to walk a non-array. Report an empty result
+        // and log why instead.
+        $json = json_decode((string) ($this->getKey('JSONRAW') ?? ''), true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($json)) {
+            if (function_exists('freepbx_log')) {
+                freepbx_log(FPBX_LOG_WARNING, 'sccp_manager: could not decode the driver JSON response: ' . json_last_error_msg());
+            }
+            return array();
         }
+        return $json;
     }
 }
 
@@ -235,10 +257,12 @@ class SCCPGeneric_Response extends Response
                 $this->_temptable = array();
                 $thisSetEventEntryType = 'undefinedAsThisIsNotASet';
 
-                // Finished the table. Now check to see if everything was received
-                // If counts do not match return false and table will not be
-                //loaded
+                // Finished the table. Now check to see if everything was received.
+                // The table was stored a few lines up, so a short read has to be taken back
+                // out again - otherwise a truncated table was loaded regardless, which is the
+                // opposite of what this check is for.
                 if ($event->getKey('TableEntries') != count($this->_tables[$event->getTableName()]['Entries'])) {
+                    unset($this->_tables[$event->getTableName()]);
                     return false;
                 }
                 break;
@@ -390,7 +414,11 @@ class SCCPShowDevice_Response extends SCCPGeneric_Response
         $result = array();
 
         foreach ($this->_events as $trow) {
-                $result = array_merge($result, $trow->getKeys());
+                $trowKeys = $trow->getKeys();
+                if (!is_array($trowKeys)) {
+                    continue;               // an unparsed/unknown event carries no keys at all
+                }
+                $result = array_merge($result, $trowKeys);
         }
         // Now handle label changes so that keys from AMI correspond to db keys in _tables
         $result['Buttons'] = $this->ConvertTableData(

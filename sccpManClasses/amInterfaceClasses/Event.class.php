@@ -36,6 +36,10 @@ class UnknownEvent extends Event
 {
     public function __construct($rawContent = '')
     {
+        // must initialise like any other event: without the parent call this object has no
+        // keys, lines or raw content, and it still ends up in the events list where callers
+        // merge getKeys() - which then hands them a null
+        parent::__construct($rawContent);
     }
 }
 
@@ -110,7 +114,7 @@ class SCCPShowDevice_Event extends Event
     {
         // TODO unused method - to be deleted?
         $ret = array();
-        $codecs = explode(';', substr($this->getKey('Capabilities'), 1, -1));
+        $codecs = explode(';', substr((string) $this->getKey('AudioCapabilities'), 1, -1));
         foreach ($codecs as $codec) {
             $codec_parts = explode(" ", $codec);
             $ret[] = array("name" => $codec_parts[0], "value" => substr($codec_parts[1], 1, -1));
@@ -122,7 +126,7 @@ class SCCPShowDevice_Event extends Event
     {
         // TODO unused method - to be deleted?
         $ret = array();
-        $codecs = explode(';', substr($this->getKey('CodecsPreference'), 1, -1));
+        $codecs = explode(';', substr((string) $this->getKey('AudioPreferences'), 1, -1));
         foreach ($codecs as $codec) {
             $codec_parts = explode(" ", $codec);
             $ret[] = array("name" => $codec_parts[0], "value" => substr($codec_parts[1], 1, -1));

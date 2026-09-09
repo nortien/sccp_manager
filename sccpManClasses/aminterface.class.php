@@ -135,7 +135,11 @@ class aminterface
         }
         $msg = new aminterface\LoginAction($this->_config['user'], $this->_config['pass']);
         $response = $this->send($msg);
-
+        if ($response == false) {
+            // no answer at all - the login never completed, so do not report success
+            $this->_errorException('Could not connect: no response to the AMI login');
+            return false;
+        }
         if ($response != false) {
             if (!$response->isSuccess()) {
                 $this->_errorException('Could not connect: ' . $response->getMessage());
@@ -183,7 +187,12 @@ class aminterface
         $this->eventListIsCompleted[$this->_lastActionId] = false;
         $deadline = microtime(true) + $this->_config['timeout'];
         while (true) {
-            $this->readBuffer(1);
+            if ($this->readBuffer(1) === false) {
+                // the connection is gone; nothing further can arrive, so stop now instead of
+                // spinning until the deadline. A plain "nothing yet" returns null and falls
+                // through to the deadline check at the bottom of the loop.
+                return false;
+            }
             // Completion is checked before the deadline so a list that finished right as
             // the clock ran out is still returned. The deadline then fires independently
             // of whether the last read carried data - unrelated AMI traffic on the shared
@@ -245,7 +254,7 @@ class aminterface
             $except = null;
             $ready = @stream_select($readStreams, $write, $except, $waitSeconds);
             if (!$ready) {
-                return false;
+                return null;            // nothing yet - the caller keeps waiting for its deadline
             }
             $read = @fread($this->_socket, 65535);
             if ($read === false || $read === "") {
@@ -326,7 +335,7 @@ class aminterface
         if ($_className) {
             if (class_exists($_className, true)) {
                 $responseClass = $_className;
-            } elseif ($responseHandler != false) {
+            } elseif ($this->_lastRequestedResponseHandler != false) {
                 $this->_errorException('Response Class ' . $_className . '  requested via responseHandler, could not be found');
             }
         }
@@ -481,6 +490,15 @@ class aminterface
         }
         return $result;
     }
+    /**
+     * Whether the manager connection is currently up. Callers need this to tell "the driver did
+     * not answer" apart from "we never reached Asterisk at all", which look identical in the
+     * data returned below.
+     */
+    public function isConnected() {
+        return (bool)$this->_connect_state;
+    }
+
     function getSCCPConfigMetaData($segment = '') {
         $metadata = array();
         if ($this->_connect_state) {
@@ -574,7 +592,12 @@ class aminterface
             $this->useAmiInterface = false;
         }
         if ($revNumComp) {
-            return array($res['vCode'], true);
+            // Compatibility is about the driver version, not the revision counter. A released
+            // build can report RevisionNum 0 and still be 4.3.3+, which is all this module
+            // needs - keying the answer off the revision closes a perfectly good connection.
+            // (That is why this used to be hardcoded true, which in turn made the caller's
+            // close() unreachable; report the real answer, from the right signal.)
+            return array($res['vCode'], ((int) $res['vCode']) >= 433);
         }
         return $res['vCode'];
     }
