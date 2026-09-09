@@ -30,7 +30,7 @@ $cnf_int = \FreePBX::Config();
 $thisInstaller = new
     #[\AllowDynamicProperties]
     class {
-    use \FreePBX\modules\Sccp_Manager\sccpManTraits\helperFunctions;
+    use \FreePBX\modules\Sccp_manager\sccpManTraits\helperFunctions;
 };
 
 $requiredClasses = array('aminterface', 'extconfigs');

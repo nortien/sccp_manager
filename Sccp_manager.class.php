@@ -104,9 +104,9 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
     public $sccpHelpInfo = array();
 
     // Move all non sccp_manager specific functions to traits
-    use \FreePBX\modules\Sccp_Manager\sccpManTraits\helperFunctions;
-    use \FreePBX\modules\Sccp_Manager\sccpManTraits\ajaxHelper;   // TODO should migrate this to child class
-    use \FreePBX\modules\Sccp_Manager\sccpManTraits\bmoFunctions;
+    use \FreePBX\modules\Sccp_manager\sccpManTraits\helperFunctions;
+    use \FreePBX\modules\Sccp_manager\sccpManTraits\ajaxHelper;   // TODO should migrate this to child class
+    use \FreePBX\modules\Sccp_manager\sccpManTraits\bmoFunctions;
 
     public function __construct($freepbx = null) {
         try {
@@ -187,6 +187,12 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
             unset($sysConfiguration);
         }
 
+        // Seeded with the error view. The loop below assigns only when the xpath
+        // actually matches a page group, so asking for a group name that is absent
+        // from the XML fell through to a return of an undefined variable: the page
+        // rendered blank, with nothing to say what went wrong. Now an unmatched name
+        // gets the same explanation as unreadable XML.
+        $htmlret = load_view(__DIR__ . '/views/formShowError.php');
         if ((array) $this->xml_data) {
             foreach ($this->xml_data->xpath('//page_group[@name="' . $group_name . '"]') as $item) {
                 $htmlret = load_view(__DIR__ . '/views/formShowSysDefs.php', array(
@@ -200,8 +206,6 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                     )
                   );
             }
-        } else {
-            $htmlret = load_view(__DIR__ . '/views/formShowError.php');
         }
         return $htmlret;
     }
@@ -638,6 +642,12 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
             $val = $this->sccpvalues['allow']['systemdefault'] ?? '';
         }
         $siteCodecs = array_fill_keys(explode(';',$val), 1);
+        // Initialised for a $type the switch does not name. Only 'audio' and 'video'
+        // are requested today, but the switch has no default, and the intersections
+        // below take $fpbxCodecs as a typed array argument: an unhandled type would
+        // pass an undefined variable and abort the page on PHP 8 rather than simply
+        // returning nothing.
+        $fpbxCodecs = array();
         switch ($type) {
             case 'audio':
                 $fpbxCodecs = $this->FreePBX->Codecs->getAudio();

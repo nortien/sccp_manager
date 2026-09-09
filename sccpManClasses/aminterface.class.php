@@ -77,6 +77,12 @@ class aminterface
                 }
             }
         }
+        // Both guards below are always true: 'enabled' is seeded true a few lines up
+        // and the only loop that rewrites $this->_config touches 'user' and 'pass'.
+        // Nothing in the module or in FreePBX ever sets it, so there is no way to
+        // turn the AMI client off through configuration. Kept rather than removed
+        // because the slot documents an intended switch; wiring it needs a real
+        // setting and a decision about what an operator without AMI should see.
         if ($this->_config['enabled']) {
             $this->load_subspace();
         }
@@ -588,9 +594,16 @@ class aminterface
     public function get_compatible_sccp($revNumComp=false) {
         // only called with args from installer to get revision and compatibility
         $res = $this->getSCCPVersion();
-        if ($res['RevisionNum'] < 11063) {
-            $this->useAmiInterface = false;
-        }
+        // Disabled, not deleted, so the intent stays on record. $useAmiInterface is
+        // written here and read nowhere in the module, so this assignment never had
+        // an effect. It is also keyed off the wrong signal: a released 4.3.3+ driver
+        // can report RevisionNum 0, so the threshold below fires on drivers that are
+        // in fact compatible. Compatibility is decided further down from the driver
+        // version, and callers that need to know whether AMI is usable ask
+        // isConnected(). Re-enable only together with a reader and a correct signal.
+        // if ($res['RevisionNum'] < 11063) {
+        //     $this->useAmiInterface = false;
+        // }
         if ($revNumComp) {
             // Compatibility is about the driver version, not the revision counter. A released
             // build can report RevisionNum 0 and still be 4.3.3+, which is all this module

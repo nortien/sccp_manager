@@ -195,6 +195,11 @@ trait ajaxHelper {
                 if ($request['command'] == 'model_update') {
                     $key_name = array('model','vendor','dns', 'buttons', 'loadimage', 'loadinformationid', 'nametemplate');
                     $upd_mode = 'update';
+                    // Only the model_add case above initialises this, and model_update
+                    // is reached directly as well as by falling through it. Entering
+                    // here without a model in the request then returned an undefined
+                    // variable instead of the empty set the caller expects.
+                    $save_settings = array();
                 }
                 if (!empty($request['model'])) {
                     foreach ($key_name as $key => $value) {

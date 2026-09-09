@@ -166,6 +166,10 @@ class dbinterface
                 // No default case so will give exception of $raw_settings undefined if the
                 // dataid is not in the switch.
         }
+        // Initialised for the case where none of the three branches below applies:
+        // the function returned an undefined variable, so callers that treat the
+        // result as an array got null instead of an empty one.
+        $raw_settings = array();
         if (!empty($stmt)) {
             $stmt->execute();
             $raw_settings = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -460,6 +464,11 @@ class dbinterface
                         '431' => ['private'=> "enum('on','off')"],
                         '433' => ['directed_pickup'=>'']
                         ];
+        // Initialised before the loop: DESCRIBE returns no rows when the table is
+        // missing, and the loop below would then leave $id_result undefined while
+        // array_intersect_assoc() still receives it as its second argument, which is
+        // a TypeError on PHP 8. An empty map simply reports "no matching column".
+        $id_result = array();
         $stmt = $this->db->prepare('DESCRIBE sccpdevice');
         $stmt->execute();
         foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $value) {

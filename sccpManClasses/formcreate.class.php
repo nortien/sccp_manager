@@ -5,7 +5,7 @@ namespace FreePBX\modules\Sccp_manager;
 #[\AllowDynamicProperties]
 class formcreate
 {
-    use \FreePBX\modules\Sccp_Manager\sccpManTraits\helperFunctions;
+    use \FreePBX\modules\Sccp_manager\sccpManTraits\helperFunctions;
 
     private $metaHelpCache = null;
 
