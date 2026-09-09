@@ -28,7 +28,20 @@ function createBackUpConfig()
     // Credentials go in a defaults-extra-file (0600, removed right after) instead of on the
     // command line, where they'd be readable via `ps` and end up in the shell error output.
     $credFile = tempnam(sys_get_temp_dir(), 'sccpdump_');
-    file_put_contents($credFile, "[client]\nuser={$amp_conf['AMPDBUSER']}\npassword={$amp_conf['AMPDBPASS']}\n");
+    $optQuote = function ($value) {
+        return '"' . str_replace(array('\\', '"'), array('\\\\', '\\"'), (string) $value) . '"';
+    };
+    $credLines = "[client]\nuser=" . $optQuote($amp_conf['AMPDBUSER']) . "\npassword=" . $optQuote($amp_conf['AMPDBPASS']) . "\n";
+    if (!empty($amp_conf['AMPDBHOST'])) {
+        $credLines .= "host=" . $optQuote($amp_conf['AMPDBHOST']) . "\n";
+    }
+    if (!empty($amp_conf['AMPDBPORT'])) {
+        $credLines .= "port=" . $optQuote($amp_conf['AMPDBPORT']) . "\n";
+    }
+    if (!empty($amp_conf['AMPDBSOCK'])) {
+        $credLines .= "socket=" . $optQuote($amp_conf['AMPDBSOCK']) . "\n";
+    }
+    file_put_contents($credFile, $credLines);
     chmod($credFile, 0600);
 
     $tablesEsc = implode(' ', array_map('escapeshellarg', $sqlTables));
@@ -50,13 +63,13 @@ function createBackUpConfig()
 
     try {
         $zip = new \ZipArchive();
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         outn("<br>");
         outn("<font color='red'>PHPx.x-zip not installed where x.x is the installed PHP version. Install it before continuing !</font>");
         die_freepbx();
     }
     $filename = $dir . "/sccp_uninstall_backup" . date("Ymd"). ".zip";
-    if ($zip->open($filename, \ZIPARCHIVE::CREATE)) {
+    if ($zip->open($filename, \ZIPARCHIVE::CREATE) === true) {
         foreach ($backup_files as $file) {
             foreach ($backup_ext as $b_ext) {
                 if (file_exists($dir . '/'.$file . $b_ext)) {
@@ -67,7 +80,13 @@ function createBackUpConfig()
         if (file_exists($sqlBuFile)) {
             $zip->addFile($sqlBuFile);
         }
-        $zip->close();
+        if (!$zip->close()) {
+            // close() is what actually writes the archive out; without this the dump below was
+            // deleted and "backup created" printed even though nothing had been saved
+            outn("<li><font color='red'>" . _("Error writing backup archive: ") . $filename . "</font></li>");
+            @unlink($sqlBuFile);
+            die_freepbx();
+        }
     } else {
         outn("<li>" . _("Error Creating BackUp: ") . $filename ."</li>");
         outn("<br>");
@@ -105,7 +124,10 @@ if (!empty($version)) {
   outn("<li>" . _('Removing realtime mappings') . "</li>");
   $cnf_read = \FreePBX::LoadConfig();
   $cnf_wr = \FreePBX::WriteConfig();
-  foreach (array('extconfig_custom.conf', 'extconfig.conf') as $extFile) {
+  // the installer writes into the first of extconfig_custom.conf / extconfig_additional.conf /
+  // extconfig.conf that exists, so all three have to be cleaned - missing the middle one left
+  // realtime mappings pointing at tables this uninstall has just dropped
+  foreach (array('extconfig_custom.conf', 'extconfig_additional.conf', 'extconfig.conf') as $extFile) {
       if (!file_exists(\FreePBX::Config()->get('ASTETCDIR') . '/' . $extFile)) {
           continue;
       }

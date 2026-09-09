@@ -48,20 +48,43 @@ CheckAsteriskVersion();
 $sccp_compatible = $aminterface->getSCCPVersion()['vCode'];
 
 outn("<li>" . _("Sccp model Compatible code : ") . $sccp_compatible . "</li>");
+if ($sccp_compatible == 0 && method_exists($aminterface, 'isConnected') && !$aminterface->isConnected()) {
+    // A zero version code only means "the driver did not answer", which is just as true when the
+    // manager connection itself is down (Asterisk stopped, wrong AMPMGRUSER/AMPMGRPASS). Treating
+    // that as "driver missing" used to reinstall chan-sccp and restart a live PBX for nothing.
+    outn("<br>");
+    outn("<font color='red'>" . _("Could not reach the Asterisk Manager interface, so the chan-sccp version could not be read.") . "</font>");
+    die_freepbx(_("Check that Asterisk is running and that AMPMGRUSER/AMPMGRPASS are correct, then re-run this install."));
+}
 if ($sccp_compatible == 0) {
     // No driver loaded. Try to install it ourselves - install.php runs as
     // the web server user (asterisk), which owns none of Asterisk's system
     // paths, so this only works via a narrow sudoers NOPASSWD rule scoped
-    // to exactly this one script (see /etc/sudoers.d/sccp_manager). If that
+    // to exactly this one script, and that script has to be root-owned: a
+    // NOPASSWD rule pointing at a file the web user can rewrite is the same
+    // as giving the web user root (see the ownership check below). If the
     // rule isn't present, `sudo -n` fails fast instead of hanging on a
     // password prompt, and we fall through to the manual-command notice.
     $driverScript = $amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/scripts/install-chan-sccp-driver.sh';
     outn("<br>");
-    outn("<font color='orange'>" . _("chan-sccp driver not found or not loaded - attempting automatic install...") . "</font>");
-    outn("<pre style=\"background:#111;color:#0f0;padding:8px;max-height:400px;overflow:auto;\">");
-    set_time_limit(0);
-    passthru('sudo -n /usr/bin/bash ' . escapeshellarg($driverScript) . ' 2>&1', $driverExitCode);
-    outn("</pre>");
+
+    // Running this through a NOPASSWD sudo rule is only safe while the script itself cannot be
+    // rewritten by the account that invokes it. The module tree is chowned to the web user by
+    // `fwconsole chown`, so a script sitting there plus such a rule would hand the web user root.
+    // Refuse the automatic path unless the script is owned by root and writable by nobody else;
+    // an administrator who wants it has to point the sudoers rule at a root-owned copy.
+    $driverExitCode = 1;
+    $scriptStat = @stat($driverScript);
+    $scriptIsRootOwned = ($scriptStat !== false && $scriptStat['uid'] === 0 && ($scriptStat['mode'] & 0022) === 0);
+    if (!$scriptIsRootOwned) {
+        outn("<font color='orange'>" . _("Skipping the automatic driver install: the installer script is writable by the web user, so running it through sudo would grant that user root.") . "</font>");
+    } else {
+        outn("<font color='orange'>" . _("chan-sccp driver not found or not loaded - attempting automatic install...") . "</font>");
+        outn("<pre style=\"background:#111;color:#0f0;padding:8px;max-height:400px;overflow:auto;\">");
+        set_time_limit(0);
+        passthru('sudo -n /usr/bin/bash ' . escapeshellarg($driverScript) . ' 2>&1', $driverExitCode);
+        outn("</pre>");
+    }
 
     // The driver script does a full `fwconsole restart`, which drops any
     // AMI connection opened before it ran - reopen before re-checking.
@@ -73,7 +96,7 @@ if ($sccp_compatible == 0) {
         outn("<br>");
         outn("<font color='red'>" . _("Automatic driver install failed. Run this on the server (as root), then re-run this module install:") . "</font>");
         outn("<pre style=\"background:#f5f5f5;border:1px solid #ccc;padding:8px;\">sudo bash " . $stackScript . "</pre>");
-        die();
+        die_freepbx(_("chan-sccp driver is not installed"));
     }
     outn("<li>" . _("chan-sccp driver installed automatically.") . "</li>");
 }
@@ -83,6 +106,13 @@ if ($sccp_compatible == 0) {
 // live sccp.conf and the schema have already been rewritten, leaving a
 // half-migrated driver. The probe records the discovered root for the later
 // settings write, which still has to happen after the schema exists.
+// Everything below this point rewrites configuration and schema into the layout of the version
+// the module ships support for. Reject an older driver here, before the config files are renamed
+// away - it used to surface much later as a bare "No db_config provided" with the rename done.
+if ($sccp_compatible < 433) {
+    die_freepbx(sprintf(_("chan-sccp %s is too old for this module; 4.3.3 or newer is required. Upgrade the driver and re-run this install."), $aminterface->getSCCPVersion()['Version'] ?: $sccp_compatible));
+}
+
 $GLOBALS['tftpRootPath'] = probeTftpServer();
 
 createBackUpConfig();
@@ -196,7 +226,7 @@ function Get_DB_config($sccp_compatible)
             'musicclass' => array('def_modify' => "default"),
             'disallow' => array('create' => "VARCHAR(255) NULL DEFAULT 'all'", 'modify' => 'VARCHAR(255)'),
             'allow' => array('create' => "VARCHAR(255) NULL DEFAULT NULL"),
-            'id' => array('create' => 'MEDIUMINT(9) NOT NULL AUTO_INCREMENT, ADD UNIQUE(id);', 'modify' => "MEDIUMINT(9)", 'index' => 'id'),
+            'id' => array('create' => 'MEDIUMINT(9) NOT NULL AUTO_INCREMENT', 'modify' => "MEDIUMINT(9)", 'index' => 'id'),
             'echocancel' => array('create' => "enum('yes','no') NOT NULL default 'yes'", 'modify' => "enum('yes','no')"),
             'silencesuppression' => array('create' => "enum('no','yes') NOT NULL default 'no'", 'modify' => "enum('no','yes')"),
             'dnd' => array('create' => "enum('reject','off','silent','user') NOT NULL default 'reject'", 'modify' => "enum('reject','off','silent','user')", 'def_modify' => "reject")
@@ -275,8 +305,8 @@ function Get_DB_config($sccp_compatible)
                                     'modify' => "enum('oldestfirst','latestfirst')"),
               'sccp_tos' => array('create' => "VARCHAR(11) NOT NULL default '0x68'", 'modify' => "VARCHAR(11)"),
               'sccp_cos' => array('create' => "VARCHAR(11) NOT NULL default '0x4'", 'modify' => "VARCHAR(11)"),
-              'dev_sshPassword' => array('create' => "VARCHAR(25) NOT NULL default 'cisco'"),
-              'dev_sshUserId' => array('create' => "VARCHAR(25) NOT NULL default 'cisco'"),
+              'dev_sshPassword' => array('create' => "VARCHAR(25) NOT NULL default ''"),        // never seed a well-known credential
+              'dev_sshUserId' => array('create' => "VARCHAR(25) NOT NULL default ''"),          // never seed a well-known credential
               'phonepersonalization' => array('create' => "VARCHAR(25) NOT NULL default '0'", 'modify' => "VARCHAR(25)"),
               'loginname' => array('create' => 'VARCHAR(20) NULL DEFAULT NULL'),
               'profileid' => array('create' => "INT(11) NOT NULL DEFAULT '0'"),
@@ -316,7 +346,7 @@ function Get_DB_config($sccp_compatible)
               '_sccp_cos' => array('rename' => 'sccp_cos'),
               '_dev_sshPassword' => array('rename' => 'dev_sshPassword'),
               '_dev_sshUserId' => array('rename' => 'dev_sshUserId'),
-              '_phonepersonalization' => array('rename' => '_phonepersonalization'),
+              '_phonepersonalization' => array('rename' => 'phonepersonalization'),
               '_loginname' => array('rename' => 'loginname'),
               '_profileid' => array('rename' => 'profileid'),
               '_dialrules' => array('rename' => 'dialrules'),
@@ -402,7 +432,7 @@ function CheckAsteriskVersion()
 function CheckChanSCCPCompatible()
 {
     global $aminterface;
-    return $aminterface->getSCCPVersion['vCode'];
+    return $aminterface->getSCCPVersion()['vCode'];
 }
 
 function InstallDB_updateSchema($db_config)
@@ -452,13 +482,22 @@ function InstallDB_updateSchema($db_config)
         // Now move any data found from _Column to Column. This is safe as the two should not exist.
         if (!empty($dbResult)) {
             foreach ($dbResult as $name => $columnArr) {
-                $sqlVar = array_reduce(array_keys($columnArr), function($carry, $key) use ($columnArr){
-                        $carry .= (isset($columnArr[$key])) ? "{$key} = '{$columnArr[$key]}'," : "";
-                        return $carry;
-                });
-                $sqlVar = rtrim($sqlVar, ",");
-                $stmt = $db->prepare("UPDATE {$table} SET {$sqlVar} WHERE name = '{$name}'");
-                $stmt->execute();
+                // Column names come from the schema (the _-prefixed fields, stripped);
+                // the values and the row name are data, so bind them.
+                $setParts = array();
+                $params = array();
+                foreach ($columnArr as $key => $val) {
+                    if (isset($val)) {
+                        $setParts[] = "{$key} = ?";
+                        $params[] = $val;
+                    }
+                }
+                if (empty($setParts)) {
+                    continue;
+                }
+                $params[] = $name;
+                $stmt = $db->prepare("UPDATE {$table} SET " . implode(",", $setParts) . " WHERE name = ?");
+                $stmt->execute($params);
             }
         }
         // Processed all _Column names; now safe to delete them
@@ -493,7 +532,7 @@ function InstallDB_updateSchema($db_config)
                 // occur as columns that are dropped should no longer be in the module.xml schema
                 // and so Doctrine will have already dropped them.
                 if (!empty($tab_modif[$fld_id]['drop'])) {
-                    $sql_create .= "DROP COLUMN {$row_fld}, ";
+                    $sql_create .= "DROP COLUMN {$fld_id}, ";
                     unset($tab_modif[$fld_id]['drop']);
                     continue;
                 }
@@ -569,6 +608,13 @@ function InstallDB_updateSchema($db_config)
         foreach ($tab_modif as $row_fld => $row_data) {
             if (!empty($row_data['create'])) {
                 $sql_create .= "ADD COLUMN {$row_fld} {$row_data['create']}, ";
+                if (!empty($row_data['index'])) {
+                    // only columns missing from the table reach this loop, so the index cannot
+                    // exist yet - and an AUTO_INCREMENT column has to be keyed in the same
+                    // statement. Declaring it here keeps it out of the MODIFY path, which used
+                    // to re-add it on every install.
+                    $sql_create .= "ADD UNIQUE({$row_data['index']}), ";
+                }
                 $count_modify ++;
             }
         }
@@ -735,9 +781,11 @@ function InstallDB_updateSchema($db_config)
 
     $test = $db->prepare("SELECT count(*) AS modelCount from sccpdevmodel");
     $test->execute();
-    if ($test->fetchAll()[0]['modelCount'] == count($devModelArr)) {
-        // Appear to have a correctly populated sccpdevmodel table. Do not overwrite
-        // as may contain user modifications;
+    if ($test->fetchAll()[0]['modelCount'] > 0) {
+        // The table already holds models, so leave it alone: it may carry the admin's own
+        // additions and edits. Comparing the row count against the size of the built-in list
+        // meant that adding or deleting a single model made the counts differ, and the bulk
+        // REPLACE below then reset every standard row and brought deleted ones back.
         outn("<li>" . _("sccpdevmodel appears to be populated; not overwriting") . "</li>");
         return;
     };
@@ -756,9 +804,9 @@ function InstallDB_createButtonConfigTrigger()
 {
     global $db;
     outn("<li>" . _("(Re)Create buttonconfig trigger") . "</li>");
-    $sql = "DROP TRIGGER IF EXISTS sccp_trg_buttonconfig;";
+    $dropTriggerSql = "DROP TRIGGER IF EXISTS sccp_trg_buttonconfig;";
 
-    $sql .= "CREATE TRIGGER `sccp_trg_buttonconfig` BEFORE INSERT ON `sccpbuttonconfig` FOR EACH ROW BEGIN
+    $sql = "CREATE TRIGGER `sccp_trg_buttonconfig` BEFORE INSERT ON `sccpbuttonconfig` FOR EACH ROW BEGIN
         IF NEW.`reftype` = 'sccpdevice' THEN
             IF (SELECT COUNT(*) FROM `sccpdevice` WHERE `sccpdevice`.`name` = NEW.`ref` ) = 0 THEN
                 UPDATE `Foreign key contraint violated: ref does not exist in sccpdevice` SET x=1;
@@ -779,9 +827,21 @@ function InstallDB_createButtonConfigTrigger()
             END IF;
         END IF;
         END;";
-    $check = $db->query($sql);
-    if (DB::IsError($check)) {
-        die_freepbx("Can not modify sccpdevice table\n");
+    try {
+        $db->query($dropTriggerSql);
+    } catch (\Exception $e) {
+        outn("<li><font color='red'>" . sprintf(_("Could not drop the old buttonconfig trigger: %s"), $e->getMessage()) . "</font></li>");
+        return false;
+    }
+    try {
+        $db->query($sql);
+    } catch (\Exception $e) {
+        // not fatal: the trigger only guards referential integrity of sccpbuttonconfig, and
+        // creating it needs privileges the database account may not have (MySQL 1419 when
+        // binary logging is on without SUPER). Say so instead of claiming success.
+        outn("<li><font color='red'>" . sprintf(_("Could not create the buttonconfig trigger: %s"), $e->getMessage()) . "</font></li>");
+        outn("<li><font color='red'>" . _("Button configuration will not be checked against devices and lines by the database.") . "</font></li>");
+        return false;
     }
     outn("<li>" . _("(Re)Create trigger Ok") . "</li>");
     return true;
@@ -823,18 +883,18 @@ function InstallDbCreateViews($sccp_compatible)
             SELECT GROUP_CONCAT( CONCAT_WS( ',', sccpbuttonconfig.buttontype, sccpbuttonconfig.name, sccpbuttonconfig.options )
             ORDER BY instance ASC SEPARATOR ';' ) AS button, sccpuser.*
             FROM sccpuser
-            LEFT JOIN sccpbuttonconfig ON ( sccpbuttonconfig.reftype = 'sccpuser' AND sccpbuttonconfig.ref = sccpuser.id)
+            LEFT JOIN sccpbuttonconfig ON ( sccpbuttonconfig.reftype = 'sccpuser' AND sccpbuttonconfig.ref = sccpuser.name)
             GROUP BY sccpuser.name; ";
     } else {
         $sql .= "CREATE OR REPLACE
             VIEW sccpdeviceconfig AS
             SELECT CASE sccpdevice.profileid
                 WHEN 0 THEN
-            (SELECT GROUP_CONCAT(CONCAT_WS(',', defbutton.buttontype, defbutton.name, defbutton.options ) SEPARATOR ';') FROM sccpbuttonconfig AS defbutton WHERE defbutton.ref = sccpdevice.name ORDER BY defbutton.instance )
+            (SELECT GROUP_CONCAT(CONCAT_WS(',', defbutton.buttontype, defbutton.name, defbutton.options ) ORDER BY defbutton.instance SEPARATOR ';') FROM sccpbuttonconfig AS defbutton WHERE defbutton.ref = sccpdevice.name )
                 WHEN 1 THEN
-            (SELECT GROUP_CONCAT(CONCAT_WS(',', userbutton.buttontype, userbutton.name, userbutton.options ) SEPARATOR ';') FROM sccpbuttonconfig AS userbutton WHERE userbutton.ref = sccpdevice.loginname ORDER BY userbutton.instance )
+            (SELECT GROUP_CONCAT(CONCAT_WS(',', userbutton.buttontype, userbutton.name, userbutton.options ) ORDER BY userbutton.instance SEPARATOR ';') FROM sccpbuttonconfig AS userbutton WHERE userbutton.ref = sccpdevice.loginname )
                 WHEN 2 THEN
-            (SELECT GROUP_CONCAT(CONCAT_WS(',', homebutton.buttontype, homebutton.name, homebutton.options ) SEPARATOR ';') FROM sccpbuttonconfig AS homebutton WHERE homebutton.ref = sccpuser.homedevice  ORDER BY homebutton.instance )
+            (SELECT GROUP_CONCAT(CONCAT_WS(',', homebutton.buttontype, homebutton.name, homebutton.options ) ORDER BY homebutton.instance SEPARATOR ';') FROM sccpbuttonconfig AS homebutton WHERE homebutton.ref = sccpuser.homedevice )
                 END
                 AS button, if(sccpdevice.profileid = 0, sccpdevice.description, sccpuser.description) AS description, sccpdevice.name, sccpdevice.type,
                 sccpdevice.addon, sccpdevice.tzoffset, sccpdevice.imageversion, sccpdevice.deny, sccpdevice.permit, sccpdevice.earlyrtp, sccpdevice.mwilamp,
@@ -928,7 +988,19 @@ function createBackUpConfig()
     // Credentials go in a defaults-extra-file (0600, removed right after) instead of on the
     // command line, where they'd be readable via `ps` and end up in the shell error output.
     $credFile = tempnam(sys_get_temp_dir(), 'sccpdump_');
-    file_put_contents($credFile, "[client]\nuser={$amp_conf['AMPDBUSER']}\npassword={$amp_conf['AMPDBPASS']}\n");
+    $credLines = "[client]\nuser={$amp_conf['AMPDBUSER']}\npassword={$amp_conf['AMPDBPASS']}\n";
+    // the connection settings belong here too, otherwise mysqldump goes to the local default
+    // socket and a remote or non-standard database cannot be backed up (and the install dies)
+    if (!empty($amp_conf['AMPDBHOST'])) {
+        $credLines .= "host={$amp_conf['AMPDBHOST']}\n";
+    }
+    if (!empty($amp_conf['AMPDBPORT'])) {
+        $credLines .= "port={$amp_conf['AMPDBPORT']}\n";
+    }
+    if (!empty($amp_conf['AMPDBSOCK'])) {
+        $credLines .= "socket={$amp_conf['AMPDBSOCK']}\n";
+    }
+    file_put_contents($credFile, $credLines);
     chmod($credFile, 0600);
 
     $cmd = "mysqldump --defaults-extra-file=" . escapeshellarg($credFile)
@@ -949,13 +1021,13 @@ function createBackUpConfig()
 
     try {
         $zip = new \ZipArchive();
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         outn("<br>");
         outn("<font color='red'>PHPx.x-zip not installed where x.x is the installed PHP version. Install it before continuing !</font>");
         die_freepbx();
     }
     $filename = $dir . "/sccp_install_backup" . date("Ymdhis"). ".zip";
-    if ($zip->open($filename, \ZIPARCHIVE::CREATE)) {
+    if ($zip->open($filename, \ZIPARCHIVE::CREATE) === true) {
         foreach ($backup_files as $file) {
             foreach ($backup_ext as $b_ext) {
                 if (file_exists($dir . '/'.$file . $b_ext)) {
@@ -968,7 +1040,12 @@ function createBackUpConfig()
         }
         $zip->close();
     } else {
-        outn("<li>" . _("Error Creating BackUp: ") . $filename ."</li>");
+        // the backup is the safety net for the destructive schema migration below, so a
+        // failed archive has to stop the install - and the plain dump must not be left
+        // lying around, it holds device secrets and admin hashes
+        outn("<li><font color='red'>" . _("Error Creating BackUp: ") . $filename . "</font></li>");
+        @unlink($fsql);
+        die_freepbx(_("Could not create the configuration backup"));
     }
     unlink($fsql);
     outn("<li>" . _("Config backup created: ") . $filename ."</li>");
@@ -1005,7 +1082,7 @@ function Setup_RealTime()
                             'dbname' => $amp_conf['AMPDBNAME'],
                             'dbuser' => $amp_conf['AMPDBUSER'],
                             'dbpass' => $amp_conf['AMPDBPASS'],
-                            'dbport' => '3306',
+                            'dbport' => (!empty($amp_conf['AMPDBPORT']) ? (string)$amp_conf['AMPDBPORT'] : '3306'),
                             'dbsock' => '/var/lib/mysql/mysql.sock',
                             'dbcharset'=>'utf8'
                           );
@@ -1060,19 +1137,21 @@ function Setup_RealTime()
 
     // Check database settings
     $res_conf = array();
-    if (file_exists($dir . '/res_mysql.conf')) {
-        $res_conf = $cnf_read->getConfig('res_mysql.conf');
-        if (empty($res_conf[$def_bd_section])) {
-            $res_conf[$def_bd_section] = $def_bd_config;
-            $cnf_wr->writeConfig('res_mysql.conf', $res_conf);
-            outn("<li>" . _("Updating res_mysql.conf file ...") . "</li>");
-        }
-    } elseif (file_exists($dir . '/res_config_mysql.conf')) {
+    if (file_exists($dir . '/res_config_mysql.conf')) {
         $res_conf = $cnf_read->getConfig('res_config_mysql.conf');
         if (empty($res_conf[$def_bd_section])) {
             $res_conf[$def_bd_section] = $def_bd_config;
             $cnf_wr->writeConfig('res_config_mysql.conf', $res_conf);
             outn("<li>" . _("Updating res_config_mysql.conf file ...") . "</li>");
+        }
+    } elseif (file_exists($dir . '/res_mysql.conf')) {
+        // legacy name from the Asterisk 1.6 addons; only reached when the modern file is
+        // absent, otherwise the section would be written into a file nothing reads
+        $res_conf = $cnf_read->getConfig('res_mysql.conf');
+        if (empty($res_conf[$def_bd_section])) {
+            $res_conf[$def_bd_section] = $def_bd_config;
+            $cnf_wr->writeConfig('res_mysql.conf', $res_conf);
+            outn("<li>" . _("Updating res_mysql.conf file ...") . "</li>");
         }
     } else {
         // Have not found either res_mysql.conf or res_config_mysql.config
@@ -1087,7 +1166,8 @@ function addDriver($sccp_compatible) {
     global $cnf_int;
     outn("<li>" . _("Adding driver ...") . "</li>");
     $file = $amp_conf['AMPWEBROOT'] . '/admin/modules/core/functions.inc/drivers/Sccp.class.php';
-    $contents = "<?php include '/var/www/html/admin/modules/sccp_manager/sccpManClasses/Sccp.class.php.v{$sccp_compatible}'; ?>";
+    $classFile = $amp_conf['AMPWEBROOT'] . "/admin/modules/sccp_manager/sccpManClasses/Sccp.class.php.v{$sccp_compatible}";
+    $contents = "<?php include '" . $classFile . "'; ?>";
     file_put_contents($file, $contents);
 }
 // The install runs as root, so every tftp dir and file it created is owned by
@@ -1104,13 +1184,27 @@ function chownTftpTree() {
     $webUser = $amp_conf['AMPASTERISKWEBUSER'] ?? 'asterisk';
     $webGroup = $amp_conf['AMPASTERISKWEBGROUP'] ?? $webUser;
     outn("<li>" . _("Setting ownership of TFTP tree to {$webUser} ...") . "</li>");
-    @chown($tftpRoot, $webUser); @chgrp($tftpRoot, $webGroup);
+    // This runs as root over a tree the web user already owns, so a symlink planted there
+    // would otherwise make root hand that user ownership of the link's target (/etc/shadow
+    // and friends). chown()/chgrp() follow symlinks - address the link itself instead, and
+    // do not descend into symlinked directories.
+    $chownPath = function ($path) use ($webUser, $webGroup) {
+        if (is_link($path)) {
+            if (function_exists('lchown')) {
+                @lchown($path, $webUser);
+                @lchgrp($path, $webGroup);
+            }
+            return;
+        }
+        @chown($path, $webUser);
+        @chgrp($path, $webGroup);
+    };
+    $chownPath($tftpRoot);
     $iter = new \RecursiveIteratorIterator(
         new \RecursiveDirectoryIterator($tftpRoot, \FilesystemIterator::SKIP_DOTS),
         \RecursiveIteratorIterator::SELF_FIRST);
     foreach ($iter as $item) {
-        @chown($item->getPathname(), $webUser);
-        @chgrp($item->getPathname(), $webGroup);
+        $chownPath($item->getPathname());
     }
 }
 // Reachability probe only: find a writable tftp root that actually serves over
@@ -1185,11 +1279,21 @@ function checkTftpServer() {
     // Populate TFTP paths in SccpSettings
     $settingsFromDb = $extconfigs->updateTftpStructure($settingsFromDb);
 
+    $settingStmt = $db->prepare("REPLACE INTO sccpsettings (keyword, data, seq, type, systemdefault) VALUES (?, ?, ?, ?, ?)");
     foreach ($settingsFromDb as $settingToSave) {
-        $sql = "REPLACE INTO sccpsettings (keyword, data, seq, type, systemdefault) VALUES ('{$settingToSave['keyword']}', '{$settingToSave['data']}', {$settingToSave['seq']}, {$settingToSave['type']}, '{$settingToSave['systemdefault']}')";
-        $results = $db->query($sql);
-        if (DB::IsError($results)) {
-            die_freepbx(_("Error updating sccpsettings. $sql"));
+        // values come from the database and from the driver's AMI metadata, so they can carry
+        // quotes and backslashes; splicing them into the statement broke the install (and the
+        // old DB::IsError() check never fires on PDO, so the failure went unnoticed)
+        try {
+            $settingStmt->execute(array(
+                $settingToSave['keyword'],
+                $settingToSave['data'],
+                $settingToSave['seq'],
+                $settingToSave['type'],
+                $settingToSave['systemdefault'],
+            ));
+        } catch (\Exception $e) {
+            die_freepbx(sprintf(_("Error updating sccpsettings for '%s': %s"), $settingToSave['keyword'], $e->getMessage()));
         }
     }
     getMasterFileList($tftpRootPath);
@@ -1239,8 +1343,17 @@ function cleanUpSccpSettings() {
     // Check that required settings are initialised and update db and $settingsFromDb if not
     // Clean up sccpsettings to remove legacy values.
     $xml_vars = $amp_conf['AMPWEBROOT'] . "/admin/modules/sccp_manager/conf/sccpgeneral.xml.v{$sccp_compatible}";
+    if (!is_file($xml_vars)) {
+        die_freepbx(sprintf(_("Unsupported chan-sccp version %s: no settings schema shipped for it. Install a supported driver version first."), $sccp_compatible));
+    }
     $thisInstaller->xml_data = simplexml_load_file($xml_vars);
+    if ($thisInstaller->xml_data === false) {
+        die_freepbx(sprintf(_("Could not read the settings schema %s"), $xml_vars));
+    }
     $thisInstaller->initVarfromXml();
+    if (!is_array($thisInstaller->sccpvalues ?? null)) {
+        die_freepbx(sprintf(_("Settings schema %s did not yield any settings"), $xml_vars));
+    }
     foreach ( array_diff_key($settingsFromDb,$thisInstaller->sccpvalues) as $key => $valueArray) {
         // Remove legacy values
         unset($settingsFromDb[$key]);
@@ -1351,7 +1464,7 @@ function cleanUpSccpSettings() {
         // Try to convert based on change from on/off to yes/no.
         if (in_array($settingsFromDb[$key]['data'], array('on','off'), true)) {
             if (in_array("'yes'", $valArr, true)) {
-                $settingsFromDb[$key]['data'] = ($settingsFromDb[$key]['data'] = 'on') ? 'yes' : 'no';
+                $settingsFromDb[$key]['data'] = ($settingsFromDb[$key]['data'] === 'on') ? 'yes' : 'no';
                 continue;
             }
         }
@@ -1365,20 +1478,37 @@ function cleanUpSccpSettings() {
         $count++;
     }
 
-    // Write settings back to db
-    $sql = "TRUNCATE sccpsettings";
-    $results = $db->query($sql);
-    foreach ( $settingsFromDb as $key =>$valueArray ) {
-        $sql = "REPLACE INTO sccpsettings
+    // Write settings back to db. TRUNCATE commits implicitly and cannot be rolled back, so a
+    // failure part-way through the rewrite left the table empty or half-filled - and a re-run
+    // then started from the truncated table, losing every site setting. Do the clear and the
+    // rewrite as one transaction over a DELETE, and abort loudly if it cannot be completed.
+    $stmt = $db->prepare("REPLACE INTO sccpsettings
                 (keyword, seq, type, data, systemdefault)
-                    VALUES
-                ( '{$settingsFromDb[$key]['keyword']}',
-                  {$settingsFromDb[$key]['seq']},
-                  {$settingsFromDb[$key]['type']},
-                  '{$settingsFromDb[$key]['data']}',
-                  '{$settingsFromDb[$key]['systemdefault']}'
-                )";
-        $results = $db->query($sql);
+                    VALUES (?, ?, ?, ?, ?)");
+    $useTransaction = method_exists($db, 'beginTransaction') && method_exists($db, 'commit');
+    $started = false;
+    try {
+        if ($useTransaction) {
+            $started = $db->beginTransaction();
+        }
+        $db->query("DELETE FROM sccpsettings");
+        foreach ( $settingsFromDb as $key =>$valueArray ) {
+            $stmt->execute(array(
+                $settingsFromDb[$key]['keyword'],
+                $settingsFromDb[$key]['seq'],
+                $settingsFromDb[$key]['type'],
+                $settingsFromDb[$key]['data'],
+                $settingsFromDb[$key]['systemdefault']
+            ));
+        }
+        if ($started) {
+            $db->commit();
+        }
+    } catch (\Exception $e) {
+        if ($started && method_exists($db, 'rollBack')) {
+            $db->rollBack();
+        }
+        die_freepbx(sprintf(_("Error rewriting sccpsettings, no settings were changed: %s"), $e->getMessage()));
     }
     // Need to load any existing sccp.conf so that retain softkeys section if exists.
     $sccp_conf_init = $thisInstaller->initialiseConfInit();
