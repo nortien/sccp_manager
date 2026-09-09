@@ -40,7 +40,7 @@ and open the template in the editor. Base Version before all crash :-)
             <label>Phone ssh login</label>
             <input>
                 <name>dev_sshUserId</name>
-                <default>cisco</default>
+                <default></default>
             </input>
             <help>Help.</help>
         </item>
@@ -48,7 +48,7 @@ and open the template in the editor. Base Version before all crash :-)
             <label>Phone ssh password</label>
             <input>
                 <name>dev_sshPassword</name>
-                <default>cisco</default>
+                <default></default>
             </input>
             <help>Help.</help>
         </item>

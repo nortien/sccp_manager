@@ -179,22 +179,26 @@ class xmlinterface
 
         $data_path = $dev_config['tftp_templates_path'];
         if (empty($data_path)) {
-            die('Create_SEP_XML tftp_templates_path not defined');
+            freepbx_log(FPBX_LOG_ERROR, 'sccp_manager: create_SEP_XML called without tftp_templates_path');
+            return false;
         }
 
         $store_path = $dev_config['tftp_store_path'];
         if (empty($store_path)) {
-            die('Create_SEP_XML tftp_store_path not defined');
+            freepbx_log(FPBX_LOG_ERROR, 'sccp_manager: create_SEP_XML called without tftp_store_path');
+            return false;
         }
 
         if (!empty($dev_config['nametemplate'])) {
-            $xml_template = "{$data_path}/{$dev_config['nametemplate']}";
+            $xml_template = "{$data_path}/" . basename((string) $dev_config['nametemplate']);   // basename keeps the template inside data_path
         } else {
             $xml_template = "{$data_path}/SEP0000000000.cnf.xml_79df_template";
         }
-        $xml_name = "{$store_path}/{$dev_id}.cnf.xml";
+        $safe_dev_id = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $dev_id);                  // device id feeds a write path; keep it to a bare token
+        $xml_name = "{$store_path}/{$safe_dev_id}.cnf.xml";
         if (!file_exists($xml_template)) {
-            die('Error Hardware template :' . $xml_template . ' not found');
+            freepbx_log(FPBX_LOG_ERROR, 'sccp_manager: hardware template not found: ' . $xml_template);
+            return false;
         }
         $xml_work = simplexml_load_file($xml_template);
 
@@ -256,10 +260,16 @@ class xmlinterface
                                 $srst_addrs = $this->convertCsvToArray($data_values['srst_ip']);
                                 //Now have an array of srst addresses - maybe empty
 
-                                foreach ($srst_addrs as $netKey => $netValue) {
-                                    $nodeName = "ipAddr{$netKey}";
+                                $srstSlot = 0;
+                                foreach ($srst_addrs as $netValue) {
+                                    // the template numbers these from one (ipAddr1..ipAddr3)
+                                    $srstSlot++;
+                                    if ($srstSlot > 3) {
+                                        break;
+                                    }
+                                    $nodeName = "ipAddr{$srstSlot}";
                                     $xnode->$nodeName = $netValue['ip'];
-                                    $nodeName = "port{$netKey}";
+                                    $nodeName = "port{$srstSlot}";
                                     $xnode->$nodeName = $netValue['port'];
                                 }
                                 break;
@@ -329,10 +339,15 @@ class xmlinterface
                     if (!empty($dev_config['addon'])) {
                         $xnode = $xml_work->addChild('addOnModules');
                         $ti = 1;
-                        $hw_addon = explode(';', $dev_config['addon']);
+                        // addon_info is built by splitting this same field on ',' (see
+                        // Sccp_manager::createSccpDeviceXML), and it is keyed per addon model -
+                        // splitting on ';' and then looking the whole field up as one key meant
+                        // a device with more than one addon got none of them.
+                        $hw_addon = explode(',', $dev_config['addon']);
                         foreach ($hw_addon as $add_key) {
-                            if (!empty($dev_config['addon_info'][$dev_config['addon']])) {
-                                $add_val = $dev_config['addon_info'][$dev_config['addon']];
+                            $add_key = trim($add_key);
+                            if (!empty($dev_config['addon_info'][$add_key])) {
+                                $add_val = $dev_config['addon_info'][$add_key];
                                 $xnode_obj = $xnode->addChild('addOnModule');
                                 $xnode_obj->addAttribute('idx', $ti);
                                 $xnode_obj->addChild('loadInformation', $add_val);
@@ -342,7 +357,13 @@ class xmlinterface
                     }
                     break;
                 case 'commonprofile':
-                    $xml_node->phonePassword = $data_values['dev_sshPassword'];
+                    // The phone reads this in clear text - that is how the Cisco provisioning
+                    // protocol works - and the file is served over TFTP without authentication.
+                    // So write it only when it actually holds something: an unset SSH password
+                    // has no business appearing in the file at all.
+                    if (!empty($data_values['dev_sshPassword'])) {
+                        $xml_node->phonePassword = $data_values['dev_sshPassword'];
+                    }
                     $xml_node->backgroundImageAccess = (($data_values['backgroundImageAccess'] == 'on') || ($data_values['backgroundImageAccess'] == 'true') ) ? 'true' : 'false';
                     $xml_node->callLogBlfEnabled = $data_values['callLogBlfEnabled'];
                     break;
@@ -398,7 +419,7 @@ class xmlinterface
     private function get_server_sccp_bind($data_values = array())
     {
         $res = array();
-        if ($data_values['bindaddr'] !== '0.0.0.0') {
+        if (!empty($data_values['bindaddr']) && $data_values['bindaddr'] !== '0.0.0.0') {
             $rkey = $data_values['bindaddr'];
             $res[$rkey] = array('ip' => $data_values['bindaddr'], 'port' => $data_values['port']);
             return $res;
@@ -467,7 +488,7 @@ class xmlinterface
         }
 
         if (!empty($dev_config['nametemplate'])) {
-            $xml_template = $data_path . '/templates/' . $dev_config['nametemplate'];
+            $xml_template = $data_path . '/templates/' . basename((string) $dev_config['nametemplate']);   // keep the template inside the templates dir
             if (!file_exists($xml_template)) {
                 $xml_template = $data_path . '/templates/SEP0000000000.cnf.xml_79df_sip_template';
             }
@@ -602,9 +623,9 @@ class xmlinterface
                                     if (!empty($data_values['speeddial'])) {
                                         foreach ($data_values['speeddial'] as $spkey => $spvalue) {
                                             $xmlstr = '<line button="' . ($ifc + 1) . '"> <featureID>22</featureID>'
-                                                    . '<featureLabel>' . $spvalue["name"] . '</featureLabel>'
-                                                    . '<speedDialNumber>' . $spvalue["dial"] . '</speedDialNumber>'
-                                                    . '<contact>' . $spvalue["dial"] . '</contact> <retrievalPrefix /></line>';
+                                                    . '<featureLabel>' . htmlspecialchars($spvalue["name"], ENT_QUOTES | ENT_XML1) . '</featureLabel>'
+                                                    . '<speedDialNumber>' . htmlspecialchars($spvalue["dial"], ENT_QUOTES | ENT_XML1) . '</speedDialNumber>'
+                                                    . '<contact>' . htmlspecialchars($spvalue["dial"], ENT_QUOTES | ENT_XML1) . '</contact> <retrievalPrefix /></line>';
                                             $xnode_obj = simplexml_load_string($xmlstr);
                                             $this->appendSimpleXmlNode($xnode->line, $xnode_obj);
                                             $ifc++;
@@ -646,10 +667,13 @@ class xmlinterface
                         if (!empty($dev_config['addon'])) {
                             $xnode = $xml_work->addChild('addOnModules');
                             $ti = 1;
-                            $hw_addon = explode(';', $dev_config['addon']);
+                            // same as the SCCP branch: addon_info is keyed per model and the
+                            // field is comma separated
+                            $hw_addon = explode(',', $dev_config['addon']);
                             foreach ($hw_addon as $add_key) {
-                                if (!empty($dev_config['addon_info'][$dev_config['addon']])) {
-                                    $add_val = $dev_config['addon_info'][$dev_config['addon']];
+                                $add_key = trim($add_key);
+                                if (!empty($dev_config['addon_info'][$add_key])) {
+                                    $add_val = $dev_config['addon_info'][$add_key];
                                     $xnode_obj = $xnode->addChild('addOnModule');
                                     $xnode_obj->addAttribute('idx', $ti);
                                     $xnode_obj->addChild('loadInformation', $add_val);
@@ -659,11 +683,14 @@ class xmlinterface
                         }
                         break;
                     case 'commonProfile':
-                        $xml_node->phonePassword = $data_values['dev_sshPassword'];
+                        // see the SCCP branch above: only write a credential that is actually set
+                        if (!empty($data_values['dev_sshPassword'])) {
+                            $xml_node->phonePassword = $data_values['dev_sshPassword'];
+                        }
                         $xml_node->backgroundImageAccess = (($data_values['backgroundImageAccess'] == 'on') || ($data_values['backgroundImageAccess'] == 'true') ) ? 'true' : 'false';
                         $xml_node->callLogBlfEnabled = $data_values['callLogBlfEnabled'];
                         break;
-                    case 'userlocale':
+                    case 'userLocale':
                         // Device language
                         $lang = $data_values['devlang'];
                         if (!empty($dev_config['devlang'])) {
@@ -672,12 +699,12 @@ class xmlinterface
                         $xml_node->winCharSet = $dev_config['phonecodepage'];
                         $xml_node->name = $dev_config['devlang'];
                         $xml_node->langCode = 'en';
-                        if (isset($this->langCodeArray['devlang'])) {
-                            $xml_node->langCode = $this->langCodeArray['devlang'];
+                        if (isset($this->langCodeArray[$lang])) {
+                            $xml_node->langCode = $this->langCodeArray[$lang];
                         }
                         $this->replaceSimpleXmlNode($xml_work->$key, $xml_node);
                         break;
-                    case 'networklocale':
+                    case 'networkLocale':
                         $lang = $data_values['netlang'];
                         if (!empty($dev_config['netlang'])) {
                             $lang = $dev_config['netlang'];
@@ -689,7 +716,7 @@ class xmlinterface
                             $xml_work->$key = '';
                         }
                         break;
-                    case 'networklocaleinfo':
+                    case 'networkLocaleInfo':
                         $lang = $data_values['netlang'];
                         if (!empty($dev_config['netlang'])) {
                             $lang = $dev_config['netlang'];
@@ -708,7 +735,8 @@ class xmlinterface
 
             $this->saveXml($xml_work, $xml_name);  // Save
         } else {
-            die('Error Hardware template :' . $xml_template . ' not found');
+            freepbx_log(FPBX_LOG_ERROR, 'sccp_manager: hardware template not found: ' . $xml_template);
+            return false;
         }
         return time();
     }
@@ -724,7 +752,11 @@ class xmlinterface
         $save_data = array();
         $integer_msg = _("%s must be a non-negative integer");
         $errors = array();
-        foreach ($get_settings[$hdr_arprefix . 'dialtemplate'] as $key => $value) {
+        $dialTemplates = $get_settings[$hdr_arprefix . 'dialtemplate'] ?? null;
+        if (!is_array($dialTemplates) || empty($dialTemplates)) {
+            return array(_("At least one dial plan template line is required"));
+        }
+        foreach ($dialTemplates as $key => $value) {
             $xmlstr .= '<TEMPLATE';
             if (!empty($value['match'])) {
                 foreach ($dialFelds as $fld) {
@@ -732,12 +764,12 @@ class xmlinterface
                         if ($value[$fld] == 'empty' || $value[$fld] == '') {
 
                         } else {
-                            $xmlstr .= ' ' . $fld . '="' . (string) $value[$fld] . '"';
+                            $xmlstr .= ' ' . $fld . '="' . htmlspecialchars((string) $value[$fld], ENT_QUOTES | ENT_XML1) . '"';
                         }
                     }
                 }
             } else {
-                $errors = array('Fields need to match !!');
+                $errors[] = _("Fields need to match !!");
             }
             $xmlstr .= "/>\n";
         }
@@ -759,7 +791,9 @@ class xmlinterface
         if (empty($errors)) {
             $put_file = str_replace(array("\n", "\r", "\t", "/", "\\", ".", ","), '', $put_file);
             $file = $confDir . '/dial' . $put_file . '.xml';
-            file_put_contents($file, $xmlstr);
+            if (file_put_contents($file, $xmlstr) === false) {
+                $errors[] = sprintf(_("Could not write %s"), $file);
+            }
         }
 
         return $errors;
@@ -771,7 +805,7 @@ class xmlinterface
             if ($name == 'default') {
                 $typeSoft = $confDir["tftp_templates_path"] . '/SIPDefaultSoftKey.xml_template';
                 if (file_exists($typeSoft)) {
-                    $file = $confDir["tftp_softkey_path"] . '/softkey' . $name . '.xml';
+                    $file = $confDir["tftp_softkey_path"] . '/softkey' . basename($name) . '.xml';
                     if (!copy($typeSoft, $file)) {
                         return array('error' => 'Access error' . $name);
                     }
@@ -796,9 +830,12 @@ class xmlinterface
         $xmlstr .= $read_soft;
         $xmlstr .= "  <softKeySets>\n";
         foreach ($config[$name] as $key => $value) {
-            $xmlstr .= '    <softKeySet id="' . $key . '">' . "\n";
+            if ($key === 'type' || !is_string($value)) {
+                continue;                                       // section meta, not a key set
+            }
+            $xmlstr .= '    <softKeySet id="' . htmlspecialchars($key, ENT_QUOTES | ENT_XML1) . '">' . "\n";
             foreach (explode(",", $value) as $keyvalue) {
-                $xmlstr .= '      <softKey keyID="' . $keyvalue . '" />' . "\n";
+                $xmlstr .= '      <softKey keyID="' . htmlspecialchars($keyvalue, ENT_QUOTES | ENT_XML1) . '" />' . "\n";
             }
             $xmlstr .= "    </softKeySet>\n";
         }
@@ -806,14 +843,14 @@ class xmlinterface
 
         $xmlstr .= '</softKeyCfg>';
         if (empty($errors)) {
-            $file = $confDir["tftp_softkey_path"] . '/softkey' . $name . '.xml';
+            $file = $confDir["tftp_softkey_path"] . '/softkey' . basename($name) . '.xml';
             file_put_contents($file, $xmlstr);
         }
 
         return $errors;
     }
 
-    private function replaceSimpleXmlNode($xml, $element = SimpleXMLElement)
+    private function replaceSimpleXmlNode(\SimpleXMLElement $xml, \SimpleXMLElement $element)
     {
         $dom = dom_import_simplexml($xml);
         $import = $dom->ownerDocument->importNode(
@@ -823,7 +860,7 @@ class xmlinterface
         $dom->parentNode->replaceChild($import, $dom);
     }
 
-    private function appendSimpleXmlNode($xml, $element = SimpleXMLElement)
+    private function appendSimpleXmlNode(\SimpleXMLElement $xml, \SimpleXMLElement $element)
     {
 
         $dom = dom_import_simplexml($xml);

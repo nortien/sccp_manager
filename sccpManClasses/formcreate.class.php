@@ -7,9 +7,57 @@ class formcreate
 {
     use \FreePBX\modules\Sccp_Manager\sccpManTraits\helperFunctions;
 
+    private $metaHelpCache = null;
+
     public function __construct($parent_class = null) {
         $this->buttonDefLabel = 'chan-sccp';
         $this->buttonHelpLabel = 'site';
+    }
+
+    /**
+     * Help texts chan-sccp ships for its own settings, keyed by setting name.
+     *
+     * A field whose schema entry carries <meta_help>1</meta_help> (or the placeholder help text)
+     * takes its description from the driver instead of from our XML, so the help always matches
+     * the driver actually installed. The module builds this map once from the driver's AMI
+     * metadata; if it has not done so yet (the form can be rendered before that runs), build it
+     * here from the same source. An unreachable driver simply means no meta help, and the
+     * schema's own text is kept.
+     */
+    private function metaHelp() {
+        if ($this->metaHelpCache !== null) {
+            return $this->metaHelpCache;
+        }
+        $this->metaHelpCache = array();
+        try {
+            $parent = \FreePBX::Sccp_manager();
+            if ($parent && !empty($parent->sccpHelpInfo) && is_array($parent->sccpHelpInfo)) {
+                $this->metaHelpCache = $parent->sccpHelpInfo;
+                return $this->metaHelpCache;
+            }
+            if (!$parent || empty($parent->aminterface)) {
+                return $this->metaHelpCache;
+            }
+            $metaData = $parent->aminterface->getSCCPConfigMetaData('general');
+            if (empty($metaData['Options']) || !is_array($metaData['Options'])) {
+                return $this->metaHelpCache;
+            }
+            foreach ($metaData['Options'] as $option) {
+                if (empty($option['Name']) || empty($option['Description'])) {
+                    continue;
+                }
+                $description = $option['Description'];
+                $this->metaHelpCache[$option['Name']] = is_array($description)
+                    ? implode('<br>', $description)
+                    : (string) $description;
+            }
+            if (isset($parent->sccpHelpInfo)) {
+                $parent->sccpHelpInfo = $this->metaHelpCache;        // share it, it is static data
+            }
+        } catch (\Throwable $e) {
+            $this->metaHelpCache = array();
+        }
+        return $this->metaHelpCache;
     }
 
     // Shared field wrapper, matching FreePBX core's own convention
@@ -73,10 +121,9 @@ class formcreate
         // if there are multiple inputs, take the first for res_id and shortId
         $shortId = (string)$child->input[0]->name;
         $res_id = $npref.$shortId;
-        if (!empty($metainfo[$shortId])) {
-            if ($child->meta_help == '1' || $child->help == 'Help!') {
-                $child->help = $metainfo[$shortId];
-            }
+        $metaHelp = $this->metaHelp();
+        if (!empty($metaHelp[$shortId]) && ($child->meta_help == '1' || $child->help == 'Help!')) {
+            $child->help = $metaHelp[$shortId];
         }
 
         // --- Add Hidden option
@@ -157,10 +204,9 @@ class formcreate
         $opt_at = array();
         $res_n =  (string)$child->name;
 
-        if (!empty($metainfo[$res_n])) {
-            if ($child->meta_help == '1' || $child->help == 'Help!') {
-                $child->help = $metaInfo[$res_n];
-            }
+        $metaHelp = $this->metaHelp();
+        if (!empty($metaHelp[$res_n]) && ($child->meta_help == '1' || $child->help == 'Help!')) {
+            $child->help = $metaHelp[$res_n];
         }
     //        $res_value
         $lnhtm = '';
@@ -183,7 +229,13 @@ class formcreate
             $res_value = $this->convertCsvToArray($sccp_defaults[$res_n]['data'] ?? '');
         }
         if (empty($res_value)) {
-            $res_value = array((string) $child->default);
+            // Give the declared default the same shape convertCsvToArray() produces. As a bare
+            // string it never reached the fields: the render loop asks isset($addrArr[$field]),
+            // which is false for a string offset addressed by name, so the default was quietly
+            // dropped and the row rendered empty. Fall back to the old shape if the default is
+            // empty or unparseable, so the 'NONE' handling below keeps working.
+            $parsedDefault = $this->convertCsvToArray((string) $child->default);
+            $res_value = !empty($parsedDefault) ? $parsedDefault : array((string) $child->default);
         }
 
         $this->elementOpen($res_id, _($child->label));
@@ -256,7 +308,7 @@ class formcreate
                                     }
 
                                     $defValue = (isset($addrArr[$field_id])) ? $addrArr[$field_id]: "";
-                                    echo '<input type="text" name="'. $res_n.'" class="'.$opt_at[$field_id]['class'].'" value="'. $defValue .'"';
+                                    echo '<input type="text" name="'. $res_n.'" class="'.$opt_at[$field_id]['class'].'" value="'. htmlspecialchars($defValue, ENT_QUOTES) .'"';
 
 
                                     if (isset($value->options)) {
@@ -286,7 +338,7 @@ class formcreate
                             <?php
                             if (!empty($child->addbutton)) {
                                 echo '<div class = "'.$res_id.'-gr">';
-                                echo '<input type="button" id="'.$res_id.'-btn" data-id="'.$res_id.'" data-for="'.$res_id.'" data-max="'.$max_row.'"data-json="'.bin2hex(json_encode($opt_at)).'" class="input-js-add" value="'._($child->addbutton).'" />';
+                                echo '<input type="button" id="'.$res_id.'-btn" data-id="'.$res_id.'" data-for="'.$res_id.'" data-max="'.$max_row.'" data-json="'.bin2hex(json_encode($opt_at)).'" class="input-js-add" value="'._($child->addbutton).'" />';
                                 echo '</div>';
                             }
                             ?>
@@ -303,10 +355,9 @@ class formcreate
         $res_n =  (string)$child->name;
         $res_id = $npref.$res_n;
         $res_ext = str_replace($npref,'',$res_n);
-        if (!empty($metainfo[$res_n])) {
-            if ($child->meta_help == '1' || $child->help == 'Help!') {
-                $child->help = $metaInfo[$res_n];
-            }
+        $metaHelp = $this->metaHelp();
+        if (!empty($metaHelp[$res_n]) && ($child->meta_help == '1' || $child->help == 'Help!')) {
+            $child->help = $metaHelp[$res_n];
         }
 
         // --- Add Hidden option
@@ -399,10 +450,9 @@ class formcreate
         $res_id = $npref.$res_n;
         $child->value ='';
         // $select_opt is an associative array for these types.
-        if (!empty($metainfo[$res_n])) {
-            if ($child->meta_help == '1' || $child->help == 'Help!') {
-                $child->help = $metaInfo[$res_n];
-            }
+        $metaHelp = $this->metaHelp();
+        if (!empty($metaHelp[$res_n]) && ($child->meta_help == '1' || $child->help == 'Help!')) {
+            $child->help = $metaHelp[$res_n];
         }
         switch ($child['type']) {
             case 'SLS':
@@ -448,8 +498,10 @@ class formcreate
                         $select_opt[$key]= $key;
                     }
                 }
+                break;
 
             case 'SLM':
+                $moh_list = null;
                 if (function_exists('music_list')) {
                     $moh_list = music_list();
                 }
@@ -533,10 +585,9 @@ class formcreate
         $child->value ='';
         $selectArray = array();
         // $select_opt is an associative array for these types.
-        if (!empty($metainfo[$res_n])) {
-            if ($child->meta_help == '1' || $child->help == 'Help!') {
-                $child->help = $metaInfo[$res_n];
-            }
+        $metaHelp = $this->metaHelp();
+        if (!empty($metaHelp[$res_n]) && ($child->meta_help == '1' || $child->help == 'Help!')) {
+            $child->help = $metaHelp[$res_n];
         }
 
         switch ($child['type']) {
@@ -615,10 +666,9 @@ class formcreate
         $res_n =  (string)$child ->name;
         $res_id = $npref.$res_n;
 
-        if (!empty($metainfo[$res_n])) {
-            if ($child->meta_help == '1' || $child->help == 'Help!') {
-                $child->help = $metaInfo[$res_n];
-            }
+        $metaHelp = $this->metaHelp();
+        if (!empty($metaHelp[$res_n]) && ($child->meta_help == '1' || $child->help == 'Help!')) {
+            $child->help = $metaHelp[$res_n];
         }
 
         if (empty($child->class)) {
@@ -638,7 +688,11 @@ class formcreate
                 $assignedExts = \FreePBX::Sccp_manager()->dbinterface->getSccpDeviceTableData('getAssignedExtensions');
                 $select_opt = \FreePBX::Sccp_manager()->dbinterface->getSccpDeviceTableData('SccpExtension');
                 foreach ($assignedExts as $name => $nameArr ) {
-                      $select_opt[$name]['label'] .= " -  in use";
+                      // an assigned extension without a matching sccpline row must not
+                      // conjure an entry of its own into the list
+                      if (isset($select_opt[$name]['label'])) {
+                          $select_opt[$name]['label'] .= " -  in use";
+                      }
                 }
                 $child->default = $fvalues['defaultLine'] ?? '';
                 break;
@@ -769,13 +823,13 @@ class formcreate
                 $res_opt['inp_end'] = '<span class="input-group-addon" id="bases_'.$res_n.'">'.$opt_at[$fields_id]['display_sufix'].'</span></div>';
                 switch ($value['type']) {
                     case 'date':
-                        echo $res_opt['inp_st'].'<input type="date" name="'. $res_n.'" value="'.($res_vf[$i2] ?? '').'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
+                        echo $res_opt['inp_st'].'<input type="date" name="'. $res_n.'" value="'.htmlspecialchars($res_vf[$i2] ?? '', ENT_QUOTES).'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
                         break;
                     case 'number':
-                        echo $res_opt['inp_st'].'<input type="number" name="'. $res_n.'" value="'.($res_vf[$i2] ?? '').'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
+                        echo $res_opt['inp_st'].'<input type="number" name="'. $res_n.'" value="'.htmlspecialchars($res_vf[$i2] ?? '', ENT_QUOTES).'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
                         break;
                     case 'input':
-                        echo $res_opt['inp_st'].'<input type="text" name="'. $res_n.'" value="'.($res_vf[$i2] ?? '').'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
+                        echo $res_opt['inp_st'].'<input type="text" name="'. $res_n.'" value="'.htmlspecialchars($res_vf[$i2] ?? '', ENT_QUOTES).'"'.$res_opt['addon']. '>'.$res_opt['inp_end'];
                         break;
                     case 'title':
                         if ($i > 0) {
@@ -862,10 +916,9 @@ class formcreate
         $res_id = $npref.$res_n;
         $child->value ='';
 
-        if (!empty($metainfo[$res_n])) {
-            if ($child->meta_help == '1' || $child->help == 'Help!') {
-                $child->help = $metaInfo[$res_n];
-            }
+        $metaHelp = $this->metaHelp();
+        if (!empty($metaHelp[$res_n]) && ($child->meta_help == '1' || $child->help == 'Help!')) {
+            $child->help = $metaHelp[$res_n];
         }
 
         if (empty($child->class)) {

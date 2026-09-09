@@ -293,6 +293,15 @@ class Sccp extends \FreePBX\modules\Core\Driver {
                                 'category' => $gn_category
                               );
 
+        // FreePBX core builds the device fields solely from the devinfo_* keys present in the
+        // submitted form, and dies with "Fields are empty" when there are none. Both codec
+        // selectors below are checkboxes, and the help text invites clearing every one of them
+        // to fall back to site defaults - an unchecked checkbox is not submitted, so that left
+        // the request without a single devinfo_ key. Carry one hidden field that is always
+        // posted: core turns an empty devinfo_dial into "<tech>/<account>", which is exactly
+        // the dial string this driver wants anyway.
+        $currentComponent->addguielem($section_с, new \gui_hidden("devinfo_dial", ""), $gn_category);
+
         $el = array(
             "elemname" => "devinfo_sccp_codec",
             "prompttext" => _('Line Audio Codec:'),

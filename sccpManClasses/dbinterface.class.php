@@ -209,7 +209,10 @@ class dbinterface
             case 'byciscoid':
                 if (!empty($filter)) {
                     if (!empty($filter['model'])) {
-                        if (!strpos($filter['model'], 'loadInformation')) {
+                        // strpos() returns 0 when the prefix is already at the start and !0 is
+                        // true, so the guard prepended a second time for exactly the case it was
+                        // meant to catch, producing 'loadInformationloadInformation<id>'
+                        if (strncmp((string) $filter['model'], 'loadInformation', 15) !== 0) {
                             $filter['model'] = 'loadInformation' . $filter['model'];
                         }
                         $stmt = $this->db->prepare("SELECT {$sel_inf} FROM sccpdevmodel WHERE (loadinformationid = :model ) ORDER BY model");
@@ -411,13 +414,22 @@ class dbinterface
         // Credentials go in a 0600 defaults-extra-file, not on the command line where
         // they are readable via `ps` while the dump runs. Same hardening as uninstall.php.
         $credFile = tempnam(sys_get_temp_dir(), 'sccpdump_');
-        file_put_contents($credFile, "[client]\nuser=".$user."\npassword=".$pass."\n");
+        // quote the values: in a MySQL option file a '#' starts a comment, surrounding spaces
+        // are stripped and a backslash escapes - an unquoted password containing any of those
+        // silently produced the wrong credentials and a failed dump
+        $optQuote = function ($value) {
+            return '"' . str_replace(array('\\', '"'), array('\\\\', '\\"'), (string) $value) . '"';
+        };
+        file_put_contents($credFile, "[client]\nuser=" . $optQuote($user) . "\npassword=" . $optQuote($pass) . "\n");
         chmod($credFile, 0600);
         $cmd = 'mysqldump --defaults-extra-file='.escapeshellarg($credFile)
              .' --single-transaction '.escapeshellarg($database)
              .' > '.escapeshellarg($filename).' 2>'.escapeshellarg($filename.'.err');
         exec($cmd, $output, $return_var);
         unlink($credFile);
+        if (file_exists($filename)) {
+            @chmod($filename, 0600);        // the dump holds device secrets and admin hashes
+        }
         if ($return_var !== 0 || !file_exists($filename) || filesize($filename) === 0) {
             @unlink($filename);
             @unlink($filename.'.err');
@@ -428,7 +440,13 @@ class dbinterface
     }
 
     public function updateTableDefaults($table, $field, $value) {
-        $stmt = $this->db->prepare("ALTER TABLE {$table} ALTER COLUMN {$field} SET DEFAULT '{$value}'");
+        // $table/$field are identifiers spliced into DDL and cannot be bound as
+        // parameters, so validate them strictly; the default value is quoted.
+        if (!preg_match('/^[A-Za-z0-9_]+$/', (string) $table) || !preg_match('/^[A-Za-z0-9_]+$/', (string) $field)) {
+            error_log("sccp_manager: updateTableDefaults rejected invalid identifier: {$table}.{$field}");
+            return;
+        }
+        $stmt = $this->db->prepare("ALTER TABLE `{$table}` ALTER COLUMN `{$field}` SET DEFAULT " . $this->db->quote((string) $value));
         $stmt->execute();
     }
 

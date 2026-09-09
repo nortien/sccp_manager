@@ -290,9 +290,25 @@ class extconfigs
         if (empty($settingsFromDb['tftp_rewrite_path']['data'] ?? '')) {
             $settingsFromDb['tftp_rewrite_path']['data'] = $settingsFromDb['tftp_path']['data'] ?? '/tftpboot';
         } else {
-            // Have a setting in sccpsettings. It should start with $tftp_path
-            // If not we will replace it with $tftp_path. Avoids issues with legacy values
-            if (!strpos($settingsFromDb['tftp_rewrite_path']["data"] ?? '', $settingsFromDb['tftp_path']['data'] ?? '')) {
+            // The rewrite path must live inside the tftp root. The old guard asked
+            // !strpos($rewrite, $root): strpos returns 0 exactly when the path does start with
+            // the root, and !0 is true - so every correct value was thrown away, while a value
+            // that merely mentioned the root somewhere in the middle ('/evil/../tftpboot/x')
+            // passed. That is what let a crafted path out of the tree and into the file
+            // operations below. Compare properly, on normalised paths.
+            $tftpRoot = rtrim((string) ($settingsFromDb['tftp_path']['data'] ?? '/tftpboot'), '/');
+            $rewritePath = rtrim((string) ($settingsFromDb['tftp_rewrite_path']['data'] ?? ''), '/');
+            $realRoot = realpath($tftpRoot);
+            $realRewrite = realpath($rewritePath);
+            if ($realRoot !== false && $realRewrite !== false) {
+                // both exist - compare what they actually resolve to, so symlinks and ../ cannot
+                // dress up a path outside the tree
+                $tftpRoot = rtrim($realRoot, '/');
+                $rewritePath = rtrim($realRewrite, '/');
+            }
+            $contained = ($rewritePath === $tftpRoot)
+                      || strncmp($rewritePath, $tftpRoot . '/', strlen($tftpRoot) + 1) === 0;
+            if (!$contained || strpos($rewritePath, '..') !== false) {
                 $settingsFromDb['tftp_rewrite_path']['data'] = $settingsFromDb['tftp_path']['data'] ?? '/tftpboot';
             }
         }
@@ -302,20 +318,39 @@ class extconfigs
         switch ($settingsFromDb['tftp_rewrite']['data'] ?? 'off') {
             case 'pro':
                 $adv_tree_mode = 'pro';
-                if (!empty($adv_ini) && file_exists($adv_ini)) {
+                // index.cnf sits in the TFTP tree, which is owned by the web user, while this
+                // runs as root. Following a symlink planted there would let that user have root
+                // read any ini-shaped file (its keys are merged below and written back into a
+                // file served over TFTP without authentication) and - because file_exists() is
+                // false for a dangling link, so the rename below would skip it - have the fopen()
+                // further down write through the link. Refuse links outright.
+                if (is_link($adv_ini)) {
+                    @unlink($adv_ini);
+                }
+                if (!empty($adv_ini) && is_file($adv_ini)) {
                     $adv_ini_array = parse_ini_file($adv_ini);
-                    $adv_config = array_merge($adv_config, $adv_ini_array);
+                    if (is_array($adv_ini_array)) {
+                        // take only the keys this structure defines, so a foreign file cannot
+                        // inject its own into the TFTP-served index
+                        $adv_config = array_merge($adv_config, array_intersect_key($adv_ini_array, $adv_config));
+                    }
                 }
                 // rewrite adv_ini to reflect the new $adv_config
                 if (file_exists($adv_ini)){
                     rename($adv_ini, "{$adv_ini}.old");
                 }
-                $indexFile = fopen($adv_ini,'w');
-                fwrite($indexFile, "[main]\n");
-                foreach ($adv_config as $advKey => $advVal) {
-                    fwrite($indexFile, "{$advKey} = {$advVal}\n");
+                $indexFile = @fopen($adv_ini, 'w');
+                if ($indexFile === false) {
+                    // unwritable path: fwrite() on false is a TypeError on PHP 8, and the old
+                    // code went straight on to write into it
+                    freepbx_log(FPBX_LOG_ERROR, "sccp_manager: could not write {$adv_ini}");
+                } else {
+                    fwrite($indexFile, "[main]\n");
+                    foreach ($adv_config as $advKey => $advVal) {
+                        fwrite($indexFile, "{$advKey} = {$advVal}\n");
+                    }
+                    fclose($indexFile);
                 }
-                fclose($indexFile);
                 $settingsFromDb['tftp_rewrite']['data'] = 'pro';
                 break;
             case 'on':
