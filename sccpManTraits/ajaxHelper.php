@@ -118,7 +118,7 @@ trait ajaxHelper {
                 $ver_id = ' on found active model !';
                 foreach ($models as $data) {
                     $ver_id = $this->createSccpDeviceXML($data['name']);
-                    if ($ver_id == -1) {
+                    if (empty($ver_id)) {                       // the generator returns a version stamp, or false on failure
                         return array('status' => false, 'message' => 'Error Create Configuration Divice :' . $data['name']);
                     }
                 };
@@ -278,11 +278,11 @@ trait ajaxHelper {
                     $result[$i]['softkeys'] = $keyl;
                     if ($keyl == 'default') {
                         foreach ($this->extconfigs->getExtConfig('keyset') as $key => $value) {
-                            $result[$i][$key] = str_replace(',', '<br>', $value);
+                            $result[$i][$key] = str_replace(',', ', ', $value);   // the grid escapes HTML, so no <br> here
                         }
                     } else {
                         foreach ($this->getMyConfig('softkeyset', $keyl) as $key => $value) {
-                            $result[$i][$key] = str_replace(',', '<br>', $value);
+                            $result[$i][$key] = str_replace(',', ', ', $value);   // the grid escapes HTML, so no <br> here
                         }
                     }
 
@@ -580,7 +580,10 @@ trait ajaxHelper {
         }
         switch ($request['type']) {
             case 'firmware':
-                $device = $request['device'];
+                $device = preg_replace('/[^A-Za-z0-9_.-]/', '', (string)($request['device'] ?? ''));
+                if ($device === '' || $device === '.' || $device === '..') {
+                    return array('status' => false, 'message' => _('Invalid device name'), 'reload' => false);
+                }
                 $firmwareDir = $tftpBootXml->xpath("//Directory[@name='firmware']");
                 $result = $firmwareDir[0]->xpath("//Directory[@name='{$device}']");
                 $filesToGet['firmware'] = (array)$result[0]->FileName;
@@ -607,7 +610,10 @@ trait ajaxHelper {
                 $msg = "Firmware for {$device} has been successfully downloaded";
                 break;
             case 'locale':
-                $language = $request['locale'];
+                $language = preg_replace('/[^A-Za-z0-9_.-]/', '', (string)($request['locale'] ?? ''));
+                if ($language === '' || $language === '.' || $language === '..') {
+                    return array('status' => false, 'message' => _('Invalid locale name'), 'reload' => false);
+                }
                 // Get locales
                 $localeDir = $tftpBootXml->xpath("//Directory[@name='languages']");
                 $result = $localeDir[0]->xpath("//Directory[@name='{$language}']");
@@ -629,7 +635,10 @@ trait ajaxHelper {
             case 'country':
                 if ($totalFiles == 0) {
                     //Request is for countries; if >0, have fallen through from locale
-                    $countryName = $request['country'];
+                    $countryName = preg_replace('/[^A-Za-z0-9_.-]/', '', (string)($request['country'] ?? ''));
+                    if ($countryName === '' || $countryName === '.' || $countryName === '..') {
+                        return array('status' => false, 'message' => _('Invalid country name'), 'reload' => false);
+                    }
                     $msg = "{$countryName} country tones have been successfully downloaded";
                 }
 

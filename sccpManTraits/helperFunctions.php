@@ -21,11 +21,19 @@ trait helperfunctions {
             if (count($subArr) === 2) {
                 // Have net/mask
                 $outputArr[] = array('net' => $subArr[0], 'mask' => $subArr[1]);
-            } else {
+                continue;
+            }
+            if (strpos($value, ':') !== false) {
                 // have ip:port
                 $subArr = explode(":", $value);
                 $outputArr[] = array('ip' => $subArr[0], 'port' => $subArr[1]);
+                continue;
             }
+            // Neither shape. Reading $subArr[1] here used to raise an undefined-index warning
+            // and hand back a bogus ip/port pair. The remaining dynamic field with a plain
+            // value is setvar (stored verbatim by the save path), and keying it by its own
+            // field name is what lets the form show it back.
+            $outputArr[] = array('setvar' => $value);
         }
         return $outputArr;
     }
@@ -39,7 +47,20 @@ trait helperfunctions {
         }
         $output = array();
         // Internal is always element 0, nets and ips start at element 1.
-        if ((isset($arrayToConvert[1]['net'])) || (isset($arrayToConvert[0]['internal']))) {
+        $isNetList = false;
+        foreach ($arrayToConvert as $probeRow) {
+            if (!is_array($probeRow)) {
+                continue;
+            }
+            if (isset($probeRow['internal']) || array_key_exists('net', $probeRow)) {
+                $isNetList = true;
+                break;
+            }
+            if (array_key_exists('ip', $probeRow)) {
+                break;
+            }
+        }
+        if ($isNetList) {
             // Have net masks
             foreach ($arrayToConvert as $netValue) {
                 if (isset($netValue['internal'])) {
@@ -102,7 +123,17 @@ trait helperfunctions {
             }
             $ret = preg_match("/(\d*+.\d*+.\d*+.\d*+)[\/(\d*+)]*/", $vals[3], $ip);
 
-            $interfaces[$vals[1] . ':' . $vals[2]] = array('name' => $vals[1], 'type' => $vals[2], 'ip' => ((empty($ip[1]) ? '' : $ip[1])));
+            $ifKey = $vals[1] . ':' . $vals[2];
+            if (isset($interfaces[$ifKey])) {
+                // one interface can carry several addresses of the same family; keying by
+                // interface:family alone kept only the last of them
+                $ifSuffix = 2;
+                while (isset($interfaces[$ifKey . '#' . $ifSuffix])) {
+                    $ifSuffix++;
+                }
+                $ifKey .= '#' . $ifSuffix;
+            }
+            $interfaces[$ifKey] = array('name' => $vals[1], 'type' => $vals[2], 'ip' => ((empty($ip[1]) ? '' : $ip[1])));
         }
         return $interfaces;
     }
@@ -116,8 +147,10 @@ trait helperfunctions {
             return true;
         }
         foreach ($arr as $currentKey => $value) {
-            if (is_array($value)) {
-                return $this->array_key_exists_recursive($key, $value);
+            // returning the first nested array's answer stopped the search there, so a key
+            // living in the second or any later branch was reported as missing
+            if (is_array($value) && $this->array_key_exists_recursive($key, $value)) {
+                return true;
             }
         }
         return false;
@@ -266,7 +299,7 @@ trait helperfunctions {
             $pkt = unpack("nopcode/nblockno/a*data", $buffer);
 
             // send ack and close socket.
-            $packet = chr(4) . chr($pkt["blockno"]);
+            $packet = pack('nn', 4, $pkt["blockno"]);        // RFC 1350: 2-byte opcode + 2-byte block number
             socket_sendto($socket, $packet, strlen($packet), MSG_EOR, $host, $port);
 
             socket_close($socket);
