@@ -1042,8 +1042,17 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $dev_config['tftp_firmware'] = '';
         $dev_config['addon_info'] = array();
         if (!empty($dev_config['addon'])) {
-            $hw_addon = explode(',', $dev_config['addon']);
+            // Semicolon, not comma. A pair of identical sidecars is stored as one
+            // field, '7916;7916', because res_config_mysql splits a realtime column
+            // value on ';' into repeated addon= variables for the driver. Splitting
+            // on ';' keys this map per sidecar model, so the generator below can emit
+            // one <addOnModule> per attached module.
+            $hw_addon = explode(';', (string) $dev_config['addon']);
             foreach ($hw_addon as $key) {
+                $key = trim($key);
+                if ($key === '') {
+                    continue;
+                }
                 $hw_data = $this->getSccpModelInformation('byid', false, "all", array('model' => $key));
                 // Empty if this addon model was removed from sccpdevmodel while a
                 // device still references it in its own 'addon' field (a stale

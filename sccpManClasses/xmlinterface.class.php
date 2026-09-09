@@ -157,6 +157,49 @@ class xmlinterface
         }
     }
 
+    /**
+     * Append the <addOnModules> block for a device that has expansion modules.
+     *
+     * Written here rather than while walking the template, because it used to be
+     * emitted from inside the branch that handles the template's <loadInformation>
+     * element, and two of the shipped templates have no such element: the ones for
+     * the 7975 and for the 797x family. Those are exactly the models that carry a
+     * sidecar and never got one provisioned, which is upstream report
+     * chan-sccp/chan-sccp#623. Emitting it from here makes the block independent of
+     * what the template happens to contain, and also stops the document being
+     * modified while the loop above is iterating it.
+     *
+     * The field holds one model name; a pair of identical sidecars is stored as one
+     * value, '7916;7916', because the realtime backend splits a column on the
+     * semicolon into repeated addon variables for the driver.
+     *
+     * @param \SimpleXMLElement $xml_work  device document being built
+     * @param array             $dev_config device row, with 'addon' and 'addon_info'
+     */
+    private function addAddOnModules($xml_work, $dev_config)
+    {
+        if (empty($dev_config['addon'])) {
+            return;
+        }
+        $xnode = null;
+        $ti = 1;
+        foreach (explode(';', (string) $dev_config['addon']) as $add_key) {
+            $add_key = trim($add_key);
+            if ($add_key === '' || empty($dev_config['addon_info'][$add_key])) {
+                continue;
+            }
+            if ($xnode === null) {
+                // Created on first use, so a device whose addon has no firmware on
+                // record does not get an empty element.
+                $xnode = $xml_work->addChild('addOnModules');
+            }
+            $xnode_obj = $xnode->addChild('addOnModule');
+            $xnode_obj->addAttribute('idx', (string) $ti);
+            $xnode_obj->addChild('loadInformation', $dev_config['addon_info'][$add_key]);
+            $ti++;
+        }
+    }
+
     function create_SEP_XML($store_path, $data_values, $dev_config, $dev_id, $lang_info = array())
     {
         // TODO: $data_values are system wide defaults, $dev_config are specific device values.
@@ -336,25 +379,8 @@ class xmlinterface
                     } else {
                         $xml_work->$key = (isset($dev_config["loadimage"])) ? $dev_config["loadimage"] : '';
                     }
-                    if (!empty($dev_config['addon'])) {
-                        $xnode = $xml_work->addChild('addOnModules');
-                        $ti = 1;
-                        // addon_info is built by splitting this same field on ',' (see
-                        // Sccp_manager::createSccpDeviceXML), and it is keyed per addon model -
-                        // splitting on ';' and then looking the whole field up as one key meant
-                        // a device with more than one addon got none of them.
-                        $hw_addon = explode(',', $dev_config['addon']);
-                        foreach ($hw_addon as $add_key) {
-                            $add_key = trim($add_key);
-                            if (!empty($dev_config['addon_info'][$add_key])) {
-                                $add_val = $dev_config['addon_info'][$add_key];
-                                $xnode_obj = $xnode->addChild('addOnModule');
-                                $xnode_obj->addAttribute('idx', $ti);
-                                $xnode_obj->addChild('loadInformation', $add_val);
-                                $ti++;
-                            }
-                        }
-                    }
+                    // The expansion modules used to be written here. They are now added
+                    // once, after this loop, by addAddOnModules(): see the note there.
                     break;
                 case 'commonprofile':
                     // The phone reads this in clear text - that is how the Cisco provisioning
@@ -664,23 +690,8 @@ class xmlinterface
                         } else {
                             $xml_work->$key = (isset($dev_config["loadimage"])) ? $dev_config["loadimage"] : '';
                         }
-                        if (!empty($dev_config['addon'])) {
-                            $xnode = $xml_work->addChild('addOnModules');
-                            $ti = 1;
-                            // same as the SCCP branch: addon_info is keyed per model and the
-                            // field is comma separated
-                            $hw_addon = explode(',', $dev_config['addon']);
-                            foreach ($hw_addon as $add_key) {
-                                $add_key = trim($add_key);
-                                if (!empty($dev_config['addon_info'][$add_key])) {
-                                    $add_val = $dev_config['addon_info'][$add_key];
-                                    $xnode_obj = $xnode->addChild('addOnModule');
-                                    $xnode_obj->addAttribute('idx', $ti);
-                                    $xnode_obj->addChild('loadInformation', $add_val);
-                                    $ti++;
-                                }
-                            }
-                        }
+                        // Expansion modules are added once after this loop, by
+                        // addAddOnModules(). Same reason as the SCCP branch.
                         break;
                     case 'commonProfile':
                         // see the SCCP branch above: only write a credential that is actually set
@@ -733,6 +744,7 @@ class xmlinterface
                 }
             }
 
+            $this->addAddOnModules($xml_work, $dev_config);
             $this->saveXml($xml_work, $xml_name);  // Save
         } else {
             freepbx_log(FPBX_LOG_ERROR, 'sccp_manager: hardware template not found: ' . $xml_template);
