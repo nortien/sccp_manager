@@ -39,7 +39,8 @@
         var banner = document.getElementById('sccp-page-banner');
         var text = active ? active.getAttribute('data-banner') : '';
         if (text) {
-            banner.innerHTML = '<b><?php echo _("IMPORTANT:"); ?></b> ' + text;
+            banner.innerHTML = '<b><?php echo _("IMPORTANT:"); ?></b> ';
+            banner.appendChild(document.createTextNode(text));
             banner.style.display = '';
         } else {
             banner.style.display = 'none';

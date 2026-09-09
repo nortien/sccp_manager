@@ -19,8 +19,12 @@ if (empty($spage->class_error)) {
     $display_page = $spage->advServerShowPage();
     $display_info = _("SCCP Advance Server Configuration");
 } else {
-    $display_page = $spage->infoServerShowPage();
-    $display_info = _("SCCP Server Configuration");
+        // Unreachable: Sccp_manager::__construct() fills class_error and then rethrows
+        // (Sccp_manager.class.php:150), so an object carrying a non-empty class_error is
+        // never handed out. Kept, disabled, as the intended degraded-page fallback - it
+        // becomes live again if that constructor ever stops rethrowing.
+        // $display_page = $spage->infoServerShowPage();
+        // $display_info = _("SCCP Server Configuration");
 }
 // standardise code to reduce base
 include('page.html.php');

@@ -130,7 +130,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                         if (class_exists($class, false)) {
                             $this->$name = new $class($this);
                         } else {
-                            throw new \Exception("Invalid Class inside in the include folder" . print_r($freepbx));
+                            throw new \Exception(sprintf('sccp_manager: class %s was not found in the include folder', $class));
                         }
                     }
                 }
@@ -174,8 +174,13 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         if (empty($this->sccpHelpInfo)) {
             $sysConfiguration = $this->aminterface->getSCCPConfigMetaData('general');
 
-            foreach ($sysConfiguration['Options'] as $key => $valueArray) {
-                foreach ($valueArray['Description'] as $descKey => $descValue) {
+            // the driver may be unreachable or an option may carry no description at all -
+            // walking those unchecked is a TypeError on PHP 8
+            foreach (($sysConfiguration['Options'] ?? array()) as $key => $valueArray) {
+                if (empty($valueArray['Name']) || empty($valueArray['Description'])) {
+                    continue;
+                }
+                foreach ((array) $valueArray['Description'] as $descKey => $descValue) {
                     $this->sccpHelpInfo[$valueArray['Name']] = ($this->sccpHelpInfo[$valueArray['Name']] ?? '') . $descValue . '<br>';
                 }
             }
@@ -427,7 +432,13 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         );
 
         // $lines_list = $this->dbinterface->getSccpDeviceTableData('SccpExtension');
-        $max_btn = (!empty($get_settings['buttonscount']) ? $get_settings['buttonscount'] : 60);
+        // comes from a hidden form field, so treat it as untrusted: an integer, and never
+        // more buttons than a device could physically have with its addons
+        $max_btn = (int) ($get_settings['buttonscount'] ?? 0);
+        if ($max_btn <= 0) {
+            $max_btn = 60;
+        }
+        $max_btn = min($max_btn, 200);
 
         for ($it = 0; $it < $max_btn; $it++) {
             if (!empty($get_settings["button{$it}_type"])) {
@@ -545,7 +556,10 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $db_field = $this->dbinterface->getSccpDeviceTableData("get_columns_sccpuser");
         $hw_prefix = 'SEP';
         $name_dev = $get_settings[$hdr_prefix . 'id'] ?? '';
-        $save_buttons = $this->getPhoneButtons($get_settings, $name_dev, 'sccpline');
+        // the buttons belong to the roaming user, so they must carry reftype 'sccpuser':
+        // that is what the sccpuserconfig view joins on, and the sccpbuttonconfig trigger
+        // would reject 'sccpline' anyway (it requires a matching row in sccpline).
+        $save_buttons = $this->getPhoneButtons($get_settings, $name_dev, 'sccpuser');
 
         foreach ($db_field as $data) {
             $key = (string) $data['Field'];
@@ -606,7 +620,10 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
             }
         }
         $this->dbinterface->write('sccpuser', $save_settings, 'replace', 'name');
-        $this->dbinterface->write('sccpbuttons', $save_buttons, 'delete', '', $name_dev); //standardise to delete
+        // 'delete' only runs DELETE ... WHERE ref = :hwid and ignores the value entirely, so the
+        // buttons computed above were thrown away instead of stored. 'clear' is the delete+add
+        // pair the device path uses.
+        $this->dbinterface->write('sccpbuttons', $save_buttons, 'clear', '', $name_dev);
         return $save_buttons;
     }
 
@@ -661,12 +678,20 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $result = array();
 
         if (!file_exists("{$this->sccppath['tftp_path']}/masterFilesStructure.xml")) {
-            if (!$this->getFileListFromProvisioner(($this->sccpvalues['tftp_path']['data'] ?? ''))) {
+            // download to the very directory the check above looks in: taking the path from
+            // sccpvalues instead meant an empty setting wrote the list to '/' while the check
+            // kept failing against the real tftp root
+            if (!$this->getFileListFromProvisioner($this->sccppath['tftp_path'] ?? '')) {
                 // File does not exist and cannot get from internet.
                 return $result;
             };
         }
         $tftpBootXml = simplexml_load_file("{$this->sccppath['tftp_path']}/masterFilesStructure.xml");
+        if ($tftpBootXml === false) {
+            // malformed or unreadable - ->xpath() below would be a fatal error
+            freepbx_log(FPBX_LOG_WARNING, "sccp_manager: could not parse {$this->sccppath['tftp_path']}/masterFilesStructure.xml");
+            return $result;
+        }
 
         foreach (array('languages', 'countries') as $pack) {
             switch ($pack) {
@@ -804,7 +829,11 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         // AJAX caller) - otherwise this returns an undefined variable, which
         // is a warning-turned-fatal under FreePBX's strict handler.
         $res = array();
-        $file = $this->sccppath["tftp_dialplan_path"] . '/' . $get_file . '.xml';
+        $safe = basename((string) $get_file);
+        if ($safe === '' || $safe[0] === '.') {   // reject empty, '..' and dotfiles so a crafted name cannot escape the dialplan dir
+            return $res;
+        }
+        $file = $this->sccppath["tftp_dialplan_path"] . '/' . $safe . '.xml';
         if (file_exists($file)) {
 
             $fileContents = file_get_contents($file);
@@ -821,7 +850,11 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         // getDialPlan() above - false is the correct "nothing to delete"
         // result here, not an undefined variable.
         $res = false;
-        $file = $this->sccppath["tftp_dialplan_path"] . '/' . $get_file . '.xml';
+        $safe = basename((string) $get_file);
+        if ($safe === '' || $safe[0] === '.') {   // reject empty, '..' and dotfiles so a crafted name cannot escape the dialplan dir
+            return $res;
+        }
+        $file = $this->sccppath["tftp_dialplan_path"] . '/' . $safe . '.xml';
         if (file_exists($file)) {
             $res = unlink($file);
         }
@@ -953,8 +986,18 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                     $tmp_line = explode(',', $value);
                     switch ($tmp_line[0]) {
                         case 'line':
+                            // a malformed entry, or a line that no longer exists in the sip
+                            // tables, used to be read straight through: $tmp_line[1]/[2] without
+                            // a length check and ['sipdriver'] off a row the code itself tests
+                            // for emptiness a few lines further down
+                            if (!isset($tmp_line[1])) {
+                                continue 2;
+                            }
                             $dev_line_data = $this->dbinterface->getSipTableData('DeviceById', $tmp_line[1]);
-                            $f_linetype = ($dev_line_data['sipdriver'] == 'chan_sip') ? 'sip' : 'pjsip';
+                            if (empty($dev_line_data)) {
+                                continue 2;
+                            }
+                            $f_linetype = (($dev_line_data['sipdriver'] ?? '') == 'chan_sip') ? 'sip' : 'pjsip';
                             $dev_line_data['sbind'] = $tmp_bind[$f_linetype];
                             if ((!$this->array_key_exists_recursive('udp', $tmp_bind[$f_linetype])) && (!$this->array_key_exists_recursive('tcp', $tmp_bind[$f_linetype]))) {
                                 die_freepbx(_("SIP server configuration error ! Neither UDP nor TCP protocol enabled"));
@@ -963,12 +1006,12 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                             if (!empty($dev_line_data)) {
                                 $data_value['siplines'][] = $dev_line_data;
                             }
-                            if ($tmp_line[2] == 'default') {
+                            if (($tmp_line[2] ?? '') == 'default') {
                                 $data_value['sbind'] = $tmp_bind[$f_linetype];
                             }
                             break;
                         case 'speeddial':
-                            $data_value['speeddial'][] = array("name" => $tmp_line[1], "dial" => $tmp_line[2]);
+                            $data_value['speeddial'][] = array("name" => $tmp_line[1] ?? '', "dial" => $tmp_line[2] ?? '');
                             break;
                         default:
                             $data_value['sipfunctions'][] = $tmp_line;
@@ -1020,7 +1063,12 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
             $xml_name = $this->sccppath["tftp_store_path"] . '/VG*.cnf.xml';
             array_map("unlink", glob($xml_name));
         } else {
-            if (!strpos($dev_id, 'SEP')) {
+            // strpos() returns 0 for a name that starts with SEP and !0 is true, so this
+            // refused every legitimate device and deleted nothing - while a crafted name with
+            // SEP somewhere in the middle sailed through. Validate the id properly instead:
+            // it becomes the file name we are about to unlink. ATA/VG devices are covered too,
+            // the 'all' branch above already removes their files.
+            if (!preg_match('/^(SEP|ATA|VG)[0-9A-Za-z_-]+$/', (string) $dev_id)) {
                 return false;
             }
             $xml_name = $this->sccppath["tftp_store_path"] . '/' . $dev_id . '.cnf.xml';
@@ -1028,6 +1076,7 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
                 unlink($xml_name);
             }
         }
+        return true;
     }
 
     private function createSccpBackup() {
@@ -1036,9 +1085,14 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         $backup_files = array($amp_conf['ASTETCDIR'] . '/sccp', $amp_conf['ASTETCDIR'] . '/extensions', $amp_conf['ASTETCDIR'] . '/extconfig',
             $amp_conf['ASTETCDIR'] . '/res_config_mysql', $amp_conf['ASTETCDIR'] . '/res_mysql');
         $backup_ext = array('.conf', '_additional.conf', '_custom.conf');
-        $backup_info = $this->sccppath["tftp_path"] . '/sccp_dir.info';
+        // Stage the dump and the archive outside the TFTP tree. Both hold the whole asterisk
+        // database (device secrets, admin hashes) and the asterisk configs, and the tftp root is
+        // served without authentication under names that are easy to guess. The archive is
+        // streamed to the browser and unlinked right after, so it never needs to live there.
+        $stageDir = sys_get_temp_dir();
+        $backup_info = $stageDir . '/sccp_dir.info';
 
-        $result = $this->dbinterface->dump_sccp_tables($this->sccppath["tftp_path"], $amp_conf['AMPDBNAME'], $amp_conf['AMPDBUSER'], $amp_conf['AMPDBPASS']);
+        $result = $this->dbinterface->dump_sccp_tables($stageDir, $amp_conf['AMPDBNAME'], $amp_conf['AMPDBUSER'], $amp_conf['AMPDBPASS']);
         $dir_info['asterisk'] = $this->findAllFiles($amp_conf['ASTETCDIR']);
         $dir_info['tftpdir'] = $this->findAllFiles($this->sccppath["tftp_path"]);
         $dir_info['driver'] = $this->FreePBX->Core->getAllDriversInfo();
@@ -1062,9 +1116,16 @@ class Sccp_manager extends \FreePBX_Helpers implements \BMO {
         fputs($fh, $dir_str);
         fclose($fh);
 
+        if (empty($result) || !file_exists($result)) {
+            // the database dump failed - without it there is nothing to archive, and $result
+            // would otherwise be spliced into the archive name and passed to addFile()
+            freepbx_log(FPBX_LOG_ERROR, 'sccp_manager: database dump failed, backup not created');
+            @unlink($backup_info);
+            return $dir_info;
+        }
         $zip = new \ZipArchive();
         $filename = $result . "." . gethostname() . ".zip";
-        if ($zip->open($filename, \ZIPARCHIVE::CREATE)) {
+        if ($zip->open($filename, \ZIPARCHIVE::CREATE) === true) {
             $zip->addFile($result);
             $zip->addFile($backup_info);
             foreach ($backup_files as $file) {
