@@ -19,7 +19,11 @@ if (!empty($_REQUEST['extdisplay'])) {
 if ($dev_id != '*new*') {
     $list_data= $this->getDialPlan($dev_id);
     $data_s= '';
-    foreach ($list_data['template'] as $key => $value) {
+    $templates = $list_data['template'] ?? array();
+    if ($templates instanceof \SimpleXMLElement) {
+        $templates = array($templates);          // exactly one <TEMPLATE> in the file
+    }
+    foreach ((array) $templates as $key => $value) {
         foreach ($dialFelds as $fld) {
             if (isset($value[$fld])) {
                 $data_s .=(string)$value[$fld];
@@ -38,7 +42,7 @@ if ($dev_id != '*new*') {
 
 <form autocomplete="off" name="frm_editdialtemplate" id="frm_editbuttons" class="fpbx-submit" action="" method="post" data-id="dial_template">
     
-    <input type="hidden" name="idtemplate" value="<?php echo str_replace('dial', '', $dev_id);?>">
+    <input type="hidden" name="idtemplate" value="<?php echo htmlspecialchars(preg_replace('/^dial/', '', (string) $dev_id), ENT_QUOTES);?>">
     <input type="hidden" name="Submit" value="Submit">
     <?php
     if ($dev_id == '*new*') {

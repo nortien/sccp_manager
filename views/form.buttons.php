@@ -33,9 +33,9 @@ if (!empty($_REQUEST['id'])) {
     $db_buttons = $this->dbinterface->getSccpDeviceTableData('get_sccpdevice_buttons', array("id" => $dev_id));
     $db_device = $this->dbinterface->getSccpDeviceTableData('get_sccpdevice_byid', array("id" => $dev_id));
     if (!empty($db_device)) {
-        $show_buttons = $db_device['buttons'];
+        $show_buttons = (int) ($db_device['buttons'] ?? 0);
         if (!empty($db_device['addon_buttons'])) {
-            $show_buttons += $db_device['addon_buttons'];
+            $show_buttons += (int) $db_device['addon_buttons'];
         }
     } else {
         // No matching device row (stale/deleted id) - keep the pre-set default instead
@@ -195,14 +195,14 @@ if (!empty($_REQUEST['ru_id'])) {
                         <?php
                         foreach ($lines_list as $data) {
                             $select = (($data['name']==$defaul_btn)?'selected="selected"':"");
-                            echo '<option value="'.$data['name'].'" '.$select.' >'.$data['name'].' / '.$data['label'].'</option>';
+                            echo '<option value="'.htmlspecialchars($data['name'], ENT_QUOTES).'" '.$select.' >'.htmlspecialchars($data['name'], ENT_QUOTES).' / '.htmlspecialchars($data['label'], ENT_QUOTES).'</option>';
                         }
                         ?>
                         </select>
 <!--  if Line Type = Othe Show  Input -->
                         <div data-type='speeddial' class="lineid_<?php echo $line_id.(($show_form_mode=='speeddial')? '':' hidden');?>" >
                             <?php
-                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_input"  name="'.$forminfo[1]['name'].$line_id.'_input" placeholder="Name" value="'.($db_buttons[$line_id]['name'] ?? '').'" >';
+                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_input"  name="'.$forminfo[1]['name'].$line_id.'_input" placeholder="Name" value="'.htmlspecialchars($db_buttons[$line_id]['name'] ?? '', ENT_QUOTES).'" >';
                             ?>
                         </div>
                         </div>
@@ -213,7 +213,7 @@ if (!empty($_REQUEST['ru_id'])) {
                         <div data-type='hintline' class="lineid_<?php echo $line_id.(($show_form_mode=='speeddial')? '':' hidden');?>" name="<?php echo $forminfo[1]['name'].$line_id.'_hint';?>">
                             <?php
                             echo '<div class="col-xs-5">';
-                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_phone"  name="'.$forminfo[1]['name'].$line_id.'_phone" placeholder="Phone" value="'.$defaul_opt[0].'">';
+                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_phone"  name="'.$forminfo[1]['name'].$line_id.'_phone" placeholder="Phone" value="'.htmlspecialchars($defaul_opt[0], ENT_QUOTES).'">';
                             echo '</div><div class="col-xs-2 radioset" data-toggle="buttons">';
                             echo '<input class="form-control" type="checkbox" name="'.$forminfo[1]['name'].$line_id.'_hint" id="'.$forminfo[1]['name'].$line_id.'_hint" '.$def_hint.' value= "hint">';
                             echo '<label for="'.$forminfo[1]['name'].$line_id.'_hint">hints</label>';
@@ -223,7 +223,7 @@ if (!empty($_REQUEST['ru_id'])) {
 
                             foreach ($hint_list as $data) {
                                 $select = (($data['key']==$def_hint_btn)?"selected":"");
-                                echo '<option value="'.$data['key'].'" '.$select.' >'.$data['exten'].' / '.$data['label'].'</option>';
+                                echo '<option value="'.htmlspecialchars($data['key'], ENT_QUOTES).'" '.$select.' >'.htmlspecialchars($data['exten'], ENT_QUOTES).' / '.htmlspecialchars($data['label'], ENT_QUOTES).'</option>';
                             }
                             echo '</select>';
                             echo '</div>';
@@ -233,12 +233,12 @@ if (!empty($_REQUEST['ru_id'])) {
                         <div data-type='feature' class="lineid_<?php echo $line_id.(($show_form_mode=='feature')? '':' hidden');?>" name="<?php echo $forminfo[1]['name'].$line_id.'_hint';?>">
                             <div class="col-xs-4">
                             <?php
-                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_flabel"  name="'.$forminfo[1]['name'].$line_id.'_flabel" placeholder="Display Label" value="'.($db_buttons[$line_id]['name'] ?? '').'" >';
+                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_flabel"  name="'.$forminfo[1]['name'].$line_id.'_flabel" placeholder="Display Label" value="'.htmlspecialchars($db_buttons[$line_id]['name'] ?? '', ENT_QUOTES).'" >';
                             ?>
                             </div>
                             <div class="col-xs-4">
                             <?php
-                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_fvalue"  name="'.$forminfo[1]['name'].$line_id.'_fvalue" placeholder="code" value="'.$defaul_fcod.'" >';
+                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_fvalue"  name="'.$forminfo[1]['name'].$line_id.'_fvalue" placeholder="code" value="'.htmlspecialchars($defaul_fcod, ENT_QUOTES).'" >';
                             ?>
                             </div>
                         </div>
@@ -247,12 +247,12 @@ if (!empty($_REQUEST['ru_id'])) {
                         <div data-type='adv_line' class="lineid_<?php echo $line_id.(($show_form_mode=='adv.line')? '':' hidden');?>" name="<?php echo $forminfo[1]['name'].$line_id.'_hint';?>">
                             <div class="col-xs-5">
                             <?php
-                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_advline"  name="'.$forminfo[1]['name'].$line_id.'_advline" placeholder="[+=][01]:[cidname]" value="'.$defaul_advline.'" >';
+                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_advline"  name="'.$forminfo[1]['name'].$line_id.'_advline" placeholder="[+=][01]:[cidname]" value="'.htmlspecialchars($defaul_advline, ENT_QUOTES).'" >';
                             ?>
                             </div>
                             <div class="col-xs-5">
                             <?php
-                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_advopt"  name="'.$forminfo[1]['name'].$line_id.'_advopt" placeholder="ButtonLabel,Options" value="'.($db_buttons[$line_id]['options'] ?? '').'" >';
+                            echo '<input class="form-control" type="text" id="'.$forminfo[1]['name'].$line_id.'_advopt"  name="'.$forminfo[1]['name'].$line_id.'_advopt" placeholder="ButtonLabel,Options" value="'.htmlspecialchars($db_buttons[$line_id]['options'] ?? '', ENT_QUOTES).'" >';
                             ?>
                             </div>
                         </div>

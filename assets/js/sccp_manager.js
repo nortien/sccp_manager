@@ -697,7 +697,7 @@ $(document).ready(function () {
                     } else {
                         if (Array.isArray(data.message)) {
                             data.message.forEach(function (entry) {
-                                fpbxToast(data.message[1],_('Error Result'), 'warning');
+                                fpbxToast(entry,_('Error Result'), 'warning');
                             });
                         } else {
                             if (data.message) {
@@ -771,7 +771,7 @@ $(document).ready(function () {
                     } else {
                         if (Array.isArray(data.message)) {
                             data.message.forEach(function (entry) {
-                                fpbxToast(data.message[1],_('Error Result'), 'warning');
+                                fpbxToast(entry,_('Error Result'), 'warning');
                             });
                         } else {
                             if (data.message) {
@@ -861,12 +861,10 @@ $("table").on("post-body.bs.table", function () {
         if (confirm(_("Are you sure you wish to delete this extension?"))) {
             $.post("ajax.php", {command: "delete", module: "core", extensions: [id], type: "extensions"}, function (data) {
                 if (data.status) {
-                    delete(extmap[id]);
                     $(".ext-list-sccp").bootstrapTable('remove', {
                         field: "name",
                         values: [id.toString()]
                     });
-                    toggle_reload_button("show");
                 } else {
                     bs_alert(data.message, data.status);
                 }
@@ -1220,15 +1218,14 @@ function bs_alert(data, status, reload)
 //        console.log(modal2);
 //        modal.find('.modal-body').text(data);
         var modal2 = modal.find('.modal-body');
-        var msg_html = '';
+        modal2.empty();
         if (Array.isArray(data)) {
             data.forEach(function (entry) {
-                msg_html = msg_html + '<p>'+ entry + '</p>';
+                modal2.append($('<p>').text(entry));
             });
         } else {
-            msg_html = data;
+            modal2.text(data);
         }
-        modal2[0].innerHTML = msg_html;
         if (typeof reload != "undefined") {
             if (reload === true) {
                 $("#hwalert").on('hidden.bs.modal', bs_page_reload);

@@ -30,7 +30,7 @@ if (!empty($_REQUEST['id'])) {
 
     $db_res = $this->dbinterface->getSccpDeviceTableData('get_sccpdevice_byid', array("id" => $dev_id));
     foreach ($db_res as $key => $val) {
-        if (!empty($val)) {
+        if ($val !== null && $val !== '') {          // a stored "0" is a value, not an absence
             switch ($key) {
                 case 'phonepersonalization':
                     $def_val['phonepersonalization'] =  array("keyword" => 'phonepersonalization', "data" => $val, "seq" => "99");
@@ -89,7 +89,8 @@ if (!empty($def_val['type']['data'])) {
         echo '<input type="hidden" name="sccp_deviceid" value="new">';
     } else {
         $val = str_replace(array('SEP','ATA','VG'), '', $dev_id);
-        $val = implode(':', sscanf($val, '%2s%2s%2s%2s%2s%2s')); // Convert to Cisco display Format
+        $macParts = sscanf($val, '%2s%2s%2s%2s%2s%2s');          // Convert to Cisco display Format
+        $val = is_array($macParts) ? implode(':', array_filter($macParts, 'strlen')) : $val;
         $def_val['mac'] = array("keyword" => 'mac', "data" => $val, "seq" => "99");
         echo '<input type="hidden" name="sccp_device_id" value="'.$this->escapeHtml($dev_id).'">';
     }

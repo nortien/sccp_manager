@@ -25,7 +25,7 @@
 <script type="text/javascript">
     $("#sccpnavgrid").on('click-row.bs.table',function(e,row,elem){
         if (row['new_hw'] == 'Y' ) {
-            window.location = '?display=sccp_phone&tech_hardware=cisco&new_id=' + encodeURIComponent(row['name']) + '&' + encodeURIComponent(row['type']);
+            window.location = '?display=sccp_phone&tech_hardware=cisco&new_id=' + encodeURIComponent(row['name']) + '&type=' + encodeURIComponent(row['type']);
         } else {
             window.location = '?display=sccp_phone&tech_hardware=cisco&id=' + encodeURIComponent(row['name']);
         };

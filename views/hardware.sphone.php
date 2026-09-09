@@ -22,7 +22,7 @@
                     </button>
                 </div>
                 <table data-escape="true" data-cookie="true" data-cookie-id-table="sccp-sphone" data-url="ajax.php?module=sccp_manager&command=getPhoneGrid&type=cisco-sip"
-                            data-cache="false" data-show-refresh="true" data-toolbar="#toolbar-sip" data-maintain-selected="true"
+                            data-cache="false" data-show-refresh="true" data-toolbar="#toolbar-sccp-sphone" data-maintain-selected="true"
                             data-show-columns="true" data-show-toggle="true" data-toggle="table" data-pagination="true"
                             data-search="true" class="table table-striped ext-list" id="table-sip" data-id="name">
                     <thead>

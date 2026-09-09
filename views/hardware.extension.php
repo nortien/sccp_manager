@@ -20,7 +20,7 @@ if (!empty($this->sccpvalues['system_rouminguser'])) {
                 <div id="toolbar-sccp-extension">
                     <a class="btn btn-default" href="config.php?display=extensions&tech_hardware=sccp_custom"><i class="fa fa-plus">&nbsp;</i><?php echo _("Add Extension") ?></a>
                 </div>
-                <table data-escape="true" data-cookie="true" data-cookie-id-table="sccp-extension-table" data-url="ajax.php?module=sccp_manager&command=getExtensionGrid&type=extGrid" data-cache="false" data-show-refresh="true" data-toolbar="#toolbar-sip" data-maintain-selected="true" data-show-columns="true" data-show-toggle="true" data-toggle="table" data-pagination="true" data-search="true" class="table table-striped ext-list-sccp" id="table-sccp-extension" data-id="name">
+                <table data-escape="true" data-cookie="true" data-cookie-id-table="sccp-extension-table" data-url="ajax.php?module=sccp_manager&command=getExtensionGrid&type=extGrid" data-cache="false" data-show-refresh="true" data-toolbar="#toolbar-sccp-extension" data-maintain-selected="true" data-show-columns="true" data-show-toggle="true" data-toggle="table" data-pagination="true" data-search="true" class="table table-striped ext-list-sccp" id="table-sccp-extension" data-id="name">
                     <thead>
                         <tr>
                             <th data-sortable="true" data-field="name"><?php echo _('Extension') ?></th>
@@ -45,6 +45,9 @@ if (!empty($this->sccpvalues['system_rouminguser'])) {
             exp_dev += '<a href="config.php?display=sccp_phone&amp;tech_hardware=r_user&amp;ru_id=' + encodeURIComponent(row['name']) + '"><i class="fa fa-bicycle"></i></a> &nbsp;';
         }
         return  exp_dev;
-        return  '<a href="config.php?display=extensions&amp;extdisplay=' + encodeURIComponent(row['name']) + '"><i class="fa fa-pencil"></i></a> &nbsp;<a class="clickable delete" data-id="' + sccpEscapeHtml(row['name']) + '"><i class="fa fa-trash"></i></a>';
+        // Unreachable: the return above always fires. Kept, disabled, because it is the older
+        // edit/delete action pair for this column - if those actions are wanted back, they
+        // belong inside exp_dev above rather than after the return.
+        // return  '<a href="config.php?display=extensions&amp;extdisplay=' + encodeURIComponent(row['name']) + '"><i class="fa fa-pencil"></i></a> &nbsp;<a class="clickable delete" data-id="' + sccpEscapeHtml(row['name']) + '"><i class="fa fa-trash"></i></a>';
     }
 </script>

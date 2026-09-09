@@ -16,6 +16,7 @@ $ast_realtime = $this->aminterface->getRealTimeStatus();
 //$ast_realm = (empty($ast_realtime['sccp']) ? '' : 'sccp');
 
 // if there are multiple connections, this will only return the first.
+$ast_realm = '';        // no connector may report OK, and validate_RealTime() then gets an undefined value
 foreach ($ast_realtime as $key => $value) {
     if (empty($ast_realm)) {
         if ($value['status'] === 'OK') {
@@ -127,7 +128,8 @@ if (empty($ast_realtime)) {
 // There are potential issues with string Type Declarations in PHP 5.
 $info['PHP'] = array('Version' => phpversion(), 'about' => version_compare(phpversion(), '7.0.0', '>' ) ? 'OK' : 'PHP 7 Preferred - Please upgrade if possible');
 $mariaDbInfo = exec('mysql -V');
-$info['MariaDb'] = array('Version' => explode(" ",$mariaDbInfo)[3], 'about' => $mariaDbInfo);
+$mariaDbParts = explode(" ", (string) $mariaDbInfo);
+$info['MariaDb'] = array('Version' => $mariaDbParts[3] ?? _('unknown'), 'about' => $mariaDbInfo);   // output shape varies by client/build
 
 if (empty($conf_realtime)) {
     $info['ConfigsRealTime'] = array('Version' => 'Error', 'about' => '<div class="alert signature alert-danger"> Realtime configuration was not found</div>');
@@ -157,6 +159,12 @@ if (isset($cisco_tz['offset']) && $cisco_tz['offset'] == 0) {
     if (!empty($conf_tz)) {
         $tmp_dt = new DateTime('now', new DateTimeZone($conf_tz));
         $tmp_ofset = $tmp_dt->getOffset();
+        if ($tmp_dt->format('I') === '1') {
+            // Cisco's table carries the standard (winter) offset while getOffset() includes
+            // daylight saving, so every DST zone raised a false "not supported" warning all
+            // summer. Take the hour back out before comparing.
+            $tmp_ofset -= 3600;
+        }
         if (($cisco_tz['offset'] != ($tmp_ofset / 60) )) {
             $this->info_warning['NTP'] = array('The selected NTP time zone is not supported by cisco devices.', 'We will use the Greenwich Time zone');
         }
@@ -226,7 +234,7 @@ if (!empty($this->class_error)) {
                     <tbody>
 <?php
 foreach ($info as $key => $value) {
-    echo '<tr><td>' . $key . '</td><td>' . $value['Version'] . '</td><td>' . $value['about'] . '</td></tr>';
+    echo '<tr><td>' . htmlspecialchars($key, ENT_QUOTES) . '</td><td>' . htmlspecialchars($value['Version'] ?? '', ENT_QUOTES) . '</td><td>' . htmlspecialchars($value['about'] ?? '', ENT_QUOTES) . '</td></tr>';
 }
 ?>
                     </tbody>

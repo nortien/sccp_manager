@@ -39,11 +39,12 @@
                                             break;
                                     }
                                     foreach ($selectArray as $key => $val) {
-                                        echo "<option value= '{$val}'";
+                                        $safeVal = htmlspecialchars($val, ENT_QUOTES);
+                                        echo "<option value= '{$safeVal}'";
                                         if (($val == 'English_United_Kingdom') || ($val == 'United_Kingdom')) {
                                             echo ' selected="selected"';
                                         }
-                                        echo ">{$val}</option>";
+                                        echo ">{$safeVal}</option>";
                                     }
                                     ?>
                                     </select>

@@ -32,7 +32,7 @@
                     </button>
                 </div>
                 <table data-escape="true" data-cookie="true" data-cookie-id-table="sccp-phone" data-url="ajax.php?module=sccp_manager&command=getPhoneGrid&type=sccp"
-                            data-cache="false" data-show-refresh="true" data-toolbar="#toolbar-sccp" data-maintain-selected="true"
+                            data-cache="false" data-show-refresh="true" data-toolbar="#toolbar-sccp-phone" data-maintain-selected="true"
                             data-show-columns="true" data-show-toggle="true" data-toggle="table" data-pagination="true"
                             data-search="true" class="table table-striped ext-list" id="table-sccp" data-id="name">
                     <thead>

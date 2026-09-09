@@ -305,7 +305,7 @@ include($amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/views/getFileModa
 
     function SetRowColor(row, index) {
         var tclass = "active";
-        if (row['enabled'] === 1) {
+        if (row['enabled'] === '1') {          // grid values arrive as strings, like the checks below
             tclass = (index % 2 === 0) ? "info" : "info";
         }
         if ((row['validate'] === 'yes;yes') || (row['validate'] === 'yes;-')) {
