@@ -51,7 +51,9 @@ if (!empty($_REQUEST['id'])) {
                     }
                     $def_val[$key] = array("keyword" => $key, "data" => $val, "seq" => "99");
                     // Need to assign defaultLine as not set in the db.
-                    $def_val['defaultLine'] = $this->dbinterface->getSccpDeviceTableData('getDefaultLine', array('id' => $dev_id))['name'];
+                    // a device with no line yet gets false back, and false['name'] is a fatal error on PHP 8
+                    $defaultLine = $this->dbinterface->getSccpDeviceTableData('getDefaultLine', array('id' => $dev_id));
+                    $def_val['defaultLine'] = (is_array($defaultLine) && isset($defaultLine['name'])) ? $defaultLine['name'] : '';
                     break;
             }
         }

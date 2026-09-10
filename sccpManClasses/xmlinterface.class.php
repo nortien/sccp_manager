@@ -387,9 +387,10 @@ class xmlinterface
                     // protocol works - and the file is served over TFTP without authentication.
                     // So write it only when it actually holds something: an unset SSH password
                     // has no business appearing in the file at all.
-                    if (!empty($data_values['dev_sshPassword'])) {
-                        $xml_node->phonePassword = $data_values['dev_sshPassword'];
-                    }
+                    // And clear it explicitly when it is empty: the node comes from the
+                    // template, and a template already installed on a system (they are not
+                    // refreshed on upgrade) may still carry the literal it used to ship with.
+                    $xml_node->phonePassword = !empty($data_values['dev_sshPassword']) ? $data_values['dev_sshPassword'] : '';
                     $xml_node->backgroundImageAccess = (($data_values['backgroundImageAccess'] == 'on') || ($data_values['backgroundImageAccess'] == 'true') ) ? 'true' : 'false';
                     $xml_node->callLogBlfEnabled = $data_values['callLogBlfEnabled'];
                     break;
@@ -436,6 +437,12 @@ class xmlinterface
                     break;
             }
         }
+
+        // The loop above stopped writing the expansion modules when the block moved into
+        // addAddOnModules(), but the call that was supposed to replace it only went into
+        // the SIP path. A 7975 with a 7916 got a SEP file with no <addOnModules> at all -
+        // the exact opposite of what the change set out to do.
+        $this->addAddOnModules($xml_work, $dev_config);
 
         $this->saveXml($xml_work, $xml_name);  // Save
 

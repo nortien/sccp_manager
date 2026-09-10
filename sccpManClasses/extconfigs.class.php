@@ -388,11 +388,16 @@ class extconfigs
             }
         }
         // TODO: Need to add index.cnf, after setting defaults correctly
-        if (!file_exists("{$baseConfig['tftp_templates_path']}/XMLDefault.cnf.xml_template")) {
-            $src_path = $amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/conf/';
-            $dst_path = "{$baseConfig["tftp_templates_path"]}/";
-            foreach (glob("{$src_path}*.*_template") as $filename) {
-                copy($filename, $dst_path . basename($filename));
+        // Install a template when it is missing or when the one shipped with the module is
+        // newer than the installed copy. This used to copy the whole set only while
+        // XMLDefault.cnf.xml_template was absent - that is, once, on the first install - so
+        // no template change ever reached an upgraded system.
+        $src_path = $amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/conf/';
+        $dst_path = "{$baseConfig["tftp_templates_path"]}/";
+        foreach (glob("{$src_path}*.*_template") as $filename) {
+            $dst = $dst_path . basename($filename);
+            if (!file_exists($dst) || filemtime($filename) > filemtime($dst)) {
+                copy($filename, $dst);
             }
         }
         foreach ($baseConfig as $baseKey => $baseValue) {

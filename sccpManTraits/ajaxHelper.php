@@ -149,15 +149,18 @@ trait ajaxHelper {
                         }
 
                         if ($idv == 'all') {
+                            // reset each device by its own name - this used to pass the literal 'all'
+                            // to the driver for every one of them, which answered 'Device not found'
+                            // while the page reported success
                             $dev_list = $this->aminterface->sccp_get_active_device();
                             foreach ($dev_list as $key => $data) {
                                 if ($cmd_id == 'reset_token') {
                                     if (($data['token'] == 'Rej') || ($data['status'] == 'Token ')) {
-                                        $res = $this->aminterface->sccpDeviceReset($idv, 'tokenack');
+                                        $res = $this->aminterface->sccpDeviceReset($key, 'tokenack');
                                         $msgr[] = 'Sent Token reset to :' . $key;
                                     }
                                 } else {
-                                    $res = $this->aminterface->sccpDeviceReset($idv, 'reset');
+                                    $res = $this->aminterface->sccpDeviceReset($key, 'reset');
                                     $msgr[] = $res['Response'] . ' ' . $res['data'];
                                 }
                             }
@@ -308,8 +311,9 @@ trait ajaxHelper {
                         $lineArr['line_status'] = "{$activeDev['status']} | {$activeDev['act']}";
                     }
                     if (array_key_exists($lineArr['name'], $uniqueLineList)) {
-                        $lineList[$uniqueLineList[$lineArr['name']]]['mac'] .= '<br>' . $lineArr['mac'];
-                        $lineList[$uniqueLineList[$lineArr['name']]]['line_status'] .= '<br>' . $lineArr['line_status'];
+                        // the grid escapes HTML, so a literal <br> showed up as text between the two names
+                        $lineList[$uniqueLineList[$lineArr['name']]]['mac'] .= ', ' . $lineArr['mac'];
+                        $lineList[$uniqueLineList[$lineArr['name']]]['line_status'] .= ', ' . $lineArr['line_status'];
                         unset($lineList[$key]);  // Drop this array as no longer used
                         continue;
                     }
@@ -387,6 +391,12 @@ trait ajaxHelper {
             case 'backupsettings':
                 // -------------------------------   Old device support - In the development---
                 $filename = $this->createSccpBackup();
+                // on failure createSccpBackup() hands back its directory listing, not a path;
+                // basename() of an array is a TypeError on PHP 8, after a zip header had
+                // already gone out
+                if (!is_string($filename) || !file_exists($filename)) {
+                    return array('status' => false, 'message' => _('Backup failed: the database dump did not complete, see the FreePBX log'));
+                }
                 $file_name = basename($filename);
 
                 header("Content-Type: application/zip");

@@ -243,8 +243,11 @@ class Sccp extends \FreePBX\modules\Core\Driver {
         if (empty($this->sccpHelpInfo)) {
             $this->sccpHelpInfo = array();
             $sysConfiguration = \FreePbx::sccp_manager()->aminterface->getSCCPConfigMetaData('general');
-            foreach ($sysConfiguration['Options'] as $key => $valueArray) {
-                foreach ($valueArray['Description'] as $descKey => $descValue) {
+            // With the driver not running the AMI answer has no Options, and iterating a
+            // missing key is a warning on 7.4 and a TypeError on 8 - the page died instead
+            // of loading without the help texts.
+            foreach ((array)($sysConfiguration['Options'] ?? array()) as $key => $valueArray) {
+                foreach ((array)($valueArray['Description'] ?? array()) as $descKey => $descValue) {
                     $this->sccpHelpInfo[$valueArray['Name']] = ($this->sccpHelpInfo[$valueArray['Name']] ?? '') . $descValue . '<br>';
                 }
             }

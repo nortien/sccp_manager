@@ -284,7 +284,9 @@ $(document).ready(function () {
                 case 'service':
                 case 'feature':
                     if (lval == 'featurep') {
-                        if ($('.futuretype').val() == 'parkinglot') {
+                        // the feature select of THIS button - an unqualified selector read the
+                        // first one on the page, so past button 0 the parking lot field never showed
+                        if ($('.futuretype[data-id="' + kid + '"]').val() == 'parkinglot') {
                             class_id = [kval,lval];
                         }
                     }
