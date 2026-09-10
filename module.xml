@@ -105,7 +105,7 @@
 			<field name="_profileid" type="integer" notnull="false"/>
 			<field name="dialrules" type="string" length="255" default="NULL" notnull="false"/>
 			<field name="_dialrules" type="string" length="255" notnull="false"/>
-			<field name="useRedialMenu" type="string" length="5" default="no" notnull="false"/>
+			<field name="useRedialMenu" type="string" length="5" default="yes" notnull="false"/>
 			<field name="cfwdnoanswer" type="string" default="on" notnull="false"/>
 			<field name="park" type="string" default="on" notnull="false"/>
 			<field name="monitor" type="string" notnull="false"/>

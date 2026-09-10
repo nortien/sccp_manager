@@ -164,7 +164,7 @@ function Get_DB_config($sccp_compatible)
             '_loginname' => array('create' => 'VARCHAR(20) NULL DEFAULT NULL AFTER `_hwlang`'),
             '_profileid' => array('create' => "INT(11) NOT NULL DEFAULT '0' AFTER `_loginname`"),
             '_dialrules' => array('create' => "VARCHAR(255) NULL DEFAULT NULL AFTER `_profileid`"),
-            'useRedialMenu' => array('create' => "enum('yes','no') NOT NULL default 'no'", 'modify' => "enum('yes','no')"),
+            'useRedialMenu' => array('create' => "enum('yes','no') NOT NULL default 'yes'", 'modify' => "enum('yes','no')"),   // decision 2026-09-10: Redial opens the phone's own placed-calls list, as on CUCM
             'dtmfmode' => array('drop' => "yes"),
             'force_dtmfmode' => array('create' => "ENUM('auto','rfc2833','skinny') NOT NULL default 'auto'",
                           'modify' => "ENUM('auto','rfc2833','skinny')"),
