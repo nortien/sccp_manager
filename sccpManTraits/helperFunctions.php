@@ -479,7 +479,10 @@ trait helperfunctions {
                           'cfwdall', 'cfwdbusy', 'cfwdnoanswer', 'cfwdnoanswer_timeout', 'nat', 'directrtp', 'allowoverlap', 'pickup_modeanswer',
                           'callhistory_answered_elsewhere', 'amaflags', 'callanswerorder', 'devicetable', 'linetable', 'meetmeopts', 'jbenable', 'jbforce',
                           'jblog', 'jbmaxsize', 'jbresyncthreshold', 'jbimpl', 'hotline_enabled', 'hotline_extension', 'hotline_context', 'hotline_label', 'fallback',
-                          'backoff_time', 'server_priority');
+                          'backoff_time', 'server_priority',
+                          // the Group Config tab saved these four to sccpsettings but they never reached sccp.conf,
+                          // because this list did not name them; chan-sccp accepts all four in [general]
+                          'regcontext', 'pickupgroup', 'directed_pickup', 'directed_pickup_context');
 
         foreach ($sccpvalues as $key => $value) {
             if (!in_array($key, $permittedSettings, true)) {

@@ -1445,28 +1445,31 @@ function cleanUpSccpSettings() {
                 $settingsFromDb[$key] = array('keyword' => $key, 'seq' => 0, 'type' => 0, 'data' => '', 'systemdefault' => $sysConfiguration[$key]['DefaultValue']);
             }
         }
-        // Override certain chan-sccp defaults as they are based on a non-FreePbx system
-        $settingsFromDb['context']['systemdefault'] = 'from-internal';
-        $settingsFromDb['directed_pickup']['systemdefault'] = 'no';
-        // Override this chan-sccp default as it is a potential security risk. See Issue 29
-        $settingsFromDb['hotline_enabled']['systemdefault'] = 'no';
-        // chan-sccp's AMI metadata reports *_cos defaults in decimal (e.g. '6')
-        // while *_tos defaults already come back correctly in hex (e.g. '0xB8') -
-        // our own XML schema/DB defaults for all of these are hex, so normalize
-        // here rather than showing a decimal placeholder next to a hex-formatted
-        // saved value. Plain int-to-hex conversion, not a lookup table - always
-        // correct, no ambiguity (unlike the similar tone-name-vs-hex mismatch on
-        // callwaiting_tone/transfer_tone etc., left unfixed since that needs a
-        // real name->hex map this box doesn't have).
-        foreach (array('sccp_cos', 'audio_cos', 'video_cos') as $cosKey) {
-            if (isset($settingsFromDb[$cosKey]['systemdefault']) && is_numeric($settingsFromDb[$cosKey]['systemdefault']) && stripos((string) $settingsFromDb[$cosKey]['systemdefault'], '0x') !== 0) {
-                $settingsFromDb[$cosKey]['systemdefault'] = sprintf('0x%X', (int) $settingsFromDb[$cosKey]['systemdefault']);
-            }
-        }
-
         unset($sysConfiguration[$key]);
     }
     unset($sysConfiguration);
+
+    // The overrides below do not depend on $key; they used to sit inside the loop above (an
+    // indentation slip) and ran once per metadata entry. Harmless only because every key they
+    // touch is seeded from the XML before the loop - moved out so that stays true by construction.
+    // Override certain chan-sccp defaults as they are based on a non-FreePbx system
+    $settingsFromDb['context']['systemdefault'] = 'from-internal';
+    $settingsFromDb['directed_pickup']['systemdefault'] = 'no';
+    // Override this chan-sccp default as it is a potential security risk. See Issue 29
+    $settingsFromDb['hotline_enabled']['systemdefault'] = 'no';
+    // chan-sccp's AMI metadata reports *_cos defaults in decimal (e.g. '6')
+    // while *_tos defaults already come back correctly in hex (e.g. '0xB8') -
+    // our own XML schema/DB defaults for all of these are hex, so normalize
+    // here rather than showing a decimal placeholder next to a hex-formatted
+    // saved value. Plain int-to-hex conversion, not a lookup table - always
+    // correct, no ambiguity (unlike the similar tone-name-vs-hex mismatch on
+    // callwaiting_tone/transfer_tone etc., left unfixed since that needs a
+    // real name->hex map this box doesn't have).
+    foreach (array('sccp_cos', 'audio_cos', 'video_cos') as $cosKey) {
+        if (isset($settingsFromDb[$cosKey]['systemdefault']) && is_numeric($settingsFromDb[$cosKey]['systemdefault']) && stripos((string) $settingsFromDb[$cosKey]['systemdefault'], '0x') !== 0) {
+            $settingsFromDb[$cosKey]['systemdefault'] = sprintf('0x%X', (int) $settingsFromDb[$cosKey]['systemdefault']);
+        }
+    }
 
     // Update enums in sccpsettings - values have changed over versions so need to update values in db that are not compliant
     outn("<li>" . _("Updating invalid enums in sccpsettings") . "</li>");

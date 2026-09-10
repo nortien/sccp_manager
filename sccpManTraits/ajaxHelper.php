@@ -162,12 +162,12 @@ trait ajaxHelper {
                             $dev_list = $this->aminterface->sccp_get_active_device();
                             foreach ($dev_list as $key => $data) {
                                 if ($cmd_id == 'reset_token') {
-                                    // review 2026-09, half-dead condition: chan-sccp reports the state as "Token"
-                                    // (sccp_enum.in SKINNY_DEVICE_RS_TOKEN) and IncomingMessage trims every value,
-                                    // so 'Token ' with the trailing space never matches - only the 'Rej' half
-                                    // works. The space looks copied from the CLI table layout. Filed as a
-                                    // defect to fix (drop the space) after checking the Token state on the bench.
-                                    if (($data['token'] == 'Rej') || ($data['status'] == 'Token ')) {
+                                    // review 2026-09: this compared against 'Token ' with a trailing space, which
+                                    // never matched - chan-sccp reports the state as "Token" (sccp_enum.in
+                                    // SKINNY_DEVICE_RS_TOKEN) and IncomingMessage trims every value - so only the
+                                    // 'Rej' half of the condition ever worked. The space looked copied from the CLI
+                                    // table layout.
+                                    if (($data['token'] == 'Rej') || ($data['status'] == 'Token')) {
                                         $res = $this->aminterface->sccpDeviceReset($key, 'tokenack');
                                         $msgr[] = 'Sent Token reset to :' . $key;
                                     }
@@ -586,6 +586,13 @@ trait ajaxHelper {
     }
 
     public function getFilesFromProvisioner($request) {
+        // 'Get data files from Provision' (getExternalData, 'enabled at your own risk') was saved and
+        // never read - the download ran regardless. It is the switch for this function.
+        if (($this->sccpvalues['getExternalData']['data'] ?? 'no') !== 'yes') {
+            return array('status' => false,
+                'message' => _('Downloading from the provisioner is switched off. Set "Get data files from Provision" to Yes on the Server settings tab first.'),
+                'reload' => false);
+        }
         $filesToGet = array();
         $totalFiles = 0;
         // Use our own fork via raw.githubusercontent.com directly (not github.com/.../raw/,

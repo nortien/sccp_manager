@@ -457,12 +457,10 @@ class xmlinterface
             $res[$rkey] = array('ip' => $data_values['bindaddr'], 'port' => $data_values['port']);
             return $res;
         }
-        // review 2026-09, vestigial switch with a real effect: $ip_fill is set true here and assigned
-        // nowhere else, so the 'if ($ip_fill)' below is always taken. The intent, readable from the
-        // structure, was that an explicit ccm_address list disables the fill-in of every local
-        // interface; as it stands the interface list is appended on top of the admin's list and the
-        // phone gets CallManager nodes it was told not to use. Filed as a defect: set $ip_fill=false
-        // once a non-empty ccm_address was applied, verify with a generated SEP file on the bench.
+        // review 2026-09: $ip_fill used to be set true here and assigned nowhere else, so the local
+        // interfaces were always appended on top of an explicit ccm_address list and the phone got
+        // CallManager nodes it was told not to use - contrary to the help text of that setting. Now
+        // cleared once a non-empty ccm_address was applied (see below).
         $ip_fill = true;
         if (!empty($data_values['ccm_address'])) {
             // ccm_address is json from sccpsettings
@@ -470,6 +468,10 @@ class xmlinterface
             // This is a sanitised list of ipaddresses and ports
             foreach ($ccm_address as $netValue) {
                 $res[$netValue['ip']] = $netValue;
+            }
+            if (!empty($res)) {
+                // an explicit CallManager list means exactly that - do not append every local interface
+                $ip_fill = false;
             }
         }
         if ($ip_fill) {

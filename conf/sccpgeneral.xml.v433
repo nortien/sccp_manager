@@ -1033,12 +1033,11 @@ and open the template in the editor. Base Version before all crash :-)
             </input>
             <help>Context: This is the context in which your phones will operate. It should match the context you are using for the rest of your phones (if you have any). The FreePBX default is 'from-internal'</help>
         </item>
-        <!-- review 2026-09, saved but never applied: regcontext (and pickupgroup below) land in
-             sccpsettings on Save, but createDefaultSccpConfig only writes the keys in its
-             $permittedSettings whitelist to sccp.conf [general], and the other route (DEFAULT
-             columns via updateTableDefaults) only fires for sccpline_/sccpdevice_-prefixed keys,
-             which this 'sccp'-prefixed group never produces. Filed as a defect to fix, not as
-             dead weight - the admin gets 'Data saved' for a setting that has no effect. -->
+        <!-- review 2026-09: regcontext, pickupgroup, directed_pickup and directed_pickup_context were
+             saved to sccpsettings and never written to sccp.conf, because createDefaultSccpConfig
+             only emits the keys named in its $permittedSettings whitelist and these four were not
+             in it (the 'sccp'-prefixed groups do not take the DEFAULT-column route either). The
+             whitelist now names them; chan-sccp accepts all four in [general]. -->
         <item type="IE" id="5">
             <label>Dynamically registration Context</label>
             <input>
@@ -1249,10 +1248,11 @@ and open the template in the editor. Base Version before all crash :-)
             <button value="no">No</button>
             <help>Say 'yes' if you need to create cisco default language directory in tftp path.</help>
         </item>
-        <!-- review 2026-09, switch that switches nothing: the value is rendered, seeded and saved, but no
-             PHP reads getExternalData. The provisioner download runs unconditionally from the
-             'Update Files from Provisioner' button (get_ext_files). Filed as a defect: 'No' must
-             actually block the download. -->
+        <!-- review 2026-09: this switch was rendered, seeded and saved but read by no PHP - the provisioner
+             download ran unconditionally from the 'Update Files from Provisioner' button. It is now
+             the gate of getFilesFromProvisioner (ajaxHelper.php): 'No' refuses the download with a
+             message. The file-LIST fetch (masterFilesStructure.xml) is not gated - it is metadata
+             the installer and the model page need. -->
         <item type="IS" id="4" seq="90">
             <name>getExternalData</name>
             <label>Get data files from Provision</label>
