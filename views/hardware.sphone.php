@@ -45,7 +45,12 @@
 
 <script>
 
-
+    // review 2026-09, duplicate definitions: DispayTypeFormatter and LineFormatter below are word for
+    // word the ones in views/hardware.phone.php. When siptftp=on both templates land on the same page
+    // (Sccp_manager::processPageData glues the sccpdevice and sipdevice tabs together), both scripts
+    // declare them in the global scope, and the later one silently wins. Identical today, so no
+    // visible effect - but an edit to one copy will apply to both grids or to neither, depending on
+    // tab order. Change them in step, or better, in one place.
 
     function DispayTypeFormatter(value, row, index) {
         var exp_model = sccpEscapeHtml(value);

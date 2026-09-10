@@ -17,6 +17,9 @@
     <?php
         // Warning banner for this tab is rendered by page.html.php, above the
         // tab strip (see the "banner" key set in Sccp_manager::settingsShowPage()).
+        // review 2026-09, dead value: none of the four showGroup calls below takes $def_val_device, so
+        // this DESCRIBE sccpdevice runs on every render for nothing (same leftover as $def_val_line in
+        // views/server.device.php).
         $def_val_device = $this->getTableDefaults('sccpdevice');
 
         echo $this->showGroup('sccp_general', 1);
@@ -29,6 +32,12 @@
 </form>
 
 <!-- Begin Form Input New / Edit  -->
+<!-- review 2026-09, unfinished network editor: the modal below, its Save button (data-id="network_add")
+     and the page_group add_network_1 in conf/sccpgeneral.xml.v433 exist, but nothing connects them:
+     the opener is the commented div above, the body's showGroup call is commented, and 'network_add'
+     has no branch in the .sccp_update JS handler nor in ajaxRequest/ajaxHandler (a click would post
+     command=undefined, which ajaxRequest rejects). The job is done instead by the dynamic deny/permit
+     rows of the sccp_net group. -->
 <div class="modal fade new_network" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel_Net">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">

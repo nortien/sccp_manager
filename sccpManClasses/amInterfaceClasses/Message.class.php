@@ -37,6 +37,11 @@ abstract class Message
         $this->createdDate = time();
     }
 
+    // review 2026-09, no callers: _ToDebug is an empty stub. The whole 'Variable:' mechanism below is
+    // equally unused - setVariable() is never called, so $this->variables stays empty, the loop over
+    // getVariables() in serialize() emits nothing and serializeVariable() is unreachable. It was the
+    // groundwork for AMI actions that carry 'Variable: k=v' lines (Originate and friends), which this
+    // module never sends; all nine ActionMessage classes use setKey() only.
     public function _ToDebug($level, $msg)
     {
     }
@@ -240,6 +245,8 @@ abstract class IncomingMessage extends Message
 
     protected $rawContent;
 
+    // review 2026-09, no callers for getEventList() and getRawContent(): the list-complete detection
+    // reads EventList through getKey() directly, and rawContent is only ever written.
     public function getEventList()
     {
         return $this->getKey('EventList');
@@ -353,6 +360,8 @@ class ExtensionStateListAction extends ActionMessage
         $this->setResponseHandler("ExtensionStateList");
     }
 }
+// review 2026-09, never instantiated: no 'new SCCPShowGlobalsAction' anywhere in the module, and no
+// response handler class for it either. Kept as the documented shape of the action.
 #[\AllowDynamicProperties]
 class SCCPShowGlobalsAction extends ActionMessage
 {

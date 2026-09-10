@@ -74,6 +74,11 @@ class SCCPSoftKeySetEntry_Event extends Event
 class ExtensionStatus_Event extends Event
 {
     // this is a list of tables, each table is an entry
+    // review 2026-09, no callers: getPrivilege/getExtension/getContext/getHint/getStatus (and
+    // ClosingEvent::getListItems below) are typed accessors from an earlier API. The same data is
+    // read in bulk through getKeys() by SCCPGeneric_Response::ConvertEventData, and ListItems
+    // directly through getKey('listitems') in listCorrectlyReceived. Kept as the documented shape
+    // of the event.
     public function getPrivilege()
     {
         return $this->getKey('Privilege');
@@ -110,6 +115,11 @@ class SCCPDeviceEntry_Event extends Event
 class SCCPShowDevice_Event extends Event
 {
     // This is a list of tables
+    // review 2026-09, unfinished: getCapabilities/getCodecsPreference parse AudioCapabilities /
+    // AudioPreferences into arrays for a "negotiated codecs" display that no screen ever asked for.
+    // The data does arrive (SCCPShowDevice_Response collects these events); no caller, no dynamic
+    // dispatch by name either (the only string-dispatched names in the module are ajax commands and
+    // XML item types). The author's own TODO below says the same.
     public function getCapabilities()
     {
         // TODO unused method - to be deleted?

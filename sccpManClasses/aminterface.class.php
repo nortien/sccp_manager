@@ -16,7 +16,7 @@ class aminterface
     var $_socket;
     var $_error;
     var $_config;
-    var $_test;
+    var $_test;    // review 2026-09: declared and never used; the debug output in info() ('test' => get_declared_classes()) does not go through it
     private $_connect_state;
     private $_lastActionClass;
     private $_lastActionId;
@@ -373,6 +373,10 @@ class aminterface
         return new $className($message);
     }
 
+    // review 2026-09, dead twice over: nothing calls dispatch(), and its body returns false on line 3
+    // anyway, leaving the die() and the listener loop unreachable. The event-listener mechanism it was
+    // meant to drive was never connected - $this->_eventListeners is initialised empty in the
+    // constructor and filled nowhere. The print_r lines are the debug scaffolding it was left with.
     protected function dispatch($message)
     {
         print_r("<br>------------dispatch----------<br>");

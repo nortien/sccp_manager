@@ -278,6 +278,9 @@ include($amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/views/getFileModa
         return  exp_model[value];
     }
 
+// review 2026-09, commented-out alternative: an editable 'Model template' input drawn straight into
+// the grid. Replaced by the plain column with SetColTemplNf (see the <th> at the top) plus the edit
+// modal (load_model). Nothing references DispayInputFormatter; not a feature that was lost.
 //    function DispayInputFormatter(value, row, index) {
 //        return  (value == null) ?  '<input class="tabl-edit form-control" name="' + row['model'] + '_template" type="text" value="">'  : '<input class="tabl-edit form-control" name="' + row['model'] + '_template" type="text" value="' + value + '">';
 //    }
@@ -308,6 +311,10 @@ include($amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/views/getFileModa
         if (row['enabled'] === '1') {          // grid values arrive as strings, like the checks below
             tclass = (index % 2 === 0) ? "info" : "info";
         }
+        // review 2026-09: the then-branch is empty on purpose - the commented line painted the rows
+        // whose firmware AND template were found in danger/warning, i.e. the colouring was inverted.
+        // The else is the part that is wanted (models with a missing file). The condition stays so
+        // the two 'good' validate states ('yes;yes', 'yes;-') remain spelled out; do not fold it away.
         if ((row['validate'] === 'yes;yes') || (row['validate'] === 'yes;-')) {
 //            tclass = (row['enabled'] === '1') ?  "danger" : "warning";
         } else {

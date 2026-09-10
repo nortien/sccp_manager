@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- edited with XML Spy v4.4 U (http://www.xmlspy.com) by Cisco Systems, Inc. (Cisco Systems, Inc.) -->
 <!-- Last updated 31 Dec 20 -->
+<!-- review 2026-09: reference copy only. Nothing in sccp_manager names this file - no validation
+     against it, no install step, no TFTP copy (the conf/*_template glob does not match it). Kept as
+     the documentation of the CiscoIPPhone XML objects the phones accept. -->
+
 <!-- The following Cisco IP Phones implement this XML parser: 6921, 6941, 6945, 6961, 7906G, 7911G, 7921G, 7925G, 7925G-EX, 7926G, 7931G, 7941G, 7941G-GE 7942G, 7945G, 7961G, 7961G-GE, 7962G, 7965G, 7970G, 7971G-GE, 7975G, 8800 Series, 8821, 8961, 9951, and 9971.-->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"
 attributeFormDefault="unqualified" version="3.3.4">

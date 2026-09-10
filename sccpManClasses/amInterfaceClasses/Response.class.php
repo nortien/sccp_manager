@@ -35,6 +35,9 @@ abstract class Response extends IncomingMessage
         return $ret;
     }
 
+    // review 2026-09, no callers: subclasses reach $this->_events directly (SCCPShowDevice_Response::getResult,
+    // ConvertEventData) and the housekeeping goes through getClosingEvent/removeClosingEvent/
+    // getCountOfEvents; this public getter was left over.
     public function getEvents()
     {
         return $this->_events;

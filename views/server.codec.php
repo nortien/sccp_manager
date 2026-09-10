@@ -83,6 +83,10 @@ if (empty($sccp_disallow_def)) {
                                 foreach ($audio_codecs as $codec => $codec_state) {
                                     $codec_trans = _($codec);
                                     $codec_checked = $codec_state ? 'checked' : '';
+                                    // review 2026-09: this drag icon is borrowed from the sipsettings module; the
+                                    // module's own assets/images/arrow_up_down.png (shipped for the unused
+                                    // $.fn.moveUpDown) is referenced by nothing, so the icon breaks if sipsettings
+                                    // is absent or moves its assets while an identical file sits next door.
                                     echo '<li><a href="#">'
                                     . '<img src="assets/sipsettings/images/arrow_up_down.png" height="16" width="16" border="0" alt="move" style="float:none; margin-left:-6px; margin-bottom:-3px;cursor:move" /> '
                                     . '<input type="checkbox" '
@@ -135,6 +139,10 @@ if (empty($sccp_disallow_def)) {
                                 foreach ($video_codecs as $codec => $codec_state) {
                                     $codec_trans = _($codec);
                                     $codec_checked = $codec_state ? 'checked' : '';
+                                    // review 2026-09: this drag icon is borrowed from the sipsettings module; the
+                                    // module's own assets/images/arrow_up_down.png (shipped for the unused
+                                    // $.fn.moveUpDown) is referenced by nothing, so the icon breaks if sipsettings
+                                    // is absent or moves its assets while an identical file sits next door.
                                     echo '<li><a href="#">'
                                     . '<img src="assets/sipsettings/images/arrow_up_down.png" height="16" width="16" border="0" alt="move" style="float:none; margin-left:-6px; margin-bottom:-3px;cursor:move" /> '
                                     . '<input type="checkbox" '

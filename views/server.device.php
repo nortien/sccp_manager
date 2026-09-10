@@ -16,6 +16,10 @@
     ?>
 <?php
 
+        // review 2026-09, dead value: $def_val_line is assigned and never used on this page - it costs a
+        // DESCRIBE sccpline on every render for nothing. Left over from when sccp_dev_config took the
+        // table defaults (the commented call below); $def_val_device is still live for the QoS group.
+        // The same leftover exists as $def_val_device in views/server.setting.php.
         $def_val_line = $this->getTableDefaults('sccpline');
         $def_val_device = $this->getTableDefaults('sccpdevice');
 

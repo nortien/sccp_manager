@@ -87,6 +87,11 @@ if (!empty($def_val['type']['data'])) {
 
     <?php
 
+    // review 2026-09, dead field: the server reads sccp_device_id (with the underscore,
+    // saveSccpDevice in ajaxHelper.php), never sccp_deviceid. Harmless by accident - a missing
+    // sccp_device_id is treated as 'new', which is exactly the case this branch serves - and the
+    // existing-device branch below uses the right name. The commented block in the SIP branch
+    // further down is where the typo came from.
     if (empty($dev_id)) {
         echo '<input type="hidden" name="sccp_deviceid" value="new">';
     } else {

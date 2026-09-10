@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
+<!-- review 2026-09: no model uses this template out of the box. The sccpdevmodel seed (install.php)
+     assigns the SCCP template _7925_template to the 7925 and defines no '7925-sip' model, and the
+     code fallbacks are hard-named _79df_template (SCCP) and _79df_sip_template (SIP). It only takes
+     effect if an admin types its name into a model's 'Model template' field. Kept for that case. -->
 <device xsi:type="axl:XIPPhone" ctiid="406" uuid="{aed907f9-9e22-72d8-c218-b7165fff6d37}">
   <fullConfig>true</fullConfig>
   <portalDefaultServer>x.x.x.x</portalDefaultServer>

@@ -240,6 +240,11 @@ class Sccp extends \FreePBX\modules\Core\Driver {
         $xml_vars = $amp_conf['AMPWEBROOT'] . '/admin/modules/sccp_manager/conf/sccpgeneral.xml.v433';
             $this->xml_data = simplexml_load_file($xml_vars);
         // load metainfo from chan-sccp - help information if not in xml. Only load first time as static data.
+        // review 2026-09, unfinished: sccpHelpInfo is filled here from an SCCPConfigMetaData round-trip
+        // and read nowhere. The block that was meant to consume it (case 'IE' below) tests
+        // $metainfo[$elementID] with $metainfo undefined, so it is always skipped - and its own body
+        // indexes $metainfo[$shortId], also undefined. The intent was the same as formcreate::metaHelp();
+        // the price of the half-finished version is one AMI call per extension-page load.
         if (empty($this->sccpHelpInfo)) {
             $this->sccpHelpInfo = array();
             $sysConfiguration = \FreePbx::sccp_manager()->aminterface->getSCCPConfigMetaData('general');
@@ -340,6 +345,9 @@ class Sccp extends \FreePBX\modules\Core\Driver {
             switch ($child['type']) {
                 case 'IE':
                     $elementID = (string)$child->input[0]->name;
+                    // review 2026-09, unreachable: $metainfo is never defined in this method (see the
+                    // sccpHelpInfo note above), so !empty() is always false and the $metainfo[$shortId]
+                    // inside - $shortId undefined too - has never run.
                     if (!empty($metainfo[$elementID])) {
                         if ($child->meta_help == '1' || $child->help == 'Help!') {
                             $child->help = $metainfo[$shortId];

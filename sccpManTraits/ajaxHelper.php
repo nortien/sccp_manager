@@ -18,7 +18,7 @@ trait ajaxHelper {
             case 'getPhoneGrid':
             case 'getExtensionGrid':
             case 'getDeviceModel':
-            case 'getUserGrid':
+            case 'getUserGrid':    // review 2026-09: allowed here, no case in ajaxHandler, no sender - the user grid of the unfinished Roaming User feature; the request would pass and return null
             case 'getSoftKey':
             case 'getDialTemplate':
             case 'get_ext_files':
@@ -36,6 +36,10 @@ trait ajaxHelper {
             case 'delete_dialplan':
                 return true;
                 break;
+            // review 2026-09, unfinished: validateMac is allowed here and has an empty case in ajaxHandler
+            // (returns null); nothing sends it. MAC validation lives entirely in the client-side
+            // focusout handler of #sccp_hw_mac, and saveSccpDevice() only upper-cases and strips the
+            // value without checking its shape - the server half was declared and never written.
             case 'validateMac':
                 return true;
                 break;
@@ -137,6 +141,9 @@ trait ajaxHelper {
                 $msgr[] = "Reset command sent to device(s) ";
                 if (!empty($request['name'])) {
                     foreach ($request['name'] as $idv) {
+                        // review 2026-09, dead value: device names are SEP<mac> without a dash (saveSccpDevice
+                        // builds $hw_prefix.$mac), so strpos() is always false and $msg concatenates as ''.
+                        // The intent was to put the device id into the report; the report has none.
                         $msg = strpos($idv, 'SEP-');
                         if (!(strpos($idv, 'SEP') === false)) {
                             if ($cmd_id == 'reset_token') {
@@ -155,6 +162,11 @@ trait ajaxHelper {
                             $dev_list = $this->aminterface->sccp_get_active_device();
                             foreach ($dev_list as $key => $data) {
                                 if ($cmd_id == 'reset_token') {
+                                    // review 2026-09, half-dead condition: chan-sccp reports the state as "Token"
+                                    // (sccp_enum.in SKINNY_DEVICE_RS_TOKEN) and IncomingMessage trims every value,
+                                    // so 'Token ' with the trailing space never matches - only the 'Rej' half
+                                    // works. The space looks copied from the CLI table layout. Filed as a
+                                    // defect to fix (drop the space) after checking the Token state on the bench.
                                     if (($data['token'] == 'Rej') || ($data['status'] == 'Token ')) {
                                         $res = $this->aminterface->sccpDeviceReset($key, 'tokenack');
                                         $msgr[] = 'Sent Token reset to :' . $key;
@@ -409,7 +421,7 @@ trait ajaxHelper {
                 // return array('status' => false, 'message' => $result);
                 return $result;
                 break;
-            case 'validateMac':
+            case 'validateMac':    // review 2026-09: empty stub, see the note at the ajaxRequest whitelist
                 break;
             case 'get_ext_files':
                 return $this->getFilesFromProvisioner($request);

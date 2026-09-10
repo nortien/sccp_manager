@@ -57,6 +57,10 @@ $(document).ready(function () {
         if ($('.fpbx-submit').data('id') == "hw_edit") {
             snd_command = 'save_device';
         }
+        // review 2026-09, dead branch: no template sets data-id="hw_sedit". The SIP device form is
+        // drawn by the same views/form.adddevice.php with data-id="hw_edit" and carries the difference
+        // in the hidden sccp_device_typeid=sipdevice field; on the server 'save_sip_device' falls
+        // through into 'save_device' anyway. Kept so the command name in ajaxRequest stays explained.
         if ($('.fpbx-submit').data('id') == "hw_sedit") {
             snd_command = 'save_sip_device';
         }
@@ -94,6 +98,10 @@ $(document).ready(function () {
         if ($('.fpbx-submit').data('id') == "hw_edit") {
             snd_command = 'save_device';
         }
+        // review 2026-09, dead branch: no template sets data-id="hw_sedit". The SIP device form is
+        // drawn by the same views/form.adddevice.php with data-id="hw_edit" and carries the difference
+        // in the hidden sccp_device_typeid=sipdevice field; on the server 'save_sip_device' falls
+        // through into 'save_device' anyway. Kept so the command name in ajaxRequest stays explained.
         if ($('.fpbx-submit').data('id') == "hw_sedit") {
             snd_command = 'save_sip_device';
         }
@@ -281,6 +289,9 @@ $(document).ready(function () {
                 case 'adv.line':
                     class_id = ['line','adv_line'];
                     break;
+                // review 2026-09, dead case: 'service' is not in $buttons_type (views/form.buttons.php:14,
+                // it only survives in the commented-out old list there with "Add leter !"), so the
+                // select never offers it and kval can never be 'service'. Left in place for when it is.
                 case 'service':
                 case 'feature':
                     if (lval == 'featurep') {
@@ -499,6 +510,10 @@ $(document).ready(function () {
 
 
 
+// review 2026-09, dead handlers (debug leftovers): the classes need-validate, sccp_test and test
+// appear in no view, no conf/*.xml* and no PHP, so none of the three blocks below ever binds.
+// The bodies are probes, not features: confirm() over the raw value, an array that is never
+// filled, a string that is built and thrown away. Kept as the author left them.
 // ----------------------- TEST Validate ----------------
     $('.need-validate').on('change', function (e) {
         var dev_class = $(this).attr('class');
@@ -794,6 +809,9 @@ $(document).ready(function () {
 
 
 
+    // review 2026-09, dead handler: the button in views/hardware.phone.php:21 has name="cr_sccp_phone_xml",
+    // not an id, so this selector is always empty; the click is served by the .sccp_update handler
+    // above through data-id="create-cnf". The body was already reduced to two commented console.log.
     $('#cr_sccp_phone_xml').on('click', function (e) {
 //        console.log("asasdasdasdasd");
 //        console.log($('#update-sccp-phone').find(':selected').data('val'));
@@ -804,6 +822,9 @@ $(document).ready(function () {
 
 
 
+// review 2026-09, commented-out probe: the author's note "Работает !" next to a console.log marks a
+// trial, not a feature switched off for a bug. The live version of the idea is the post-body.bs.table
+// handler further down, which wires the row buttons after the table has been drawn.
 //$("table").on('click-cell.bs.table', function (field, value, row, $element) {
 //    var id_fld=$element['model']; Работает !
 //    console.log('Table test: '+ id_fld);
@@ -1105,8 +1126,17 @@ function add_dynamic_table(pe, pclass, vdefault)
     last.after(html);
 }
 
+// review 2026-09, dead variable: a leftover from the IAX module this file was started from. No form
+// in sccp_manager is named editIax, so theForm is always undefined, and nothing reads it; the comment
+// below it describes a function that was cut ("iax_setting/iax_value pair"), what follows is the
+// select-list plugin set instead.
 var theForm = document.editIax;
 /* Insert a iax_setting/iax_value pair of text boxes */
+// review 2026-09: this IIFE is a byte-for-byte copy of assets/js/jquery.selectlistactions.js, which
+// FreePBX loads first (alphabetical); this second copy wins. Of the six plugins only
+// moveToListAndDelete and moveAllToListAndDelete are called (the .btnMultiselect handler); moveToList,
+// moveAllToList, removeSelected and moveUpDown have no caller - moveUpDown even expects up/down buttons
+// the keyset form does not have (assets/images/arrow_up_down.png is equally unused).
 (function ($) {
     //Moves selected item(s) from sourceList to destinationList
     $.fn.moveToList = function (sourceList, destinationList) {
@@ -1177,7 +1207,9 @@ var theForm = document.editIax;
     };
 })(jQuery);
 
-/*
+/* review 2026-09, commented-out copy of a live function: superseded by function hex2bin(hex) below
+   (String.fromCharCode instead of unescape); that one is what .input-js-add and add_dynamic_table
+   call. Not to be revived - unescape() is deprecated and the live version does the same job.
  String.prototype.hex2bin = function()
  {
  var i = 0, len = this.length, result = "";
@@ -1253,6 +1285,10 @@ function showProgress() {
     $('#pleaseWaitDialog').modal();
 }
 
+// review 2026-09, no callers: closeProgress is the pair of showProgress (which views/getFileModal.html
+// does call inline), but the get_ext_files success callback hides #pleaseWaitDialog directly instead.
+// sleep() is a busy-wait over 1e7 iterations that would freeze the tab; nothing calls it, and that is
+// for the best. Both are leftovers of the progress-indicator experiment.
 function closeProgress() {
   $('#pleaseWaitDialog').modal('hide');
 }
@@ -1270,6 +1306,11 @@ function sleep(milliseconds)
 // There are 2 dynamically created button Classes
 // sccp_restore for restoring system defaults, and sccp_edit for entering
 // custom values. Clicking on these buttons is handled by the 2 functions below.
+// review 2026-09, dead handlers (~90 lines): no template emits the classes sccp-restore / sccp-edit
+// any more - formcreate.class.php always renders a plain editable input with a "Use ... defaults"
+// button (see its comment around line 146) and the live handlers are .sccp-reset-default and
+// .sccp-reset-radio-default above. Even if the class came back, the container edit_<id> these look
+// up with getElementById is no longer rendered either, so the first line would throw.
 $(".sccp-restore").click(function() {
     //input is sent by data-for where for is an attribute
   	var id = $(this).data("for"), input = $("#" + id);

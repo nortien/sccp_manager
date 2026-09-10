@@ -11,6 +11,9 @@ class formcreate
 
     public function __construct($parent_class = null) {
         $this->buttonDefLabel = 'chan-sccp';
+        // review 2026-09: buttonHelpLabel is written here and twice more, read never. It was the twin of
+        // buttonDefLabel (which does go into the 'Use %s defaults' button text) meant for the help
+        // text's site/device wording; the help is printed as-is by elementHelpAndClose instead.
         $this->buttonHelpLabel = 'site';
     }
 
@@ -89,6 +92,11 @@ class formcreate
     // The hidden "customise" row used by the sccp-edit/sccp-restore toggle
     // (addElementIE/addElementIS). id/name contract must match
     // assets/js/sccp_manager.js exactly - it is not event-delegated.
+    // review 2026-09, no callers: the comment above describes a mechanism that was switched off -
+    // addElementIE/addElementIS now always render a plain editable input with a 'Use ... defaults'
+    // button (see the note around addElementIE, "no separate Customise click-to-reveal step"), so
+    // this row is never emitted and the sccp-edit/sccp-restore handlers in sccp_manager.js have no
+    // markup to bind to. Kept as the server half of that retired toggle.
     private function elementEditRowOpen($res_id, $promptText, $secClass = '') {
         ?>
             <div class="row" id="edit_<?php echo $res_id; ?>" style="display: none">
@@ -925,6 +933,10 @@ class formcreate
             $child->class = 'form-control';
         }
 
+        // review 2026-09, dead load: the saved value read here is overwritten unconditionally two lines
+        // down. The field became a read-only display of the FreePBX time zone (echo, no input), in
+        // step with Sccp_manager::updateTimeZone() which forces ntp_timezone to the FreePBX zone;
+        // the load from settings is what remains of when it was editable.
         if (!empty($fvalues[$res_n])) {
             if (!empty($fvalues[$res_n]['data'])) {
                 $child->value = $fvalues[$res_n]['data'];

@@ -180,6 +180,11 @@ and open the template in the editor. Base Version before all crash :-)
             </input>
             <add_pluss>+</add_pluss>
             <max_row>5</max_row>
+            <!-- review 2026-09: 'addbutton-disabled' is this file's way of commenting a tag out - the
+                 renderer tests !empty($child->addbutton), so a renamed tag is simply never seen. The
+                 same fields already get their '+' button through <add_pluss> and the shared
+                 .input-js-add handler; this is the older, superseded way of asking for it. Applies
+                 to every addbutton-disabled tag in this file. -->
             <addbutton-disabled>Add Deny network</addbutton-disabled>
             <help>All RFC 1918 addresses are local networks. Should always be at least '0.0.0.0/0.0.0.0'.</help>
         </item>
@@ -725,6 +730,9 @@ and open the template in the editor. Base Version before all crash :-)
             <addbutton>Add Server</addbutton>
             <help>Help.</help>
         </item>
+        <!-- review 2026-09: 'IED-disabled' switches this item off - views/formShowSysDefs.php matches the
+             type string exactly, so no case renders it and no sccpsettings row is seeded for it. An
+             SRST list for SIP phones was started and never finished (the SCCP one above is live). -->
         <item type="IED-disabled" id="3" seq="20">
             <label>SRST Sip Server list</label>
             <name>srst_sip</name>
@@ -1025,6 +1033,12 @@ and open the template in the editor. Base Version before all crash :-)
             </input>
             <help>Context: This is the context in which your phones will operate. It should match the context you are using for the rest of your phones (if you have any). The FreePBX default is 'from-internal'</help>
         </item>
+        <!-- review 2026-09, saved but never applied: regcontext (and pickupgroup below) land in
+             sccpsettings on Save, but createDefaultSccpConfig only writes the keys in its
+             $permittedSettings whitelist to sccp.conf [general], and the other route (DEFAULT
+             columns via updateTableDefaults) only fires for sccpline_/sccpdevice_-prefixed keys,
+             which this 'sccp'-prefixed group never produces. Filed as a defect to fix, not as
+             dead weight - the admin gets 'Data saved' for a setting that has no effect. -->
         <item type="IE" id="5">
             <label>Dynamically registration Context</label>
             <input>
@@ -1079,6 +1093,9 @@ and open the template in the editor. Base Version before all crash :-)
             <help>Complete transfer on hangup, without pressing transfer a second time. Will complete transfer, when the transferer puts the receiver on hook, after the destination has been reached. To cancel the transfer, either press resume on the transferred channel, press the 'endcall' softkey, or have the receiving party hangup first.</help>
         </item>
 
+        <!-- review 2026-09: 'SLA-disabled' switches the item off (type matched exactly by the renderer).
+             A per-device default dial template was planned and never wired; dial templates are
+             assigned elsewhere. Unfinished, not broken. -->
         <item type="SLA-disabled" id="6">
             <label>Default Dial Plan</label>
             <name>dial_template</name>
@@ -1095,6 +1112,8 @@ and open the template in the editor. Base Version before all crash :-)
             <button value="off">Disabled</button>
             <help>Enables and Disables auto line selection.</help>
         </item>
+        <!-- review 2026-09: meetme and meetmeopts are switched off on purpose ('IS-disabled'): chan-sccp's
+             meetme conferencing needs app_meetme, which Asterisk 20+ no longer ships. Not a leftover. -->
         <item type="IS-disabled" id="8" seq="0">
             <name>meetme</name>
             <label>Meetme Conference</label>
@@ -1230,6 +1249,10 @@ and open the template in the editor. Base Version before all crash :-)
             <button value="no">No</button>
             <help>Say 'yes' if you need to create cisco default language directory in tftp path.</help>
         </item>
+        <!-- review 2026-09, switch that switches nothing: the value is rendered, seeded and saved, but no
+             PHP reads getExternalData. The provisioner download runs unconditionally from the
+             'Update Files from Provisioner' button (get_ext_files). Filed as a defect: 'No' must
+             actually block the download. -->
         <item type="IS" id="4" seq="90">
             <name>getExternalData</name>
             <label>Get data files from Provision</label>
@@ -1463,6 +1486,10 @@ and open the template in the editor. Base Version before all crash :-)
         </item>
     </page_group>
 
+    <!-- review 2026-09, unused group: no showGroup() call anywhere asks for sccp_hw_dev_button (33 group
+         names are requested across views/ and *.php, this is not one of them). The device button form
+         is built by hand in views/form.buttons.php; the lone 'mac' item here was the header of a
+         form that never got made. -->
     <page_group name="sccp_hw_dev_button">
         <label>Buttons Configuration</label>
         <item type="IE" id="1" seq="99">
@@ -1686,6 +1713,11 @@ and open the template in the editor. Base Version before all crash :-)
             </input>
             <add_pluss>+</add_pluss>
             <max_row>5</max_row>
+            <!-- review 2026-09: 'addbutton-disabled' is this file's way of commenting a tag out - the
+                 renderer tests !empty($child->addbutton), so a renamed tag is simply never seen. The
+                 same fields already get their '+' button through <add_pluss> and the shared
+                 .input-js-add handler; this is the older, superseded way of asking for it. Applies
+                 to every addbutton-disabled tag in this file. -->
             <addbutton-disabled>Add Deny network</addbutton-disabled>
             <help>All RFC 1918 addresses are local networks. Should always be at least '0.0.0.0/0.0.0.0'.</help>
         </item>
@@ -2027,6 +2059,10 @@ and open the template in the editor. Base Version before all crash :-)
         </item>
     </page_group>
 
+    <!-- review 2026-09, unused group (~144 lines): meant as the SCCP line section on the FreePBX
+         extensions page, but the doGuiHook in sccpManTraits/bmoFunctions.php does not render it and
+         nothing calls showGroup('sccp_extension_config'). Two of its items are type SLG, which no
+         dispatcher handles (see the note at the first one). Unfinished. -->
     <page_group name="sccp_extension_config">
         <label>SCCP Extension Details</label>
         <item type="IE" id="51">
@@ -2066,6 +2102,9 @@ and open the template in the editor. Base Version before all crash :-)
             </input>
             <help>Context where direct pickup search for extensions. if not set current context will be use.</help>
         </item>
+        <!-- review 2026-09: type SLG ('call groups' in this file's legend) is documented but implemented
+             nowhere - not in views/formShowSysDefs.php, not in initVarfromXml. Even if the group were
+             wired up, these two items would neither render nor seed a settings row. -->
         <item type="SLG" id="7">
             <label>Named Call Group</label>
             <name>namedcallgroup</name>

@@ -16,6 +16,11 @@ global $cnf_int;
 global $sccp_compatible;
 global $cnf_wr;
 
+// review 2026-09, vestigial switch: $mobile_hw is '0' here and assigned nowhere else, so the two
+// branches it guards never run - the alternative schema $db_config_v4M in Get_DB_config() and the
+// CREATE of the sccpuserconfig view in InstallDbCreateViews() (whose DROP runs unconditionally, so
+// the view is guaranteed absent after every install). It is the on/off knob of the half-built
+// Roaming User feature (sccpuser table, form.addruser.php, save_ruser all exist). Left as found.
 $mobile_hw = '0';
 $autoincrement = (($amp_conf["AMPDBENGINE"] == "sqlite") || ($amp_conf["AMPDBENGINE"] == "sqlite3")) ? "AUTOINCREMENT" : "AUTO_INCREMENT";
 $table_req = array('sccpdevice', 'sccpline', 'sccpsettings');
@@ -239,6 +244,10 @@ function Get_DB_config($sccp_compatible)
             'roaminglogin' => array('create' => "ENUM('off','on','multi') NOT NULL DEFAULT 'off'", 'modify' => "ENUM('on','off','multi')" ),
             'auto_logout' => array('create' => "ENUM('on','off') NOT NULL DEFAULT 'off'", 'modify' => "ENUM('on','off')" ),
             'homedevice' => array('create' => "VARCHAR(20) NOT NULL", 'modify' => "VARCHAR(20)" ),
+            // review 2026-09: devicegroup is created here and declared in module.xml, but has no form field
+            // and no reader - the neighbouring sccpuser columns are at least described in
+            // conf/sccpgeneral.xml.v433 and filled by handleRoamingUsers; this one stays an empty
+            // NOT NULL VARCHAR(7). Part of the unfinished Roaming User feature (see $mobile_hw).
             'devicegroup' => array('create' => "VARCHAR(7) NOT NULL", 'modify' => "VARCHAR(7)" ),
         ),
         'sccpbuttonconfig' => array(
@@ -371,6 +380,11 @@ function Get_DB_config($sccp_compatible)
               'systemdefault' => array('create' => "VARCHAR(255) NULL default ''")
             ),
         'sccpdevmodel' => array(
+                // review 2026-09: fwfound and templatefound are created and never read or written by any
+                // PHP. Whether firmware and template exist is computed on the fly by
+                // getSccpModelInformation($validate=true) and handed to the grid as the virtual
+                // 'validate' field; these two columns are the trace of an earlier design that stored
+                // that result in the DB.
                 'fwfound' => array('create' => "enum('yes','no') NOT NULL default 'no'", 'modify' => "enum('yes','no')"),
                 'templatefound' => array('create' => "enum('yes','no') NOT NULL default 'no'", 'modify' => "enum('yes','no')")
             )
@@ -392,6 +406,12 @@ function Get_DB_config($sccp_compatible)
     }
 }
 
+// review 2026-09, three uncalled installer functions, each defined once and referenced nowhere:
+//  - CheckSCCPManagerDBVersion: a stub whose body was never written;
+//  - CheckPermissions: the author's own '/* notused */' - the views-directory owner check was
+//    superseded by 'fwconsole chown' and chownTftpTree();
+//  - CheckChanSCCPCompatible (below): a copy of the one-liner the installer already runs inline
+//    ($aminterface->getSCCPVersion()['vCode']).
 function CheckSCCPManagerDBVersion()
 {
 
@@ -520,6 +540,11 @@ function InstallDB_updateSchema($db_config)
         $stmt = $db->prepare("DESCRIBE {$tabl_name}");
         $stmt->execute();
         $db_result = $stmt->fetchAll(\PDO::FETCH_ASSOC|\PDO::FETCH_UNIQUE);
+        // review 2026-09, dead check: $stmt is a raw PDOStatement (the compat $db->prepare() hands
+        // PDO's back untouched) and PDO throws on failure, so $db_result is always an array here
+        // and DB::IsError() - which only recognises a DB_Error object - never fires. Note this is NOT
+        // true of the $db->query() / $db->getRow() checks elsewhere in this installer: those go
+        // through FreePBX's compat DB class, which does return a DB_Error, so they are live.
         if (DB::IsError($db_result)) {
             die_freepbx("Can not get information for " . $tabl_name . " table\n");
         }
@@ -866,6 +891,9 @@ function InstallDbCreateViews($sccp_compatible)
             DROP TABLE IF EXISTS sccpdeviceconfig;
             DROP VIEW IF EXISTS sccpuserconfig;
             ";
+    // review 2026-09: the DROP above always runs, the CREATE of sccpuserconfig below only under
+    // $mobile_hw == '1', which is never set (see the top of this file) - so the view named in
+    // Sccp_manager.class.php as the consumer of reftype='sccpuser' buttons never exists.
     ///    global $hw_mobil;
     // From logserver to end only applies to db ver > 433
 
@@ -968,6 +996,9 @@ function installDbPopulateSccpline() {
         $stmt->bindParam(':description',$description,\PDO::PARAM_STR);
         $stmt->bindParam(':label',$valArr['label'],\PDO::PARAM_STR);
         $stmt->execute();
+        // review 2026-09, dead check (same reason as the DESCRIBE check above: PDO throws before this
+        // line, and a PDOStatement is never a DB_Error). Had it ever fired, the message itself would
+        // have failed - a PDOStatement has no getMessage() and cannot be printed with %s.
         if (DB::IsError($stmt)) {
             die_freepbx(sprintf(_("Error inserting into sccpline. Command was: %s; error was: %s "), $stmt, $stmt->getMessage()));
         }

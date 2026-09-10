@@ -445,6 +445,9 @@ trait helperfunctions {
         return file_put_contents("{$tftpRootPath}/masterFilesStructure.xml", $content) !== false;
     }
 
+    // review 2026-09, no callers: confirmed - the trait is mixed into Sccp_manager, formcreate,
+    // xmlinterface and the installer's anonymous class, none of them calls it, and the name is not
+    // in the ajax command table. A developer's dump helper (three metadata round-trips + dbug()).
     public function getChanSccpSettings() {
         // This is a utility function for debug only, and is not used by core code
         foreach (array('general','line', 'device') as $section) {
@@ -563,6 +566,10 @@ trait helperfunctions {
                                 $this->sccpvalues[(string) $child->name] = array('keyword' => (string) $child->name, 'data' => $datav, 'type' => '2', 'seq' => $seq, 'systemdefault' => '');
                             }
                         }
+                        // review 2026-09: 'SLT' in this list matches nothing - no item of that type exists in
+                        // conf/sccpgeneral.xml.v433 and formShowSysDefs.php has no case for it. The type was
+                        // split into SLTD (device language) and SLTN (country) long ago; those two are not
+                        // listed here, which is harmless only because they sit on device-level items (seq 98).
                         if (in_array($child['type'], array('SLD', 'SLS', 'SLT', 'SLNA', 'SLDA', 'SL', 'SLM', 'SLZ', 'SLTZN', 'SLA'))) {
                             if (empty($child->value)) {
                                 $datav = (string) $child->default;

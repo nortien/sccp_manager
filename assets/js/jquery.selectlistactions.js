@@ -1,4 +1,8 @@
-﻿(function ($) {
+﻿// review 2026-09, dead file: FreePBX loads every assets/js/*.js in name order, this one first, then
+// sccp_manager.js - which redeclares the very same six $.fn plugins in its own IIFE and overwrites
+// these. No PHP or view names this file. Kept as-is; the copy that actually runs is the one in
+// sccp_manager.js (see the note above its IIFE for which of the six plugins have callers at all).
+(function ($) {
     //Moves selected item(s) from sourceList to destinationList
     $.fn.moveToList = function (sourceList, destinationList) {
         var opts = $(sourceList + ' option:selected');

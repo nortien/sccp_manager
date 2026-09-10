@@ -29,7 +29,7 @@ class extconfigs
                     return $this->cisco_language[$index]; // return the matched value
                 }
                 break;
-            case 'sccpDefaults':
+            case 'sccpDefaults':    // review 2026-09: unreachable, no caller passes this id (see the note at $sccpDefaults)
                 $result = $this->sccpDefaults;
                 break;
             case 'sccp_timezone': // Sccp manager: 1303; server_info: 122
@@ -65,6 +65,11 @@ class extconfigs
                         // This code may not be the one typically used, but it has the correct values.
                         $cisco_code = $key . ' Standard' . (($usesDaylight) ? '/Daylight' : '') . ' Time';
 
+                        // review 2026-09, write into nothing: extconfigs has no sccpvalues property - the
+                        // #[\AllowDynamicProperties] attribute on this class silently creates one here and
+                        // nobody reads it. The real tzoffset lives in Sccp_manager::sccpvalues and is set by
+                        // updateTimeZone() from the return value below. Copy-paste from the parent class;
+                        // will become an error once AllowDynamicProperties goes away.
                         $this->sccpvalues['tzoffset']['data'] = $tmpOffset;
 
                         return array('offset' => $tmpOffset, 'daylight' => ($usesDaylight) ? 'Daylight' : '', 'cisco_code' => $cisco_code);
@@ -89,6 +94,8 @@ class extconfigs
         }
     }
 
+    // review 2026-09, no callers: the same cisco_code is computed inline in getExtConfig('sccp_timezone')
+    // above. Left from the version that picked the Cisco zone by table key rather than by offset+DST.
     private function get_cisco_time_zone($tzc)
     {
         $tzdata = $this->cisco_timezone[$tzc];
@@ -96,6 +103,11 @@ class extconfigs
         return array('offset' => $tzdata['offset'], 'daylight' => $tzdata['daylight'], 'cisco_code' => $cisco_code);
     }
 
+    // review 2026-09, unreachable copy: getExtConfig('sccpDefaults') is called from nowhere, so this
+    // table is never read. Defaults come from conf/sccpgeneral.xml.v433 via initVarfromXml() and
+    // from chan-sccp's metadata in cleanUpSccpSettings(). Dangerous precisely as a stale copy: it
+    // says hotline_enabled 'off' / hotline_context 'default' while the installer forces
+    // hotline_enabled='no' (Issue 29). Do not consult it for what the module does.
     private $sccpDefaults = array(
         'servername' => 'VPBXSCCP',
         'bindaddr' => '0.0.0.0', "port" => '2000', # chan_sccp also supports ipv6
@@ -281,6 +293,11 @@ class extconfigs
                           'tftp_lang_path' => 'languages',
                           'tftp_dialplan_path' => 'dialplan',
                           'tftp_softkey_path' => 'softkey',
+                          // review 2026-09, unfinished: ringtones and wallpapers get their directory and
+                          // their sccpsettings row like the others, but nothing reads these two keys -
+                          // every other entry of this tree is consumed by initializeSccpPath/xmlinterface.
+                          // sccpdevice.ringtone / backgroundImage do reach chan-sccp, the GUI just never
+                          // learned to list or pick the files.
                           'tftp_ringtones_path' => 'ringtones',
                           'tftp_wallpapers_path' => 'wallpapers',
                           'tftp_countries_path' => 'countries'
