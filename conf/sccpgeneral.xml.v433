@@ -399,7 +399,7 @@ and open the template in the editor. Base Version before all crash :-)
             <default></default>
             <button value="yes">Yes</button>
             <button value="no">NO</button>
-            <help>This option set global allow devices to do direct RTP sessions (default Off)</help>
+            <help>This option set global allow devices to do direct RTP sessions (default Off). Note: call recording cannot work while this is on. With direct RTP the phones send audio to each other and Asterisk never receives it, so a recording starts, reports itself as running and produces an empty file. The Record softkey is withheld from any device that uses direct RTP.</help>
         </item>
         <item type="IS" id="5" seq="99">
             <name>earlyrtp</name>
@@ -1721,7 +1721,7 @@ and open the template in the editor. Base Version before all crash :-)
             <default></default>
             <button value="no">No</button>
             <button value="Yes">Yes</button>
-            <help>This option allow devices to do direct RTP sessions (default Off)</help>
+            <help>This option allow devices to do direct RTP sessions (default Off). Note: call recording cannot work on this device while this is on. With direct RTP the phones send audio to each other and Asterisk never receives it, so a recording starts, reports itself as running and produces an empty file. The Record softkey is withheld while direct RTP is in use.</help>
         </item>
         <item type="IS" id="5" seq="99">
             <name>earlyrtp</name>
