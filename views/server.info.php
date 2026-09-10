@@ -234,7 +234,9 @@ if (!empty($this->class_error)) {
                     <tbody>
 <?php
 foreach ($info as $key => $value) {
-    echo '<tr><td>' . htmlspecialchars($key, ENT_QUOTES) . '</td><td>' . htmlspecialchars($value['Version'] ?? '', ENT_QUOTES) . '</td><td>' . htmlspecialchars($value['about'] ?? '', ENT_QUOTES) . '</td></tr>';
+    // 'about' is markup this view builds itself from module data (with its own escaping where a
+    // value could carry anything); escaping it whole turned the warning banners into text
+    echo '<tr><td>' . htmlspecialchars($key, ENT_QUOTES) . '</td><td>' . htmlspecialchars($value['Version'] ?? '', ENT_QUOTES) . '</td><td>' . ($value['about'] ?? '') . '</td></tr>';
 }
 ?>
                     </tbody>

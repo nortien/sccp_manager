@@ -60,10 +60,9 @@ $keynamearray = array('onhook'    => array('sname' => 'ONHOOK', 'name' =>'Displa
                                 <?php
                                 $i = 0;
                                 foreach ($keynamearray as $key => $value) {
-                                    if ($i < 12) {
-                                        echo '<th data-sortable="false" data-field="'.$key.'">'._($value['sname']).'</th>';
-                                    }
-                                    $i ++;
+                                    // one header per key set field; a cap of 12 here left the last two
+                                    // columns the grid receives without a heading
+                                    echo '<th data-sortable="false" data-field="'.$key.'">'._($value['sname']).'</th>';
                                 }
                                 ?>
                                 <th data-field="actions" data-formatter="DispayActionsKeyFormatter"><?php echo _('Actions')?></th>

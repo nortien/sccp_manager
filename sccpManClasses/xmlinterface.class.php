@@ -528,7 +528,8 @@ class xmlinterface
         } else {
             $xml_template = $data_path . '/templates/SEP0000000000.cnf.xml_79df_sip_template';
         }
-        $xml_name = $store_path . '/' . $dev_id . '.cnf.xml';
+        $safe_dev_id = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $dev_id);                  // same bare-token rule as the SCCP path
+        $xml_name = $store_path . '/' . $safe_dev_id . '.cnf.xml';
         $sip_bind = $data_values['sbind'];
         $bind_proto = 'tcp';
         $bind_ip_def = '';

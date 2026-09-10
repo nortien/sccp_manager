@@ -429,7 +429,7 @@ class SCCPDeviceRestartAction extends ActionMessage
         if (in_array(strtolower($Type), array('restart', 'full', 'reset'))) {
             $this->setKey('Type', $Type);
         } else {
-            throw new Exception('Param2 has to be one of \'restart\', \'full\', \'reset\'.');
+            throw new \Exception('Param2 has to be one of \'restart\', \'full\', \'reset\'.');
         }
     }
 }

@@ -491,6 +491,11 @@ class dbinterface
     }
 
     public function getNamedGroup($callGroup) {
+        // the argument is spliced into the statement as a column name; only the two
+        // group columns are meaningful here, so accept nothing else
+        if (!in_array($callGroup, array('namedcallgroup', 'namedpickupgroup'), true)) {
+            return array();
+        }
         $sql = "SELECT {$callGroup} FROM sccpline GROUP BY {$callGroup}";
         $sth = $this->db->prepare($sql);
         $result = array();

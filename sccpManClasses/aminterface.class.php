@@ -23,7 +23,7 @@ class aminterface
     private $_lastRequestedResponseHandler;
     private $_ProcessingMessage;
     private $_DumpMessage;
-    private $debug_level = 1;
+    private $debug_level = 0;   // 1 printed HTML debug text into the AJAX body on a malformed AMI message
     private $_incomingRawMessage;
     private $eventListEndEvent;
 
@@ -307,6 +307,11 @@ class aminterface
             } elseif ($evePos === 0) {      // Event must be at the start of the msg.
                 $event = $this->_eventObjFromMsg($aMsg); // Event  Ok
                 $this->eventListIsCompleted[$this->_lastActionId] = $event->isComplete();
+                if (!isset($this->_incomingMsgObjectList[$this->_lastActionId])) {
+                    // an event that arrives before its response has nowhere to go; it used to be a fatal call on null
+                    $this->_msgToDebug(1, 'event before response for action ' . $this->_lastActionId);
+                    return;
+                }
                 $this->_incomingMsgObjectList[$this->_lastActionId]->addEvent($event);
             } else {
                 // broken ami most probably through changes in chan_sccp_b.
@@ -315,6 +320,11 @@ class aminterface
                 $bMsg = 'Event: ResponseEvent' . "\r\n";
                 $bMsg .= 'ActionId: ' . $this->_lastActionId . "\r\n" . $aMsg;
                 $event = $this->_eventObjFromMsg($bMsg);
+                if (!isset($this->_incomingMsgObjectList[$this->_lastActionId])) {
+                    // an event that arrives before its response has nowhere to go; it used to be a fatal call on null
+                    $this->_msgToDebug(1, 'event before response for action ' . $this->_lastActionId);
+                    return;
+                }
                 $this->_incomingMsgObjectList[$this->_lastActionId]->addEvent($event);
             }
         }

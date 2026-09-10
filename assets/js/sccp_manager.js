@@ -747,7 +747,7 @@ $(document).ready(function () {
                             if (percentComplete == 100 ) {
                                 controller.abort();
                             }
-                        }, true, { signal: controller.signal });
+                        }, { signal: controller.signal });   // options are the third argument; a fourth is ignored, so the abort never took
                         return xhr;
                     },
                 type: 'POST',
@@ -889,7 +889,7 @@ function load_oncliсk(e, data)
             add_btn = true;
         }
     } else {
-        if (e.href.indexOf('#edit_softkeys')) {
+        if (e.href.indexOf('#edit_softkeys') !== -1) {     // indexOf gives -1 when absent, and -1 is truthy
             add_softkey = true;
         }
     }

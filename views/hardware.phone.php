@@ -88,7 +88,9 @@
         if (value === null)  {
             return  '-- EMPTY --';
         }
-        var data = value.split(";");
+        // the grid hands over the escaped value, and an entity such as &amp; ends in ";" too:
+        // split only on separators that do not close an entity
+        var data = value.split(/(?<!&[a-zA-Z0-9#]{1,8});/);
         result = '';
         for (var i = 0; i < data.length; i++) {
             var val = data[i].split(',');

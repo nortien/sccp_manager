@@ -10,7 +10,10 @@ service tftp
 	wait			= yes
 	user			= root
 	server			= /usr/sbin/in.tftpd
-	server_args		= -c -s -v /tftpboot -m /etc/asterisk/sccpManagerRewrite.rules
+	# no -c: it lets any client on the network create files under /tftpboot, which is
+	# to say hand a phone a configuration or a firmware image of its choosing. The phones
+	# only ever read. root is needed for -s (chroot); in.tftpd drops privileges itself.
+	server_args		= -s -v /tftpboot -m /etc/asterisk/sccpManagerRewrite.rules
 	disable			= no
 	per_source		= 11
 	cps			= 100 2
