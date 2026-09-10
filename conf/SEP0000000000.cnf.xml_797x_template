@@ -43,7 +43,7 @@
   </devicePool>
   <versionStamp>1b1b9eb6-7803-11d3-bdf0-00108302ead1</versionStamp>
   <commonProfile>
-    <phonePassword>1234</phonePassword>
+    <phonePassword/>
     <defaultBackground>http://x.x.x.x/Chan-SCCP-b.png</defaultBackground>
     <backgroundImageAccess>true</backgroundImageAccess>
     <callLogBlfEnabled>3</callLogBlfEnabled>

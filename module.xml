@@ -165,9 +165,9 @@
 			<field name="_sccp_tos" type="string" length="11"  notnull="false"/>
 			<field name="sccp_cos" type="string" length="11" default="0x4"/>
 			<field name="_sccp_cos" type="string" length="11"  notnull="false"/>
-			<field name="dev_sshPassword" type="string" length="25" default="cisco"/>
+			<field name="dev_sshPassword" type="string" length="25" default=""/>
 			<field name="_dev_sshPassword" type="string" length="25"  notnull="false"/>
-			<field name="dev_sshUserId" type="string" length="25" default="cisco"/>
+			<field name="dev_sshUserId" type="string" length="25" default=""/>
 			<field name="_dev_sshUserId" type="string" length="25" notnull="false"/>
 			<field name="phonepersonalization" type="string" length="25" default="0"/>
 			<field name="_phonepersonalization" type="string" length="25"  notnull="false"/>
