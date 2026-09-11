@@ -3,6 +3,11 @@ name: Build release tarball
 on:
   release:
     types: [published]
+  # A moved release tag (re-signed, or amended before anyone downloaded the
+  # tarball) rebundles automatically; the upload needs the release for that
+  # tag to exist already, and simply fails otherwise.
+  push:
+    tags: ['v*']
   # Manual re-run, so an existing release can be (re)bundled without
   # deleting and recreating it just to fire the `published` event.
   workflow_dispatch:
@@ -25,7 +30,7 @@ jobs:
           path: sccp_manager
           # Bundle the source the release tag actually points at, not
           # whatever the default branch happens to be at dispatch time.
-          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          ref: ${{ github.event.release.tag_name || inputs.tag || github.ref_name }}
 
       - name: Fetch precompiled driver binaries from chan-sccp's latest release
         env:
@@ -66,7 +71,7 @@ jobs:
       - name: Attach to the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag || github.ref_name }}
         run: |
           # --repo is required, not optional: gh normally infers it from the
           # git remote of the working directory, but the checkout lives in a

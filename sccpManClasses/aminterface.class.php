@@ -554,9 +554,16 @@ class aminterface
                         }
                         break;
                     default:
-                        $result['vCode'] = 400;
+                        // 4.4 and later: everything this module tells apart arrived with 4.3.3, and
+                        // 433 is the newest level its schema and class files know, so any newer
+                        // driver maps to it. The old fallthrough to 400 declared the fork's own
+                        // 4.4.0 "too old", the client closed the socket, and install.php then
+                        // reported the manager interface as unreachable.
+                        $result['vCode'] = ($version_parts[1] > 3) ? 433 : 400;
                         break;
                 }
+            } elseif ($version_parts[0] > 4) {
+                $result['vCode'] = 433;
             }
             if (array_key_exists("RevisionHash", $metadata)) {
                 $result['RevisionHash'] = $metadata["RevisionHash"];

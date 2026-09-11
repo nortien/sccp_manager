@@ -1259,7 +1259,7 @@ and open the template in the editor. Base Version before all crash :-)
             <default>no</default>
             <button value="yes">Yes</button>
             <button value="no">No</button>
-            <help>If this is set to yes, Sccp_manager will try to get data files from dkgroot/Provision (languages, ring tones, firmware etc). This is enabled at your own risk - Sccp_Manager cannot vouch for the security or accuracy of these files, and this option is included to assist in getting up to speed as rapidly as possible.</help>
+            <help>If this is set to yes, Sccp_manager will try to get data files from the nortien/provision_sccp repository on GitHub (languages, ring tones, firmware etc). This is enabled at your own risk - Sccp_Manager cannot vouch for the security or accuracy of these files, and this option is included to assist in getting up to speed as rapidly as possible.</help>
         </item>
         <item type="IS" id="4" seq="90">
             <name>system_rouminguser</name>

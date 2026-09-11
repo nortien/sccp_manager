@@ -1,7 +1,7 @@
 <module>
 	<rawname>sccp_manager</rawname>
 	<name>SCCP Manager</name>
-	<version>17.0.1</version>
+	<version>17.1.0</version>
 	<type>setup</type>
 	<category>SCCP Connectivity</category>
 	<publisher>nortien</publisher>
@@ -45,6 +45,7 @@
 		 * Version 14.5.0.4 * - Fix issue where values with spaces are truncated. Preserve softkeys accross installs
 		 * Version 15.0.1 * - Own fork, Asterisk 20 / FreePBX 16 support
 		 * Version 17.0.1 * - Adapted for Asterisk 23 / FreePBX 17
+		 * Version 17.1.0 * - Security and correctness review applied throughout; settings that were saved but never used now take effect (regcontext, pickupgroup, directed pickup, provisioner download switch, explicit CallManager list); phone credentials no longer shipped in templates; useRedialMenu on by default; bundles chan-sccp 4.4.0
 	</changelog>
 	<location>https://github.com/nortien/sccp_manager</location>
 	<depends>

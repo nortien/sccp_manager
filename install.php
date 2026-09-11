@@ -57,6 +57,16 @@ if ($sccp_compatible == 0 && method_exists($aminterface, 'isConnected') && !$ami
     // A zero version code only means "the driver did not answer", which is just as true when the
     // manager connection itself is down (Asterisk stopped, wrong AMPMGRUSER/AMPMGRPASS). Treating
     // that as "driver missing" used to reinstall chan-sccp and restart a live PBX for nothing.
+    // The client also closes its socket when the driver answered with a version it does not accept,
+    // so tell that case apart before blaming the manager connection: reopen once and read the version.
+    if ($aminterface->open()) {
+        $seenVersion = $aminterface->getSCCPVersion()['Version'];
+        $aminterface->close();
+        if (!empty($seenVersion)) {
+            outn("<br>");
+            die_freepbx(sprintf(_("chan-sccp %s answered over AMI but this module does not accept it; 4.3.3 or newer is required. Upgrade the driver and re-run this install."), $seenVersion));
+        }
+    }
     outn("<br>");
     outn("<font color='red'>" . _("Could not reach the Asterisk Manager interface, so the chan-sccp version could not be read.") . "</font>");
     die_freepbx(_("Check that Asterisk is running and that AMPMGRUSER/AMPMGRPASS are correct, then re-run this install."));

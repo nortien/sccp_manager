@@ -89,14 +89,11 @@ class formcreate
         <?php
     }
 
-    // The hidden "customise" row used by the sccp-edit/sccp-restore toggle
-    // (addElementIE/addElementIS). id/name contract must match
-    // assets/js/sccp_manager.js exactly - it is not event-delegated.
-    // review 2026-09, no callers: the comment above describes a mechanism that was switched off -
-    // addElementIE/addElementIS now always render a plain editable input with a 'Use ... defaults'
-    // button (see the note around addElementIE, "no separate Customise click-to-reveal step"), so
-    // this row is never emitted and the sccp-edit/sccp-restore handlers in sccp_manager.js have no
-    // markup to bind to. Kept as the server half of that retired toggle.
+    // Server half of the retired "Customise" click-to-reveal toggle (sccp-edit/sccp-restore in
+    // assets/js/sccp_manager.js). addElementIE/addElementIS now always render a plain editable
+    // input with a 'Use ... defaults' button, so this row is never emitted and the JS handlers
+    // have no markup to bind to. Kept, not deleted, in case the toggle is ever brought back; the
+    // id/name contract with sccp_manager.js is not event-delegated and must match exactly.
     private function elementEditRowOpen($res_id, $promptText, $secClass = '') {
         ?>
             <div class="row" id="edit_<?php echo $res_id; ?>" style="display: none">

@@ -55,17 +55,15 @@ ASTERISK_MAJOR=$(echo "$ASTERISK_VERSION" | cut -d. -f1)
 [ -n "$ASTERISK_MAJOR" ] || die "Could not parse Asterisk version from 'asterisk -V'."
 log "Detected Asterisk ${ASTERISK_VERSION} (major version: ${ASTERISK_MAJOR})"
 
-# chan-sccp's configure.ac currently supports MIN_ASTERISK_VERSION=106,
-# MAX_ASTERISK_VERSION=123 for its *auto-detect* path - but we always pass
-# --with-asterisk-version explicitly below, which takes chan-sccp's manual
-# override path and bypasses that ceiling entirely (see chan-sccp's own
-# CLAUDE.md, "Build" section, 2026-08-14 correction note). So this is just
+# chan-sccp 4.4.0 compiles against Asterisk 13 through 23 and its configure
+# detects the installed version on its own. The precompiled binaries and the
+# stand tests cover the majors FreePBX 16/17 actually ship; anything else is
 # an informational heads-up, not a hard gate.
 case "$ASTERISK_MAJOR" in
-    20|22|23) : ;;  # the two combos this fork actually documents supporting (16/20, 17/23), plus 22 added alongside 123 support
+    18|20|21|22|23) : ;;
     *)
-        warn "This fork has mainly been exercised against Asterisk 20.x/22.x/23.x."
-        warn "Detected major version ${ASTERISK_MAJOR} - continuing anyway (--with-asterisk-version bypasses chan-sccp's own version ceiling), but the build may need configure.ac's MAX_ASTERISK_VERSION bumped first if this is newer than chan-sccp has ever seen - see chan-sccp/CLAUDE.md 'Known gotchas'."
+        warn "This fork is built and tested against Asterisk 18/20/21/22/23 (FreePBX 16 and 17)."
+        warn "Detected major version ${ASTERISK_MAJOR} - continuing anyway; chan-sccp's configure accepts 13 through 23, newer majors need the bound in autoconf/asterisk.m4 raised first."
         ;;
 esac
 
@@ -248,8 +246,10 @@ else
 fi
 
 log "Building chan-sccp for Asterisk ${ASTERISK_MAJOR}.0"
-# Flags match the exact command verified and documented in chan-sccp's own
-# CLAUDE.md "Build" section - keep this in sync if that ever changes.
+# configure would find the version by itself; the explicit pin keeps the build
+# tied to the Asterisk this script measured with 'asterisk -V' even on a box
+# with several sets of headers installed. Feature flags match the CI build
+# (.github/workflows/build-release.yml in chan-sccp) - keep them in sync.
 ./configure --with-asterisk-version="${ASTERISK_MAJOR}.0" \
     --enable-conference --enable-advanced-functions \
     --enable-distributed-devicestate --enable-video \
@@ -266,6 +266,48 @@ if grep -qE '^\s*noload\s*=\s*chan_skinny\.so' /etc/asterisk/modules.conf 2>/dev
 else
     echo "noload = chan_skinny.so" >> /etc/asterisk/modules.conf
     log "Added noload entry"
+fi
+
+# The module's installer probes the TFTP server for real (writes a file and
+# fetches it over tftp) and stops if the service is down, and FreePBX 16 ships
+# its tftp-server disabled. This is the only step in the tarball install that
+# runs as root, so switch the shipped server on here when it exists but is
+# off; a box without one gets a hint and is otherwise left alone.
+if systemctl list-unit-files 2>/dev/null | grep -q '^tftp\.socket'; then
+    if ! systemctl is-active --quiet tftp.socket; then
+        log "Enabling the shipped TFTP server (tftp.socket) - the module installer needs it running"
+        systemctl enable --now tftp.socket || warn "Could not enable tftp.socket - enable your TFTP server before installing the module"
+    fi
+elif systemctl list-unit-files 2>/dev/null | grep -q '^tftpd-hpa\.service'; then
+    if ! systemctl is-active --quiet tftpd-hpa; then
+        log "Enabling the shipped TFTP server (tftpd-hpa) - the module installer needs it running"
+        systemctl enable --now tftpd-hpa || warn "Could not enable tftpd-hpa - enable your TFTP server before installing the module"
+    fi
+elif [ -f /etc/xinetd.d/tftpd ] && grep -qE 'disable\s*=\s*yes' /etc/xinetd.d/tftpd; then
+    log "Enabling the shipped TFTP server (xinetd tftpd) - the module installer needs it running"
+    sed -i 's/disable\s*=\s*yes/disable         = no/' /etc/xinetd.d/tftpd
+    systemctl restart xinetd 2>/dev/null || service xinetd restart 2>/dev/null || true
+else
+    warn "No TFTP server found (tftp.socket, tftpd-hpa or xinetd tftpd) - install one before installing the module"
+fi
+
+# chan-sccp refuses to load without /etc/asterisk/sccp.conf ("Config file
+# 'sccp.conf' not found, aborting"), and on a box where the module has not
+# been installed yet there is none - which made the verification below fail
+# on every fresh install. Leave a two-line placeholder; sccp_manager's
+# installer reads any existing file and rewrites it in full, so nothing here
+# survives the module install. hotline_enabled=no keeps the driver from
+# registering unknown phones in the meantime (the driver's own default is on).
+SCCP_CONF=/etc/asterisk/sccp.conf
+if [ ! -e "$SCCP_CONF" ]; then
+    log "No ${SCCP_CONF} yet - writing a placeholder so the driver can start (sccp_manager replaces it on install)"
+    printf '%s\n' \
+        '[general]' \
+        '; placeholder written by install-chan-sccp-driver.sh: the driver does not load without this file.' \
+        '; SCCP Manager rewrites it in full when the module is installed.' \
+        'hotline_enabled = no' > "$SCCP_CONF"
+    chown asterisk:asterisk "$SCCP_CONF" 2>/dev/null || true
+    chmod 0664 "$SCCP_CONF"
 fi
 
 log "Restarting Asterisk (full restart - never hot-swap a freshly built .so)"

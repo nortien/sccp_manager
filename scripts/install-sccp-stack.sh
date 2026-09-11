@@ -129,10 +129,9 @@ log "Installing sccp_manager module through FreePBX"
 fwconsole ma install sccp_manager || die "sccp_manager install failed - see the output above (often means chan_skinny wasn't actually excluded - re-check /etc/asterisk/modules.conf)"
 
 # fwconsole ma install doesn't reliably re-symlink module assets on every
-# run (see this repo's own CLAUDE.md, "Known bug pattern:" missing
-# /admin/assets/<module> symlink - found 2026-08-14 the hard way, in
-# production, hours before this script was written). A plain `fwconsole
-# reload` is what actually recreates it (Reload.class.php's
+# run: a missing /admin/assets/sccp_manager symlink silently breaks every
+# JS-driven control on the settings page (seen in production, 2026-08-14).
+# A plain `fwconsole reload` is what actually recreates it (Reload.class.php's
 # symlink_assets()) - cheap and safe to always run once here rather than
 # hoping ma install already did it.
 log "Ensuring module asset symlinks are in place (fwconsole reload)"
