@@ -248,12 +248,9 @@ fi
 log "Building chan-sccp for Asterisk ${ASTERISK_MAJOR}.0"
 # configure would find the version by itself; the explicit pin keeps the build
 # tied to the Asterisk this script measured with 'asterisk -V' even on a box
-# with several sets of headers installed. Feature flags match the CI build
-# (.github/workflows/build-release.yml in chan-sccp) - keep them in sync.
-./configure --with-asterisk-version="${ASTERISK_MAJOR}.0" \
-    --enable-conference --enable-advanced-functions \
-    --enable-distributed-devicestate --enable-video \
-    || die "./configure failed"
+# with several sets of headers installed. No feature options: since chan-sccp
+# 4.4.1 a plain ./configure builds the same driver as the release binaries.
+./configure --with-asterisk-version="${ASTERISK_MAJOR}.0" || die "./configure failed"
 make -j"$(nproc)" || die "make failed"
 make install || die "make install failed"
 
