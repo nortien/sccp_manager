@@ -1,6 +1,6 @@
 # SCCP Manager
 
-FreePBX module that runs Cisco SCCP ("Skinny") desk phones through the [chan-sccp](https://github.com/nortien/chan-sccp) driver, with no CallManager involved. Phones, lines, buttons, speed dials, BLF, softkey sets, phone models and the `SEP<MAC>.cnf.xml` provisioning files are all managed from the FreePBX GUI.
+FreePBX module that runs Cisco SCCP ("Skinny") desk phones through the [chan-sccp](https://github.com/nortien/chan-sccp) driver, with no Cisco CallManager involved. Phones, lines, buttons, speed dials with busy lamps (BLF), softkey sets, phone models and the per-phone configuration files (`SEP<MAC>.cnf.xml`, fetched by the phone over TFTP) are all managed from the FreePBX GUI. New to the terms? The wiki has a [glossary](https://github.com/nortien/sccp_manager/wiki/Glossary).
 
 **Current release: 17.1.0**, bundling chan-sccp 4.4.0 · Documentation: [wiki](https://github.com/nortien/sccp_manager/wiki)
 
@@ -10,9 +10,9 @@ FreePBX module that runs Cisco SCCP ("Skinny") desk phones through the [chan-scc
 |---|---|---|
 | Asterisk | 18, 20 | 18, 20, 21, 22, 23 |
 | PHP | 7.4 | 8.2 |
-| Distribution | Sangoma sng7 (CentOS 7 based) | Sangoma sng12 (Debian 12 based) |
+| Distribution | Sangoma sng7: FreePBX 16 on a CentOS 7 base | Sangoma sng12: FreePBX 17 on a Debian 12 base |
 
-Also needed: the TFTP server that FreePBX ships (the installer enables it), root shell access once to install the driver, and phones running SCCP firmware.
+Also needed: the TFTP server that FreePBX ships (the phones fetch firmware and configuration from it; the installer switches it on), a root shell on the PBX once to install the driver, and phones running Cisco's SCCP firmware rather than the SIP one.
 
 ## Install
 
@@ -22,7 +22,7 @@ Also needed: the TFTP server that FreePBX ships (the installer enables it), root
    https://github.com/nortien/sccp_manager/releases/latest/download/sccp_manager.tar.gz
    ```
 
-2. **Install the driver**, once, as root on the PBX:
+2. **Install the driver**, once, in a shell on the PBX (over SSH) as root:
 
    ```bash
    sudo bash /var/www/html/admin/modules/sccp_manager/scripts/install-chan-sccp-driver.sh
